@@ -35,3 +35,13 @@ dialog:modal{overscroll-behavior:contain}dialog::backdrop{overflow:hidden;oversc
 .policy-troop-choices button[aria-pressed=true]{color:#ffe5a0;border-color:#d8b464;background:#63322d}
 .policy-troop-choices button:disabled{color:#a39a9f;opacity:1;cursor:default}.policy-troop-choices small{font:.7rem SimSun,serif}.policy-troop-marker{color:var(--policy-gold)}
 @media(max-width:700px){.policy-troops{grid-template-columns:minmax(0,1fr);gap:1rem;padding:.7rem}.policy-troop-officer{gap:.8rem}.policy-troop-officer img{width:60px}.policy-troop-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.3rem}.policy-troop-choices button{grid-template-columns:12px minmax(0,1fr);padding:.5rem .4rem;font-size:1rem}.policy-troop-choices small{grid-column:2}.policy-troop-choices legend{font-size:1rem}}
+
+.policy-allocation{grid-column:1/-1;min-width:0;border-top:1px solid #a6864c66;padding-block-start:1rem}
+.policy-allocation h5{font:1.2rem KaiTi,SimSun,serif;color:var(--policy-gold);margin:0 0 .8rem}
+.policy-allocation input[type=number]{box-sizing:border-box;width:100%;font:inherit;font-size:1rem;margin-block:.5rem}
+.policy-allocation input[type=range]{width:100%;min-height:48px;box-sizing:border-box;accent-color:var(--policy-gold);margin:0}
+.policy-allocation .policy-field{margin-block:1rem 0}.policy-range-label{display:block;margin-block-start:.7rem;color:#cbb48a;font-size:.8rem}
+.policy-allocation .policy-allocation-pool{display:flex;flex-wrap:wrap;gap:.3rem .8rem;margin-block:1rem;font-size:.8rem}.policy-allocation-pool span{color:#cbb48a}
+.policy-allocation .policy-allocation-preview{min-height:3.5em;line-height:1.8;margin-block:.5rem .8rem;font-size:.8rem;color:#f3d596}
+.policy-allocation-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;margin-block:1rem}.policy-allocation-actions button{min-width:0;padding-inline:.5rem}
+.policy-recruit-exact{border-top:1px solid #a6864c66;padding-block-start:.3rem}.policy-recruit-exact button{width:100%;margin-block-start:.3rem}

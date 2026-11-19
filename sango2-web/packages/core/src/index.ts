@@ -17,7 +17,7 @@ export * from './native-progression';
 export {officerDefinition,officerStrength,officerIntelligence,officerSpeed,officerForceMask,officerFormations,officerUnit,nativeForceNames,nativeForceLabels} from './native-officer-runtime';
 export {domesticSearchMessage} from './native-policy-actions';
 export {previewPlayerItem} from './native-player-items';
-export {allocateBattleTroops} from './native-troops';
+export {allocateBattleTroops,nativeTransferTroops,nativeReserveCapacity} from './native-troops';
 export type {AutonomyMode} from './native-policy-search';
 
 // Explicit prototype rules. These numbers are not a reconstruction of the 1.05+ executable.

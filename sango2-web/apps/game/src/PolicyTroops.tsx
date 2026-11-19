@@ -1,9 +1,9 @@
-import {useId} from 'react';
+import {useId,type ReactNode} from 'react';
 import type {GeneralDefinition} from '@sango2/content';
 import {officerForceMask,officerUnit,nativeForceNames,nativeForceLabels,allocateBattleTroops,officerLevel,type Session,type Command} from '@sango2/core';
 
 /** Original 0x41719C offers all 13 types and commits on activation. */
-export function PolicyTroops({session,officer,cityId,execute}:{session:Session;officer:GeneralDefinition;cityId:string;execute:(command:Command)=>boolean}) {
+export function PolicyTroops({session,officer,cityId,execute,children}:{session:Session;officer:GeneralDefinition;cityId:string;execute:(command:Command)=>boolean;children?:ReactNode}) {
   const id=useId(),g=session.generals[officer.id],learned=officerForceMask(g,officer),unit=officerUnit(g,officer);
   const slots=allocateBattleTroops(g.troops,officerLevel(g,officer),g.troopSlots);
   return <section className="policy-troops" aria-label={`${officer.name}部队兵种`}>
@@ -12,6 +12,7 @@ export function PolicyTroops({session,officer,cityId,execute}:{session:Session;o
         <dl><div><dt>现役兵</dt><dd>{slots.active}</dd></div><div><dt>预备兵</dt><dd>{slots.reserve}</dd></div></dl>
       </div>
       <p className="policy-hint" id={`${id}-help`}>点击已学兵种即可出战。兵员保持不变，不耗金钱、库存或年度行动；使用兵符可学习其他兵种。</p>
+      {children}
     </div>
     <fieldset className="policy-troop-choices" aria-describedby={`${id}-help`}><legend>选择出战兵种</legend>
       {nativeForceNames.map((name,index)=>{

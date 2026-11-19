@@ -3,7 +3,7 @@
  */
 import type {ScenarioDefinition} from '@sango2/content';
 import type {Session,Command} from './index';
-import {allocateBattleTroops,nativeTroopCapacity} from './native-troops';
+import {allocateBattleTroops,nativeTroopCapacity,nativeReserveCapacity} from './native-troops';
 import {initialOfficerCondition,initialConditionTimers,nativeRecoverCondition,type NativeConditionTimers} from './native-officer-condition';
 import {policyGovernorId} from './native-policy';
 import {officerLevel,officerMaxHp,officerMaxMp} from './native-progression';
@@ -128,7 +128,7 @@ export function runNativeStrategicCallback(s:Session,scene:ScenarioDefinition,ex
   // Native 0x41AFAB / 0x41AF58 passive recruiting, with the same per-recruit cost.
   for(const def of scene.cities) {
     const city=s.cities[def.id],id=def.id;
-    const maximum=Math.min(600,Math.trunc(city.population/2500)+110);
+    const maximum=nativeReserveCapacity(city.population);
     if(def.nativeFlags!==2&&--state.recruitTimers[id]<=0) {
       if(city.money>=100&&state.reserves[id]<maximum){state.reserves[id]++;city.money-=100;}
       const base=Math.trunc(4980/maximum);
