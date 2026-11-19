@@ -1,0 +1,12 @@
+
+ RUN  v5.1.0 E:/code/games/sanguo2/sango2-web
+
+
+ Test Files  44 passed (44)
+      Tests  14822 passed (14822)
+   Start at  15:27:35
+   Duration  15.34s (tests 91%, import 7%, transform 1%)
+
+    Isolate  44 workers spawned · ~101ms startup each (spawn + environment, per file)
+             at least ~1.39s faster with isolate: false — reuses workers across files instead of one per file
+

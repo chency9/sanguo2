@@ -124,6 +124,8 @@ export function executeDomestic(s:Session,scene:ScenarioDefinition,command:Domes
     const officer=scene.generals.find(g=>g.id===command.generalId)!;
     const index=nativeForceNames.indexOf(command.unit as typeof nativeForceNames[number]);
     if((officerForceMask(s.generals[officer.id],officer)&(1<<index))===0)throw new Error('该兵种尚未学会。');
+    // Original choice callback 0x41719C, event 4: learned +135 gates the sole
+    // write to current force +139. No soldier conversion, resource cost or RNG.
     s.generals[officer.id].currentUnit=command.unit;
     return `${officer.name}当前兵种已切换为${command.unit}。`;
   }

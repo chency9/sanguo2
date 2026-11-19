@@ -26,12 +26,12 @@ def main():
         status = '入口部分已接' if execute in supported else '效果未接'
         lines.append(f"| {record['SEQUENCE']} | {record['NAME']} / {record['WISELEVEL']} | {execute} | {status} | STR-01～04：逐级、成败、化解/冲突、对象、跨轮与结算；MAGIC.INI:{record['_line']} |")
     lines += ['', '## 物品：77项', '',
-              '全77项已接入搜索与势力库存；新局初始装备、电脑年度换装及物品属性内核已有原码差分。该EXE分类函数屏蔽USED位，电脑年度不会自动使用消耗品。玩家分配/使用、替换归库、卸随身物品、兵阵学习与赏赐已接，新增384组玩家入口原x86样本；主动兵种切换、特殊坐骑及原窗口/外围时机仍缺。RATE是相对权重，不是掉落百分比。原效果字段保持原词，空值略去。[玩家物品证据与边界](NATIVE-PLAYER-ITEMS-PARITY-2026-11-19.md)。', '',
+              '全77项已接入搜索与势力库存；新局初始装备、电脑年度换装及物品属性内核已有原码差分。该EXE分类函数屏蔽USED位，电脑年度不会自动使用消耗品。玩家分配/使用、替换归库、卸随身物品、兵阵学习与赏赐已接，有384组玩家入口原x86样本；主动兵种切换已贯通配兵/实战/存档，原选择事件与鼠标路径新增208组机器码样本。特殊坐骑、原窗口/外围时机及连续流程仍待验。RATE是相对权重，不是掉落百分比。原效果字段保持原词，空值略去。[玩家物品证据与边界](NATIVE-PLAYER-ITEMS-PARITY-2026-11-19.md)、[兵种选择证据](TROOP-SELECTION-2026-11-19.md)。', '',
               '| SEQUENCE | 名称 | 类别 | 等级 / RATE | 原效果字段 | 仍需完成 |', '| --- | --- | --- | --- | --- | --- |']
     keys = ['STR','INT','MAXHP','MAXMP','FORCE','BATTLE','SKILL','SPEED','HP','MP','SPIRIT','LOYAL','TIRE']
     for record in content['items']:
         effects = '；'.join(f'{k}={record[k]}' for k in keys if record.get(k)) or '按原属性/类型处理'
-        progress = '初始/AI/玩家换装、归库、卸随身物品已接；特殊效果/原窗口及连续流程待验' if record['TYPE'] != 'JEWEL_MISC' else '搜索/玩家使用与学习/赏赐已接；主动兵种切换/原窗口及连续流程待验'
+        progress = '初始/AI/玩家换装、归库、卸随身物品已接；特殊效果/原窗口及连续流程待验' if record['TYPE'] != 'JEWEL_MISC' else '搜索/玩家使用与学习/赏赐/主动兵种选择已接；原窗口及连续流程待验'
         lines.append(f"| {record['SEQUENCE']} | {record['NAME']} | {record['TYPE']} / {record['ATTRIB']} | {record['LEVEL']} / {record['RATE']} | {effects} | ITM-01～04：{progress}；SANGO.INI:{record['_line']} |")
     lines += ['', '## 剧本：5个', '', '| 剧本 | 年份 | 当前与缺口 |', '| --- | --- | --- |']
     for scene in content['scenarios']:
@@ -40,8 +40,8 @@ def main():
     for terrain in content['terrains']:
         lines.append(f"| {terrain['id']} | {terrain['name']} | {' / '.join(v['id'] for v in terrain['variants'])} | 原素材已接；MAP-09自动选景与VIS-07透视/裁切/调色板仍待逐场验收 |")
     lines += ['', '## 兵种：13类', '', '| 原兵种序号 | 名称 | 当前与缺口 |', '| --- | --- | --- |']
-    for i, name in enumerate(['朴刀兵','長槍兵','大刀兵','弓箭兵','鏈鎚兵','飛刀兵','武鬥兵','蠻族兵','鐵鎚兵','籐甲兵','黃巾兵','弩兵','女兵']):
-        lines.append(f'| {i} | {name} | 素材/基础战斗/克制已接；NEW-03初始配兵、BAT-03/07动作消息、BAT-09混合调度、ITM-03兵符仍待验收 |')
+    for i, name in enumerate(['朴刀兵','長槍兵','大刀兵','弓箭兵','鍊錘兵','飛刀兵','武鬥兵','蠻族兵','鐵鎚兵','籐甲兵','黃巾兵','弩兵','女兵']):
+        lines.append(f'| {i} | {name} | 素材/基础战斗/克制、兵符学习与当前选择/实战/读档已接；原切换事件已取证且保留兵员；NEW-03完整创建、BAT-03/07非攻击消息、BAT-09混合调度及原窗口连续流程仍待验收 |')
     lines += ['', '## 常规阵形：9种', '', '| 名称 | 当前与缺口 |', '| --- | --- |']
     for name in ['方形','圓形','錐形','雁形','玄襄','魚麗','鉤形','衝鋒','箭矢']:
         lines.append(f'| {name} | 已有原表与选择；BAT-02全部约束/特殊阵并用、VIS-04原布阵界面、ITM-03阵书学习仍待验收 |')

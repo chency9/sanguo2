@@ -14,6 +14,8 @@ export const officerStrength=(g:GeneralState,d:GeneralDefinition)=>g.strength??d
 export const officerIntelligence=(g:GeneralState,d:GeneralDefinition)=>g.intelligence??d.intelligence;
 export const officerSpeed=(g:GeneralState,d:GeneralDefinition)=>g.speed??d.speed??0;
 export const nativeForceNames=['刀','槍','關','弓','鍊','飛','武','蠻','鐵','籐','賊','弩','女'] as const;
+/** 0x406400 display names; padding spaces in the two short names are omitted. */
+export const nativeForceLabels=['朴刀兵','長槍兵','大刀兵','弓箭兵','鍊錘兵','飛刀兵','武鬥兵','蠻族兵','鐵鎚兵','籐甲兵','黃巾兵','弩兵','女兵'] as const;
 export function officerUnit(g:GeneralState,d:GeneralDefinition):string { return g.currentUnit??d.unit; }
 export function officerForceMask(g:GeneralState,d:GeneralDefinition) {
   return g.forceMask??d.forceMask??(1<<Math.max(0,nativeForceNames.indexOf(d.unit as typeof nativeForceNames[number])));

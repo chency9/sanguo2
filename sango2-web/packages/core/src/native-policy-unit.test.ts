@@ -1,8 +1,9 @@
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import type {GameContent} from '@sango2/content';
-import {createSession,dispatch,readSession,nativeForceNames,officerDefinition,type Session} from './index';
+import {createSession,dispatch,readSession,nativeForceNames,nativeForceLabels,officerDefinition,type Session} from './index';
 import {battleAttackAction,nativeAttackAction} from './native-attack-animation';
+import nativeSelection from '../fixtures/native-troop-selection.json';
 
 const content=JSON.parse(readFileSync(new URL('../../../apps/game/public/assets/content.json',import.meta.url),'utf8')) as GameContent;
 const scene=content.scenarios[0],faction=scene.factions[0];
@@ -14,6 +15,26 @@ function setup() {
   s.cities[from].troops+=200-g.troops;Object.assign(g,{level:40,troops:200,troopSlots:{active:100,reserve:100},forceMask:8191});
   return {s,def,g,from,to};
 }
+
+describe('troop-choice event 0x41719C original x86 differential',()=>{
+  for(const [index,c] of nativeSelection.cases.entries())it(`applies native learned-mask eligibility and sole current-force write ${index}`,()=>{
+    expect(nativeForceLabels).toEqual(nativeSelection.names.map(name=>name.replaceAll(' ','')));
+    const {s,def,g,from}=setup();
+    Object.assign(g,{forceMask:c.learned,currentUnit:nativeForceNames[Math.log2(c.current)]});
+    s.nativeAI!.rng=[...c.rng] as [number,number];const before=structuredClone(s);
+    const command={type:'policy-unit' as const,cityId:from,generalId:def.id,unit:nativeForceNames[c.index]};
+    if(!c.accepted) {
+      expect(()=>dispatch(s,command,content)).toThrow('尚未学会');expect(s).toEqual(before);
+      expect(c.writes).toEqual([]);expect(c.sounds).toEqual([]);return;
+    }
+    const after=dispatch(s,command,content);
+    expect(after.generals).toEqual({...before.generals,[def.id]:{...g,currentUnit:nativeForceNames[Math.log2(c.selected)]}});
+    expect(after.cities).toEqual(before.cities);expect(after.policy).toEqual(before.policy);
+    expect(after.nativeAI).toEqual({...before.nativeAI,rng:c.rngAfter});expect(after.rng).toBe(before.rng);
+    expect(c.writes).toEqual([{offset:139,size:4,value:c.selected}]);expect(c.sounds).toEqual([{name:'ACCEPT',volume:255}]);
+    expect(s).toEqual(before);
+  });
+});
 
 describe('selected troops from council to campaign battle',()=>{
   for(const [index,unit] of nativeForceNames.entries())it(`fields ${unit} active and reserve soldiers with their own source animations`,()=>{

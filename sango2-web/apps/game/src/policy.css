@@ -21,3 +21,17 @@ dialog:modal{overscroll-behavior:contain}dialog::backdrop{overflow:hidden;oversc
 
 .policy-equipment>div{min-width:0;flex:1}.policy-unit-switch{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:.55rem;margin-top:.9rem;padding:.7rem;border:1px solid #a6864c55;background:#130e28}.policy-unit-switch p,.policy-unit-switch label{grid-column:1/-1}.policy-unit-switch label{color:var(--policy-gold);font-weight:700}.policy-unit-switch select{min-width:0}.policy-unit-switch small{grid-column:1/-1;color:#d5c3a2;line-height:1.65}.policy-unit-switch button{white-space:nowrap}
 @media(max-width:700px){.policy-unit-switch{grid-template-columns:minmax(0,1fr)}.policy-unit-switch button{width:100%}.policy-unit-switch label{font-size:.8rem}}
+
+.policy-troops{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,230px);gap:1.5rem;margin-block:1.2rem;padding:1rem;border:3px ridge #a6864c;background:linear-gradient(135deg,#24172f,#100b23)}
+.policy-troop-officer{align-self:start;display:grid;grid-template-columns:auto minmax(0,1fr);gap:1rem}
+.policy-troop-officer img{image-rendering:pixelated;border:2px ridge #a6864c;max-width:100%;height:auto}
+.policy-troop-officer h4{margin:0 0 .7rem;color:var(--policy-gold);font:1.6rem KaiTi,SimSun,serif}
+.policy-troop-officer p{font-size:.85rem;line-height:1.8;margin:0}
+.policy-troop-officer dl{display:flex;gap:1.5rem;margin-block:1rem 0}.policy-troop-officer dt{font-size:.75rem;color:#cbb48a}.policy-troop-officer dd{margin:.4rem 0 0;font-size:1.2rem}
+.policy-troop-officer>.policy-hint{grid-column:1/-1;margin:0}
+.policy-troop-choices{min-width:0;margin:0;padding:.5rem;border:2px ridge #a6864c;background:#17112a}
+.policy-troop-choices legend{padding-inline:.5rem;color:var(--policy-gold);font:1.1rem KaiTi,SimSun,serif}
+.policy-troop-choices button{width:100%;display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:.4rem;align-items:center;padding:.5rem .6rem;border:1px solid transparent;border-radius:0;background:transparent;text-align:start;font:1.1rem KaiTi,SimSun,serif;color:#fff1c6}
+.policy-troop-choices button[aria-pressed=true]{color:#ffe5a0;border-color:#d8b464;background:#63322d}
+.policy-troop-choices button:disabled{color:#a39a9f;opacity:1;cursor:default}.policy-troop-choices small{font:.7rem SimSun,serif}.policy-troop-marker{color:var(--policy-gold)}
+@media(max-width:700px){.policy-troops{grid-template-columns:minmax(0,1fr);gap:1rem;padding:.7rem}.policy-troop-officer{gap:.8rem}.policy-troop-officer img{width:60px}.policy-troop-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.3rem}.policy-troop-choices button{grid-template-columns:12px minmax(0,1fr);padding:.5rem .4rem;font-size:1rem}.policy-troop-choices small{grid-column:2}.policy-troop-choices legend{font-size:1rem}}

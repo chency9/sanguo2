@@ -1,0 +1,23 @@
+
+ RUN  v5.1.0 E:/code/games/sanguo2/sango2-web
+
+ ❯ packages/core/src/native-policy-search.test.ts (788 tests | 1 failed) 7477ms
+   ❯ search, autonomy and growth campaign integration (8)
+     × finds actual wild officers, transfers their full state once and feeds live level to AI and saves 5456ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/core/src/native-policy-search.test.ts > search, autonomy and growth campaign integration > finds actual wild officers, transfers their full state once and feeds live level to AI and saves
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ packages/core/src/native-policy-search.test.ts:84:3
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 43 passed (44)
+      Tests  1 failed | 14821 passed (14822)
+   Start at  15:25:31
+   Duration  20.45s (tests 86%, import 7%, transform 6%)
+
