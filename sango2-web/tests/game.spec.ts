@@ -120,11 +120,11 @@ test('neutral capture, persistent save, export and invalid import', async ({ pag
   const game = new GamePage(page); await game.start(); await game.selectCity('長安');
   await page.getByRole('button',{name:'调兵出征'}).click();
   await page.getByLabel('行军目标').selectOption({label:'安定 · 无主 · 4 天'});
-  await page.getByLabel(/出征兵力/).fill('60');
+  await page.getByLabel(/出征兵力/).fill('30');
   await page.getByRole('button',{name:'下令出征'}).click();
   await expect(page.getByRole('heading',{name:'在途部队'})).toBeVisible();
   await game.next(); await game.next(); await game.next(); await game.next();
-  await game.selectCity('安定'); await expect(page.getByTestId('city-troops')).toHaveText('60人');
+  await game.selectCity('安定'); await expect(page.getByTestId('city-troops')).toHaveText('30人');
   await expect(page.getByLabel('天下地图').getByRole('button',{name:'安定 · 我方 · 何進',exact:true})).toBeVisible();
   await expect(page.getByLabel('天下地图').getByRole('button',{name:'安定 · 空城 · 无主',exact:true})).toHaveCount(0);
   await page.getByRole('button',{name:'存读档',exact:true}).click();
@@ -140,7 +140,7 @@ test('neutral capture, persistent save, export and invalid import', async ({ pag
   await page.reload(); await page.getByRole('button',{name:'关闭对话框'}).click();
   await page.getByRole('button',{name:'存读档',exact:true}).click();
   await page.getByRole('button',{name:'读取',exact:true}).first().click();
-  await game.selectCity('安定'); await expect(page.getByTestId('city-troops')).toHaveText('60人');
+  await game.selectCity('安定'); await expect(page.getByTestId('city-troops')).toHaveText('30人');
   await expect(page.getByLabel('天下地图').getByRole('button',{name:'安定 · 我方 · 何進',exact:true})).toBeVisible();
 });
 

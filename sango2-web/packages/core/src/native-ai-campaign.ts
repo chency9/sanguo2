@@ -6,6 +6,7 @@ import type {Session,Command} from './index';
 import {allocateBattleTroops,nativeTroopCapacity} from './native-troops';
 import {initialOfficerCondition,initialConditionTimers,nativeRecoverCondition,type NativeConditionTimers} from './native-officer-condition';
 import {policyGovernorId} from './native-policy';
+import {officerLevel,officerMaxHp,officerMaxMp} from './native-progression';
 import {nativeStrategyDecision,nativeOfficerReady,nativeCanDispatch,nativeShuffle,nativeBelow,nativeNextDecisionCountdown,
   type NativeRandomState,type NativeOfficerReadiness,type NativeStrategySnapshot,type NativeCandidate} from './native-strategic-ai';
 
@@ -28,8 +29,8 @@ export function createNativeCampaignAI(s:Session,scene:ScenarioDefinition):Nativ
 const roster=(s:Session,city:string)=>Object.keys(s.generals).filter(id=>{const g=s.generals[id];return g.cityId===city&&!g.armyId&&g.ownerId===s.cities[city].ownerId&&g.status==='登';}).reverse();
 export function nativeReadiness(s:Session,scene:ScenarioDefinition,id:string):NativeOfficerReadiness {
   const g=s.generals[id],def=scene.generals.find(g=>g.id===id)!;
-  const level=def.level??20,cap=nativeTroopCapacity(level),slots=allocateBattleTroops(g.troops,level,g.troopSlots);
-  return {hp:g.hp,maxHp:def.hp,mp:g.mp,maxMp:def.mp,troops:slots.active,maxTroops:Math.max(0,cap.active),
+  const level=officerLevel(g,def),cap=nativeTroopCapacity(level),slots=allocateBattleTroops(g.troops,level,g.troopSlots);
+  return {hp:g.hp,maxHp:officerMaxHp(g,def),mp:g.mp,maxMp:officerMaxMp(g,def),troops:slots.active,maxTroops:Math.max(0,cap.active),
     reserve:slots.reserve,maxReserve:cap.reserve};
 }
 export function nativeCityCapacity(population:number):number {
@@ -139,7 +140,7 @@ export function runNativeStrategicCallback(s:Session,scene:ScenarioDefinition,ex
   for(const def of scene.generals) {
     const g=s.generals[def.id];if(!g.cityId||g.armyId)continue;
     const defense=s.cities[g.cityId].defense,timer=state.recovery[def.id];
-    for(const [key,base] of [['hp',30],['mp',40]] as const)if(g[key]<def[key]&&--timer[key]<=0){g[key]++;timer[key]=base+Math.trunc((999-defense)*base/2997);}
+    for(const [key,base] of [['hp',30],['mp',40]] as const)if(g[key]<(key==='hp'?officerMaxHp(g,def):officerMaxMp(g,def))&&--timer[key]<=0){g[key]++;timer[key]=base+Math.trunc((999-defense)*base/2997);}
     const condition=initialOfficerCondition(g);
     const clocks={...initialConditionTimers(),...timer};
     nativeRecoverCondition(condition,clocks,true,defense);

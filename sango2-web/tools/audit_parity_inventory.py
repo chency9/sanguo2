@@ -26,12 +26,12 @@ def main():
         status = '入口部分已接' if execute in supported else '效果未接'
         lines.append(f"| {record['SEQUENCE']} | {record['NAME']} / {record['WISELEVEL']} | {execute} | {status} | STR-01～04：逐级、成败、化解/冲突、对象、跨轮与结算；MAGIC.INI:{record['_line']} |")
     lines += ['', '## 物品：77项', '',
-              '全部物品目前仍缺完整主动搜索、库存、分配/使用流程。已有初始装备外观及装备速度派生，不作为该物品玩法完成。RATE是原权重字段，不是已验收的掉落百分比。原效果字段保持原词，空值略去。', '',
+              '全77项已接入128槽搜索表、势力库存、等级权重和唯一标记；能否找到由原RATE、等级和已出现状态决定。分配、装备/卸装、消耗品使用与完整属性仍缺，不能将搜索入库当成该物品玩法完成。RATE是相对权重，不是掉落百分比。原效果字段保持原词，空值略去。[搜索证据与边界](NATIVE-POLICY-SEARCH-PARITY-2026-11-19.md)。', '',
               '| SEQUENCE | 名称 | 类别 | 等级 / RATE | 原效果字段 | 仍需完成 |', '| --- | --- | --- | --- | --- | --- |']
     keys = ['STR','INT','MAXHP','MAXMP','FORCE','BATTLE','SKILL','SPEED','HP','MP','SPIRIT','LOYAL','TIRE']
     for record in content['items']:
         effects = '；'.join(f'{k}={record[k]}' for k in keys if record.get(k)) or '按原属性/类型处理'
-        lines.append(f"| {record['SEQUENCE']} | {record['NAME']} | {record['TYPE']} / {record['ATTRIB']} | {record['LEVEL']} / {record['RATE']} | {effects} | ITM-01～04：搜索/库存/限制/唯一性/装备或消耗；SANGO.INI:{record['_line']} |")
+        lines.append(f"| {record['SEQUENCE']} | {record['NAME']} | {record['TYPE']} / {record['ATTRIB']} | {record['LEVEL']} / {record['RATE']} | {effects} | ITM-01搜索/库存待验；ITM-02～04装备/消耗/完整属性待补；SANGO.INI:{record['_line']} |")
     lines += ['', '## 剧本：5个', '', '| 剧本 | 年份 | 当前与缺口 |', '| --- | --- | --- |']
     for scene in content['scenarios']:
         lines.append(f"| {scene['title']} | {scene['year']} | 已导入{len(scene['cities'])}城/{len(scene['generals'])}人物/{len(scene['roads'])}路；NEW-01～06、POL-01～12、CAM-01均需逐剧本验收 |")

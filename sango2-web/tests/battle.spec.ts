@@ -30,6 +30,7 @@ test('real sprites, formations, ranged combat, pause and retreat in the drill',a
 test('enemy encounter pauses campaign, survives reload and settles actual casualties',async({page})=>{
   await delayRivalDecisions(page);
   await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();await finishInitialPolicy(page);
+  const startingTroops=await page.getByTestId('city-troops').textContent();
   await page.getByRole('button',{name:'调兵出征'}).click();
   const destination=page.getByLabel('行军目标');
   await destination.selectOption({label:await destination.locator('option').filter({hasText:'壺關'}).textContent()??''});
@@ -59,7 +60,7 @@ test('enemy encounter pauses campaign, survives reload and settles actual casual
   await page.getByLabel('战场速度').selectOption('4');
   await expect(page.getByRole('button',{name:'收兵 · 返回天下'})).toBeVisible({timeout:15000});
   await page.getByRole('button',{name:'收兵 · 返回天下'}).click();
-  await expect(page.getByTestId('city-troops')).toHaveText('640人');
+  await expect(page.getByTestId('city-troops')).toHaveText(startingTroops!);
   await page.getByRole('button',{name:'战报 1'}).click();await expect(page.locator('.reports article')).toHaveCount(1);
 });
 

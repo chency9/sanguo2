@@ -1,5 +1,7 @@
 import {test,expect,type Page} from '@playwright/test';
 import {delayRivalDecisions} from './campaign-fixture';
+import {readFile} from 'node:fs/promises';
+import type {Session} from '../packages/core/src/index';
 
 class CouncilPage {
   constructor(readonly page:Page){}
@@ -8,6 +10,14 @@ class CouncilPage {
   async command(name:string){await this.dialog.getByRole('navigation',{name:'内政命令'}).getByRole('button',{name,exact:false}).click();}
   async finish(){await this.dialog.getByRole('button',{name:'内政終了 · 返回征战'}).click();await expect(this.dialog).toHaveCount(0);}
   async reopen(){await this.page.getByRole('navigation',{name:'游戏菜单'}).getByRole('button',{name:'内政经营',exact:true}).click();}
+  async exportSession(){
+    if(await this.dialog.count())await this.dialog.getByRole('button',{name:'关闭对话框'}).click();
+    await this.page.getByRole('button',{name:'存读档',exact:true}).click();
+    const pending=this.page.waitForEvent('download');await this.page.getByRole('button',{name:'导出当前战役'}).click();
+    const download=await pending,path=await download.path();expect(path).toBeTruthy();
+    return JSON.parse(await readFile(path!,'utf8')) as {format:string;session:Session};
+  }
+  async importSession(value:unknown){await this.page.getByLabel('导入存档',{exact:true}).setInputFiles({name:'policy.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(value))});}
 }
 
 for(const width of [1440,390])test(`domestic council supports development, appointment, reports and save at ${width}`,async({page})=>{
@@ -45,13 +55,55 @@ for(const width of [1440,390])test(`domestic council supports development, appoi
 });
 
 test('native reserve transfer consumes existing soldiers and preserves gold',async({page})=>{
-  const council=new CouncilPage(page);await council.start(true);await council.finish();
+  const council=new CouncilPage(page);await council.start(true);
+  // A new native officer begins full; import one casualty through the real save UI.
+  const save=await council.exportSession(),s=save.session;
+  const response=await page.request.get('/assets/content.json'),content=await response.json();
+  const cao=content.scenarios[0].generals.find((g:{name:string})=>g.name==='曹操');
+  s.generals[cao.id].troops=99;s.generals[cao.id].troopSlots={active:99,reserve:0};s.cities[cao.cityId].troops--;
+  await council.importSession(save);await council.finish();
   await page.getByRole('button',{name:'下一天',exact:true}).click();await council.reopen();await council.command('部队征兵');
   // The first native reserve recruit costs100; assignment itself is free.
   await expect(council.dialog.getByText('5,236',{exact:true})).toBeVisible();
-  await council.dialog.getByLabel('配兵武将').selectOption({label:'曹操 · 现有80兵'});
+  await council.dialog.getByLabel('配兵武将').selectOption({label:'曹操 · 现有99兵'});
   await council.dialog.getByLabel('补充兵数').fill('1');await council.dialog.getByRole('button',{name:'补充部队',exact:true}).click();
   await expect(council.dialog.getByRole('status')).toContainText('补充1兵');
   await expect(council.dialog.getByText('5,236',{exact:true})).toBeVisible();
   await expect(council.dialog.getByRole('button',{name:'补充部队',exact:true})).toBeDisabled();
+});
+
+for(const width of [1440,390])test(`search, explicit autonomy, inventory and reports survive save at ${width}`,async({page})=>{
+  await page.setViewportSize({width,height:width===1440?1200:844});const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.route('**/assets/content.json',async route=>{
+    const response=await route.fetch(),content=await response.json();
+    // Keep native route RNG and item selection; isolate inventory from recruitment.
+    for(const scene of content.scenarios){for(const f of scene.factions)f.flagNumber=999;for(const g of scene.generals)if(g.status==='野'){g.status='未';g.cityId=null;}}
+    for(const item of content.items)item.RATE=item.SEQUENCE==='1'?'100':'0';
+    await route.fulfill({response,json:content});
+  });
+  const council=new CouncilPage(page);await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();
+  await council.dialog.getByLabel('治下城池').selectOption({label:'洛陽 · 8将'});
+  await council.command('搜索人才');await council.dialog.getByRole('button',{name:'全选未行动武将'}).click();
+  await council.dialog.getByRole('button',{name:'执行搜索 · 8将',exact:true}).click();
+  await expect(council.dialog.getByRole('status')).toContainText('8将完成搜索');
+  await expect(council.dialog.getByRole('checkbox',{name:/曹操/})).toBeDisabled();
+  await council.command('物品库');await expect(council.dialog.getByRole('rowheader',{name:'朴刀兵兵符',exact:true})).toBeVisible();
+  await page.screenshot({path:`docs/screenshots/policy-inventory-${width}.png`});
+  await council.command('城池自治');
+  const form=council.dialog.getByRole('form',{name:'设置城池自治'});
+  await form.getByRole('radio',{name:/搜索为主/}).check();
+  await expect(form.getByText(/已保存：不自治/)).toBeVisible();
+  await form.getByRole('button',{name:'保存自治方针',exact:true}).click();
+  await expect(form.getByText(/已保存：搜索为主/)).toBeVisible();
+  await council.dialog.getByRole('button',{name:'自治施行',exact:true}).click();
+  await expect(council.dialog.getByRole('status')).toContainText('共0将');
+  await page.screenshot({path:`docs/screenshots/policy-autonomy-${width}.png`});
+  await council.command('内政报告');await expect(council.dialog.getByRole('table',{name:'搜索报告 · 最近100次'}).getByRole('row')).toHaveCount(9);
+  await page.screenshot({path:`docs/screenshots/policy-search-${width}.png`});
+  const save=await council.exportSession();expect(save.session.policy!.search!.reports).toHaveLength(8);
+  expect(save.session.policy!.search!.inventory[save.session.factionId]['1']).toBeGreaterThan(0);
+  await council.importSession(save);await council.command('物品库');
+  await expect(council.dialog.getByRole('rowheader',{name:'朴刀兵兵符',exact:true})).toBeVisible();
+  await council.command('城池自治');await expect(council.dialog.getByRole('radio',{name:/搜索为主/})).toBeChecked();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect(errors).toEqual([]);
 });

@@ -63,7 +63,20 @@
 <br>
 <img src="docs/images/policy.png" alt="年度内政：原宫殿背景、城池经营、太守任命与每将行动记录" width="100%">
 
-新局先议政，再返回征战。现已接入原公式开发、太守任命、预备池配兵与年度税收；搜索、自治、人才和AI年度经营仍需补齐。[规则与剩余差距](sango2-web/docs/NATIVE-POLICY-PARITY-2026-11-19.md)。
+新局先议政，再返回征战。现可开发、搜索人才与宝物、设置城池自治、任命太守和从预备池配兵；归附武将的经验成长进入实战，库存与搜索报告随存档保留。AI年度经营和完整装备使用仍需补齐。[规则与剩余差距](sango2-web/docs/NATIVE-POLICY-PARITY-2026-11-19.md)。
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/policy-autonomy.png" alt="城池自治：逐城设定方针、保存后统一施行" width="100%"></td>
+    <td width="50%"><img src="docs/images/policy-inventory.png" alt="物品库：搜索所得、库存数量与等级说明" width="100%"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>治城用人</b><br><sub>四种自治方针 · 每将每年一次行动</sub></td>
+    <td align="center"><b>寻才觅宝</b><br><sub>原搜索权重 · 唯一物品与持久库存</sub></td>
+  </tr>
+</table>
+
+库存画面使用限定掉落的测试配置；正常游戏按全部77条原物品资料搜索。[搜索与自治的原码证据及剩余差距](sango2-web/docs/NATIVE-POLICY-SEARCH-PARITY-2026-11-19.md)。
 
 </details>
 
@@ -125,15 +138,15 @@ pnpm dev
 
 | 模块 | 当前已接入 | 仍需补齐 |
 | --- | --- | --- |
-| 天下与内容 | 五剧本；每剧本 60 城、401 人物记录、116 道路；城池归属、出征与战报 | 原初始化、人才、装备、事件、统一结局及特殊道路 |
-| 年度内政 | 独立议政阶段、每将行动、原公式开发、太守任命、预备池配兵、开发报告、年度税收与存档 | 搜索、自治、库存、人才成长、AI年度经营、历史事件与原菜单逐像素对照 |
+| 天下与内容 | 五剧本；每剧本 60 城、401 人物记录、116 道路；城池归属、出征与战报 | 完整对象初始化、装备、事件、统一结局及特殊道路 |
+| 年度内政 | 独立议政、开发/搜索、归附成长、四种自治、物品库、太守、预备池配兵、报告、年度税收与存档 | AI年度经营、完整装备使用、历史事件、原系统对白与菜单逐像素对照 |
 | 战略与战术 AI | 原版候选、权重、性格、双字 RNG、冷却、出阵、阵形、战术与选技函数 | 完整状态与调用顺序、连续战役回放；电脑双方交战仍有暂定自动结算 |
 | 实时战斗 | 13 兵种、九阵、五分队军令、移动占格、普攻伤害、攻击命中帧、普通远程弹道、死亡与轮战；逐源集气/恢复、撤退扣气与坐骑速度 | 原混合对象链的完整调度、部分主将状态及非攻击动作；完整装备与成长 |
 | 武将技与军师技 | 学习表、集气、部分军师效果；4 个飞射技能接原主流程及镜头；命疗术、回天术接 Heal 全部子协程、等待、回血和脚本 RNG | 104 个技能仍走暂定执行器；已接原脚本的 6 个仍有全局对象顺序、视觉或音效缺口 |
 | 画面与操作 | 原素材面板、人物与坐骑；12 地形、24 组景色；原透视表、全屏、镜头与移动端适配 | DirectDraw 调色板逐像素对照、全部菜单与布局、战役地形自动匹配 |
 | 存档 | 三槽位、JSON、战中状态、旧 Web 存档迁移与规则版本兼容 | 原版 SAV、自动保存、云存档与离线安装 |
 
-最新补入[年度内政基础流程](sango2-web/docs/NATIVE-POLICY-PARITY-2026-11-19.md)，并建立[全系统漏项总账](sango2-web/docs/FULL-PARITY-BACKLOG.md)及[原内容逐项清单](sango2-web/docs/PARITY-CONTENT-INVENTORY.md)。前序补齐命疗术、回天术的原 Heal 与全部后代协程：30 个环绕光球、80 个随机光球、追踪光柱、逐点回血、施法等待和镜头。详见 [治疗规则与证据](sango2-web/docs/NATIVE-HEAL-PARITY-2026-11-19.md)。前序还原包括 [主将源更新、装备速度与飞行技能镜头](sango2-web/docs/NATIVE-GENERAL-CAMERA-PARITY-2026-11-19.md)；[当前完整差距表](sango2-web/docs/PARITY-STATUS-2026-11-19.md) 和 [110 技能逐项清单](sango2-web/docs/MAGIC-COVERAGE-2026-11-19.md) 按实际执行路径记录进度。
+最新补入[搜索、登用成长、库存与四种自治](sango2-web/docs/NATIVE-POLICY-SEARCH-PARITY-2026-11-19.md)，前序恢复[年度内政基础流程](sango2-web/docs/NATIVE-POLICY-PARITY-2026-11-19.md)，并建立[全系统漏项总账](sango2-web/docs/FULL-PARITY-BACKLOG.md)及[原内容逐项清单](sango2-web/docs/PARITY-CONTENT-INVENTORY.md)。前序补齐命疗术、回天术的原 Heal 与全部后代协程：30 个环绕光球、80 个随机光球、追踪光柱、逐点回血、施法等待和镜头。详见 [治疗规则与证据](sango2-web/docs/NATIVE-HEAL-PARITY-2026-11-19.md)。前序还原包括 [主将源更新、装备速度与飞行技能镜头](sango2-web/docs/NATIVE-GENERAL-CAMERA-PARITY-2026-11-19.md)；[当前完整差距表](sango2-web/docs/PARITY-STATUS-2026-11-19.md) 和 [110 技能逐项清单](sango2-web/docs/MAGIC-COVERAGE-2026-11-19.md) 按实际执行路径记录进度。
 
 ## 技术实现
 
@@ -176,7 +189,7 @@ pnpm build
 pnpm preview
 ```
 
-2026-11-19 本地验证结果：**40 个核心测试文件、12,594 项测试通过；49 个 Chromium 场景通过；5 项 Python 测试通过；类型检查与生产构建通过。** 本次新增240组原开发/税收机器码样本；前序有72组完整 Heal 脚本树样本，共28,224次源更新；前序有主将源更新 640 组、镜头轨迹 142 组原码差分，以及 698 组原装备速度样本。数字为本次本地运行记录，不表示全局复刻验收或在线 CI 状态。
+2026-11-19 本地验证结果：**41 个核心测试文件、13,382 项测试通过；51 个 Chromium 场景通过；5 项 Python 测试通过；类型检查与生产构建通过。** 本次新增780组搜索/登用/成长/自治原x86样本；前序有240组原开发/税收机器码样本；前序有72组完整 Heal 脚本树样本，共28,224次源更新；前序有主将源更新 640 组、镜头轨迹 142 组原码差分，以及 698 组原装备速度样本。数字为本次本地运行记录，不表示全局复刻验收或在线 CI 状态。
 
 [查看命令日志](sango2-web/docs/evidence/commands/) · [开发操作说明](sango2-web/README.md) · [历次开发记录](sango2-web/DEVELOPMENT-HISTORY.md)
 
@@ -185,7 +198,7 @@ pnpm preview
 | 主题 | 文档 |
 | --- | --- |
 | 游戏内容与整体路线 | [总体方案](web-port-research/docs/00-Web重制总体方案.md) · [资源解析](web-port-research/docs/01-资源与数据全量解析.md) · [实施与验收](web-port-research/docs/05-实施里程碑与验收.md) |
-| 完整漏项与内容 | [一比一复刻总账](sango2-web/docs/FULL-PARITY-BACKLOG.md) · [内容逐项核对](sango2-web/docs/PARITY-CONTENT-INVENTORY.md) · [年度内政](sango2-web/docs/NATIVE-POLICY-PARITY-2026-11-19.md) |
+| 完整漏项与内容 | [一比一复刻总账](sango2-web/docs/FULL-PARITY-BACKLOG.md) · [内容逐项核对](sango2-web/docs/PARITY-CONTENT-INVENTORY.md) · [年度内政](sango2-web/docs/NATIVE-POLICY-PARITY-2026-11-19.md) · [搜索与自治](sango2-web/docs/NATIVE-POLICY-SEARCH-PARITY-2026-11-19.md) |
 | 核心 AI | [原版 AI 决策与验收边界](sango2-web/docs/NATIVE-AI-PARITY-2026-11-17.md) · [军师决策](sango2-web/docs/NATIVE-STRATEGIST-PARITY-2026-11-17.md) |
 | 战斗规则 | [普攻与强化](sango2-web/docs/NATIVE-COMBAT-PARITY-2026-11-17.md) · [单位时钟](sango2-web/docs/NATIVE-UNIT-CLOCK-PARITY-2026-11-17.md) · [分队与军令](sango2-web/docs/NATIVE-COMMAND-PARITY-2026-11-18.md) |
 | 战场呈现 | [原透视与镜头](sango2-web/docs/NATIVE-PROJECTION-CAMERA-PARITY-2026-11-18.md) · [渲染审查](sango2-web/docs/BATTLE-RENDER-AUDIT-2026-11-19.md) |

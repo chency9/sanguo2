@@ -146,6 +146,8 @@ for(const viewport of [{width:1440,height:900},{width:390,height:844}]) {
     await expect.poll(async()=>Number(await canvas.getAttribute('data-detached-objects')),{timeout:20000}).toBeGreaterThan(0);
     await page.getByRole('button',{name:'暂停战斗',exact:true}).click();
     // Painting two frames must not advance the simulation or consume events.
+    // Let the last queued model update paint before taking the baseline.
+    await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
     const snapshot=await canvas.evaluate(node=>({tick:node.dataset.simulationTick,detached:node.dataset.detachedObjects,moving:node.dataset.movingUnits,projectiles:node.dataset.projectiles,projectileClock:node.dataset.projectileClock}));
     await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
     expect(await canvas.evaluate(node=>({tick:node.dataset.simulationTick,detached:node.dataset.detachedObjects,moving:node.dataset.movingUnits,projectiles:node.dataset.projectiles,projectileClock:node.dataset.projectileClock}))).toEqual(snapshot);

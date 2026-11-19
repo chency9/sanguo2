@@ -1,19 +1,26 @@
-/** Domestic rules from the pinned 1.05+ executable. The Web world adapter does
- * not yet reproduce SearchTalk, autonomy, historical events or native lists. */
+/** Domestic rules from the pinned 1.05+ executable. System.SO presentation,
+ * annual historical events and the complete AI annual chain remain separate. */
 import type {ScenarioDefinition} from '@sango2/content';
 import type {Session} from './index';
 import {nativeBelow,type NativeRandomState} from './native-strategic-ai';
 import {allocateBattleTroops,nativeTroopCapacity} from './native-troops';
+import {createDomesticSearch,ensureDomesticSearch,developDomesticOfficer,searchDomesticOfficer,domesticSearchMessage,runDomesticAutonomy,type DomesticSearchState} from './native-policy-actions';
+import {officerLevel} from './native-progression';
+import type {AutonomyMode} from './native-policy-search';
 
 export interface DomesticResult {year:number;cityId:string;generalId:string;population:number;defense:number;reportedPopulation:number;reportedDefense:number}
 export interface DomesticState {
   version:1;year:number;active:boolean;acted:string[];
   governors:Record<string,string|null>;results:DomesticResult[];
+  search?:DomesticSearchState;
 }
 export type DomesticCommand =
   | {type:'policy-enable'}
   | {type:'policy-finish'}
   | {type:'policy-develop';cityId:string;generalIds:string[]}
+  | {type:'policy-search';cityId:string;generalIds:string[]}
+  | {type:'policy-autonomy-set';cityId:string;mode:AutonomyMode}
+  | {type:'policy-autonomy-run'}
   | {type:'policy-governor';cityId:string;generalId:string}
   | {type:'policy-recruit';cityId:string;generalId:string;amount:number};
 export interface DevelopmentInput {population:number;defense:number;isPass:boolean;strength:number;intelligence:number;governorIntelligence:number}
@@ -51,8 +58,9 @@ export function policyGovernorId(s:Session,scene:ScenarioDefinition,cityId:strin
 export function refreshPolicyGovernors(s:Session,scene:ScenarioDefinition) {
   if(s.policy)for(const c of scene.cities)s.policy.governors[c.id]=policyGovernorId(s,scene,c.id);
 }
-export function createDomesticState(s:Session,scene:ScenarioDefinition):DomesticState {
+export function createDomesticState(s:Session,scene:ScenarioDefinition,items:readonly Record<string,string>[]=[]):DomesticState {
   return {version:1,year:scene.year+Math.floor(s.day/360),active:true,acted:[],results:[],
+    search:createDomesticSearch(s,scene,items),
     governors:Object.fromEntries(scene.cities.map(c=>[c.id,policyGovernorId(s,scene,c.id)]))};
 }
 /** Do not migrate legacy sessions silently: this marker also selects native
@@ -64,10 +72,10 @@ export function beginDomesticYear(s:Session,scene:ScenarioDefinition):boolean {
   for(const def of scene.cities)s.cities[def.id].money+=nativeAnnualRevenue(s.cities[def.id].population,def.nativeFlags===2);
   return true;
 }
-export function executeDomestic(s:Session,scene:ScenarioDefinition,command:DomesticCommand):string {
+export function executeDomestic(s:Session,scene:ScenarioDefinition,command:DomesticCommand,items:readonly Record<string,string>[]=[]):string {
   if(command.type==='policy-enable') {
     if(s.policy)throw new Error('此局已启用年度内政。');
-    s.policy=createDomesticState(s,scene);
+    s.policy=createDomesticState(s,scene,items);
     return '已启用年度内政，现有资源、兵员和进度已保留。';
   }
   const p=s.policy;if(!p)throw new Error('请先启用年度内政。');
@@ -75,17 +83,30 @@ export function executeDomestic(s:Session,scene:ScenarioDefinition,command:Domes
     if(!p.active)throw new Error('本年内政已经结束。');
     p.active=false;return `${p.year}年内政終了，返回征战。`;
   }
+  if(command.type==='policy-autonomy-run') {
+    if(!p.active)throw new Error('本年内政已经结束，下一年度可再执行。');
+    if(!s.nativeAI)throw new Error('当前缺少征战状态。');
+    const search=ensureDomesticSearch(s,scene,items);
+    if(!scene.cities.some(c=>s.cities[c.id].ownerId===s.factionId&&search.autonomy[c.id]!==0))throw new Error('请先为城池设置自治方针。');
+    const count=runDomesticAutonomy(s,scene,items);return `自治施行完毕，共${count}将执行开发或搜索。`;
+  }
   const city=s.cities[command.cityId],def=scene.cities.find(c=>c.id===command.cityId);
   if(!city||!def||city.ownerId!==s.factionId)throw new Error('只能在我方城池执行此命令。');
   const ids=stationed(s,command.cityId);
+  if(command.type==='policy-autonomy-set') {
+    if(!p.active)throw new Error('本年内政已经结束，下一年度可再执行。');
+    if(!Number.isInteger(command.mode)||command.mode<0||command.mode>4)throw new Error('自治方针无效。');
+    ensureDomesticSearch(s,scene,items).autonomy[command.cityId]=command.mode;
+    return `${def.name}自治方针已保存。`;
+  }
   if(!ids.length)throw new Error('城中须有我方在任武将。');
   if(command.type==='policy-recruit') {
     if(!ids.includes(command.generalId))throw new Error('请选择本城在任武将。');
     const g=s.generals[command.generalId],officer=scene.generals.find(g=>g.id===command.generalId)!;
-    const cap=nativeTroopCapacity(officer.level??20),maximum=Math.max(0,cap.active)+cap.reserve;
+    const level=officerLevel(g,officer),cap=nativeTroopCapacity(level),maximum=Math.max(0,cap.active)+cap.reserve;
     if(!Number.isInteger(command.amount)||command.amount<1||command.amount>maximum-g.troops)throw new Error('配兵数量超出武将统兵上限。');
     if(!s.nativeAI||command.amount>s.nativeAI.reserves[command.cityId])throw new Error('城中预备兵不足，请等待城内征募。');
-    const slots=allocateBattleTroops(g.troops,officer.level??20,g.troopSlots),active=Math.min(command.amount,Math.max(0,cap.active)-slots.active);
+    const slots=allocateBattleTroops(g.troops,level,g.troopSlots),active=Math.min(command.amount,Math.max(0,cap.active)-slots.active);
     g.troopSlots={active:slots.active+active,reserve:slots.reserve+command.amount-active};
     g.troops+=command.amount;city.troops+=command.amount;s.nativeAI.reserves[command.cityId]-=command.amount;
     return `${def.name}为${officer.name}补充${command.amount}兵，取自城内预备池。`;
@@ -98,19 +119,19 @@ export function executeDomestic(s:Session,scene:ScenarioDefinition,command:Domes
   }
   if(!Array.isArray(command.generalIds)||!command.generalIds.length||new Set(command.generalIds).size!==command.generalIds.length||command.generalIds.some(id=>!ids.includes(id)))throw new Error('请选择本城尚未行动的武将。');
   if(command.generalIds.some(id=>p.acted.includes(id)))throw new Error('所选武将本轮已行动，请选择尚未行动的武将。');
+  if(command.type==='policy-search') {
+    if(!s.nativeAI)throw new Error('当前缺少征战状态。');
+    const order=ensureDomesticSearch(s,scene,items).residentOrder[command.cityId].filter(id=>command.generalIds.includes(id));
+    const messages=order.map(id=>domesticSearchMessage(searchDomesticOfficer(s,scene,command.cityId,id,items),scene,items));
+    return messages.length<=3?messages.join(' '):`${def.name}${messages.length}将完成搜索，详见搜索报告。`;
+  }
   const governor=policyGovernorId(s,scene,command.cityId);
   if(!governor||!s.nativeAI)throw new Error('当前城池缺少太守或征战状态。');
   let people=0,wall=0;
-  // Caller selection is normalized to roster order; checkbox click order cannot
-  // alter which officer consumes each RNG draw. Native list reconstruction is pending.
-  for(const id of ids.filter(id=>command.generalIds.includes(id))) {
-    const actor=scene.generals.find(g=>g.id===id)!;
-    const result=nativeDevelop({population:city.population,defense:city.defense,isPass:def.nativeFlags===2,
-      strength:actor.strength,intelligence:actor.intelligence,governorIntelligence:scene.generals.find(g=>g.id===governor)!.intelligence},s.nativeAI.rng);
-    const population=result.population-city.population,defense=result.defense-city.defense;
-    city.population=result.population;city.defense=result.defense;people+=population;wall+=defense;
-    p.acted.push(id);p.results.unshift({year:p.year,cityId:command.cityId,generalId:id,population,defense,reportedPopulation:result.reportedPopulation,reportedDefense:result.reportedDefense});
+  // The original city list uses head insertion (0x4056B7). Normalize click
+  // selection to that order, including officers joined during this council.
+  for(const id of ensureDomesticSearch(s,scene,items).residentOrder[command.cityId].filter(id=>command.generalIds.includes(id))) {
+    const result=developDomesticOfficer(s,scene,command.cityId,id);people+=result.population;wall+=result.defense;
   }
-  p.results.length=Math.min(100,p.results.length);
   return `${def.name}${command.generalIds.length}将完成开发：人口增加${people}，城防增加${wall}。`;
 }

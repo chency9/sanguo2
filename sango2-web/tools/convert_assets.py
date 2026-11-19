@@ -248,6 +248,7 @@ def main():
             if name in faction_id:return faction_id[name]
             return f'f-{int(name):02}' if name.isdigit() and 1<=int(name)<=len(factions) else None
         scene={'id':f'scenario-{n}','title':system['TIME'],'year':number(system['YEAR']),
+               'initialization':'native-105plus',
                'factions':[],'cities':[],'roads':[],'generals':[]}
         for i,f in enumerate(factions):
             scene['factions'].append({'id':faction_id[f['NAME']],'name':f['NAME'],'leaderId':general_id.get(f['NAME']),
@@ -257,7 +258,7 @@ def main():
             scene['cities'].append({'id':city_id[c['NAME']],'name':c['NAME'],'ownerId':faction(c.get('KING','')),
                 'governorId':general_id.get(c.get('MAJOR','')),'position':list(map(int,c['POS'].split())),
                 'money':number(c['MONEY']),'population':number(c['POPULATION']),'defense':number(c['DEFENSE']),
-                'nativeFlags':number(c.get('FLAGS','0'))})
+                'nativeFlags':number(c.get('FLAGS','0')),'searchCategory':number(c.get('RATE'),3) if 1<=number(c.get('RATE'),3)<=5 else 3})
         for g in generals:
             city=next((c for c in cities if c['NAME']==g.get('CITY')),None)
             fields=general_entries[g['_line']]
@@ -269,6 +270,9 @@ def main():
                 'intelligence':number(g.get('INT')),'hp':hp,'mp':mp,'baseHp':base_hp,'baseMp':base_mp,'level':level,
                 'speed':equipment_speed(level,[speed_items[g[key]] for key in ['WEAPON','HORSE','THING'] if g.get(key) in speed_items]),
                 'loyalty':number(g.get('LOYAL')),'status':g['STATUS'],'cityId':city_id.get(g.get('CITY','')),
+                # 0x42D4C2 literally reads LOYAL as a faction NAME, not LOYALKING.
+                # Numeric LOYAL values in this pack therefore resolve to null.
+                'loyalFactionId':faction_id.get(g.get('LOYAL','')),
                 'ownerId':faction(city.get('KING','')) if city and g['STATUS']=='登' else None,
                 'weapon':g.get('WEAPON',''),'horse':g.get('HORSE',''),'item':g.get('THING',''),
                 'appearance':appearance(g),'bodyType':number(g.get('TYPE')),'baseExperience':number(g.get('BASEEXP')),

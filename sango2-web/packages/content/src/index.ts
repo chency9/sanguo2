@@ -5,7 +5,7 @@ export interface FactionDefinition {
 export interface CityDefinition {
   id: string; name: string; ownerId: string | null; governorId: string | null;
   position: [number, number]; money: number; population: number; defense: number;
-  nativeFlags?:number;
+  nativeFlags?:number;searchCategory?:number;
 }
 export interface RoadDefinition {
   id: string; from: string; to: string; length: number; points: [number, number][]; restricted: boolean;
@@ -23,11 +23,13 @@ export interface GeneralDefinition {
   weapon: string; horse: string; item: string; unit: string; formations: string[];
   rawSkill: string; rawStrategy: string; sourceLine: number;
   appearance?: CombatAppearance; bodyType?: number; baseExperience?: number;
+  loyalFactionId?:string|null;
   level?:number; baseHp?:number; baseMp?:number; speed?:number; skillLearnset?:SkillLearning[]; strategyLearnset?:SkillLearning[];
 }
 export interface ScenarioDefinition {
   id: string; title: string; year: number; factions: FactionDefinition[];
   cities: CityDefinition[]; roads: RoadDefinition[]; generals: GeneralDefinition[];
+  initialization?:'native-105plus';
 }
 export interface TerrainDefinition {
   id:number; name:string; soundtrack:number; sourceLine:number; floor:string;
@@ -64,6 +66,9 @@ export function validateContent(value: unknown): asserts value is GameContent {
       if (list.some(x => typeof x.id !== 'string') || new Set(list.map(x => x.id)).size !== list.length) throw new Error('资料中存在重复编号。');
     }
     const cities = new Set(s.cities.map(c => c.id));
+    if(s.initialization!==undefined&&s.initialization!=='native-105plus')throw new Error('剧本初始化规则无效。');
+    if(s.cities.some(c=>c.searchCategory!==undefined&&(!Number.isInteger(c.searchCategory)||c.searchCategory<1||c.searchCategory>5)))throw new Error('城池搜索类别无效。');
+    if(s.generals.some(g=>g.loyalFactionId!==undefined&&g.loyalFactionId!==null&&!s.factions.some(f=>f.id===g.loyalFactionId)))throw new Error('武将情义势力资料无效。');
     if(s.generals.some(g=>g.speed!==undefined&&(!Number.isInteger(g.speed)||g.speed < -32768||g.speed>32767)))throw new Error('武将速度资料无效。');
     if (s.roads.some(r => !cities.has(r.from) || !cities.has(r.to) || !Number.isFinite(r.length) || r.points.length < 2)) throw new Error('道路资料无效。');
   }

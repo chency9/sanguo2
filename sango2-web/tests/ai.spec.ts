@@ -36,7 +36,7 @@ test('enemy invasion warns the player, opens a defensive battle and preserves th
   await expect(page.getByText('敌军来袭 · 我军守城', {exact:true})).toBeVisible();
   await expect(page.getByTestId('battle-attacker-troops')).toHaveText('10');
   await page.getByRole('button',{name:'两军名册'}).click();
-  await expect(page.getByRole('region',{name:'我军兵员'}).getByText('在场 10 · 现役 10 · 预备 0 · 超编留营 70',{exact:true})).toBeVisible();
+  await expect(page.getByRole('region',{name:'我军兵员'}).getByText('在场 10 · 现役 10 · 预备 0',{exact:true})).toBeVisible();
   await page.getByRole('button',{name:'两军名册'}).click();
   await page.getByRole('button',{name:'擂鼓开战'}).click();
   await page.getByRole('button',{name:'战中存档'}).click();
