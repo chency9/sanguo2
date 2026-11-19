@@ -53,13 +53,27 @@ for(const [sequence,object,width] of [[2,13001,1440],[13,13003,1440],[52,13001,3
     const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
     const scene=new NativeMagicScreen(page);await scene.open(sequence);await scene.cast(sequence);
     await expect(scene.canvas).toHaveAttribute('data-magic-object',String(object));
+    await expect(scene.canvas).toHaveAttribute('data-camera-owner','script');
+    await expect(page.getByRole('button',{name:'敌军主将',exact:true})).toBeDisabled();
+    const projected=await scene.canvas.evaluate(node=>({x:Number(node.dataset.cameraX),y:Number(node.dataset.cameraY)}));
+    expect(projected).toEqual(JSON.parse((await scene.canvas.getAttribute('data-script-camera'))!));
     await expect.poll(()=>page.evaluate(id=>(window as unknown as {nativeMagicDraws:Record<string,number>}).nativeMagicDraws[id]??0,object)).toBeGreaterThan(0);
     expect(await page.evaluate(id=>(window as unknown as {nativeMagicBlends:Record<string,string>}).nativeMagicBlends[id],object)).toBe(object===13003?'screen':'source-over');
     const snapshot=await scene.canvas.evaluate(node=>({phase:node.dataset.magicScriptPhase,age:node.dataset.magicScriptAge,weaponAge:node.dataset.magicWeaponAge,tick:node.dataset.simulationTick}));
     await page.getByLabel('战场视距').selectOption('0.65');
     await expect(scene.canvas).toHaveAttribute('data-camera-zoom','0.65');
+    const surface=page.getByRole('group',{name:'拖动战场镜头',exact:true});
+    await expect(surface).toHaveAttribute('aria-disabled','true');
+    await surface.dispatchEvent('keydown',{key:'ArrowRight',bubbles:true});
+    await page.getByRole('img',{name:'战场兵力分布'}).click({position:{x:10,y:10}});
+    expect(await scene.canvas.evaluate(node=>({x:Number(node.dataset.cameraX),y:Number(node.dataset.cameraY)}))).toEqual(projected);
     expect(await scene.canvas.evaluate(node=>({phase:node.dataset.magicScriptPhase,age:node.dataset.magicScriptAge,weaponAge:node.dataset.magicWeaponAge,tick:node.dataset.simulationTick}))).toEqual(snapshot);
     await page.screenshot({path:`docs/screenshots/native-magic-${sequence}-${width}.png`});
+    await page.getByRole('button',{name:'继续战斗',exact:true}).click();
+    await expect.poll(async()=>Number(await scene.canvas.getAttribute('data-camera-x'))).not.toBe(projected.x);
+    await expect(scene.canvas).toHaveAttribute('data-magic-script-kind','idle',{timeout:20000});
+    await expect(scene.canvas).toHaveAttribute('data-camera-owner','normal');
+    await expect(page.getByRole('button',{name:'敌军主将',exact:true})).toBeEnabled();
     expect(errors).toEqual([]);
   });
 }

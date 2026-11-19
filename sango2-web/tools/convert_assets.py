@@ -13,7 +13,7 @@ import shutil
 import struct
 from io import BytesIO
 from PIL import Image
-from native_general import initial_level, initial_vitals, learning_entries
+from native_general import initial_level, initial_vitals, learning_entries, equipment_speed
 from native_animation import attack_frames, attack_timeline
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -235,6 +235,7 @@ def main():
             if str(result[key]) not in animations:raise ValueError(f'Unknown {key}: {result[key]}')
         return result
     scenarios=[]
+    speed_items={item['NAME']:{'level':number(item.get('LEVEL'),1),'speed':number(item.get('SPEED'))} for item in rows(ini('SANGO.INI'),'ITEM')}
     for n in range(1,6):
         records=ini(f'TIMES{n}.INI')
         system=rows(records,'SYSTEM')[0]
@@ -266,6 +267,7 @@ def main():
             scene['generals'].append({'id':general_id[g['NAME']],'name':g['NAME'],
                 'portrait':f"portraits/{g['FACE'][-3:]}.png",'strength':number(g.get('STR')),
                 'intelligence':number(g.get('INT')),'hp':hp,'mp':mp,'baseHp':base_hp,'baseMp':base_mp,'level':level,
+                'speed':equipment_speed(level,[speed_items[g[key]] for key in ['WEAPON','HORSE','THING'] if g.get(key) in speed_items]),
                 'loyalty':number(g.get('LOYAL')),'status':g['STATUS'],'cityId':city_id.get(g.get('CITY','')),
                 'ownerId':faction(city.get('KING','')) if city and g['STATUS']=='登' else None,
                 'weapon':g.get('WEAPON',''),'horse':g.get('HORSE',''),'item':g.get('THING',''),

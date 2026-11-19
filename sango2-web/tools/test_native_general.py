@@ -1,8 +1,17 @@
 import unittest
-from native_general import experience_threshold, initial_level, initial_vitals, learning_entries
+import json
+from pathlib import Path
+from native_general import experience_threshold, initial_level, initial_vitals, learning_entries, equipment_speed
 
 
 class NativeGeneralTests(unittest.TestCase):
+    def test_equipment_speed_against_original_exe(self):
+        path=Path(__file__).resolve().parents[1]/'packages/core/fixtures/native-general-speed-vectors.json'
+        for row in json.loads(path.read_text(encoding='utf8'))['cases']:
+            spec=row['input']
+            with self.subTest(spec=spec):
+                self.assertEqual(equipment_speed(spec['level'],spec['items'],spec['speed']),row['native'])
+
     def test_real_scenario_experience_levels(self):
         self.assertEqual([initial_level(x) for x in [200, 800, 2000, 3800]], [2, 4, 6, 8])
         self.assertEqual(experience_threshold(3), 377)

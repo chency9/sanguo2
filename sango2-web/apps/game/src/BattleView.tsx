@@ -3,7 +3,7 @@ import {BattleCameraControls,resolveBattleCamera,type BattleCameraState} from '.
 import { useEffect, useRef, useState } from 'react';
 import type { TerrainDefinition } from '@sango2/content';
 import { BattleHud } from './BattleHud';
-import {battleAttackAction,nativeAttackFrame,nativeProjectileObject,formationLabel} from '@sango2/core';
+import {battleAttackAction,nativeAttackFrame,nativeProjectileObject,formationLabel,battleScriptCameraLocked} from '@sango2/core';
 import {battleScenePoints,battleEffectScenePoints,battleGroundTextureSpans,battleScenerySpans,nativeProject,nativeDepth,nativeSceneryCrop,nativeSpriteScale,nativeSpriteFacing,nativeGroundBands,NATIVE_INITIAL_CAMERA,type NativeWorldPoint} from '@sango2/core';
 import {BattleStrategyDialog} from './BattleStrategyDialog';
 import { battleStepDuration, SOURCE_TICKS_PER_STEP, NATIVE_MAGIC, commanderMagicSequences, battleSkillUnavailable, battleGeneral, battleSurvivors, battleFieldTroops, battleTroopScale, battleCasualtyPosition, battleDetachedPosition, nativeDetachedObject, battleTeamSurvivors, availableCommanders, availableFormations, isNativeFormation, type BattleState, type BattleCommand, type BattleUnit, type Division, type Formation } from '@sango2/core';
@@ -200,6 +200,8 @@ export function BattleView(props:Props) {
       node.dataset.spriteScaleX=String(sceneScale);node.dataset.spriteScaleY=String(sceneScale);
       node.dataset.cssScale=String(scale/ratio);
       node.dataset.projection=nativeScene?'native-perspective-v1':'legacy';node.dataset.cameraX=String(viewCamera.x);node.dataset.cameraY=String(viewCamera.y);node.dataset.cameraZoom=String(camera.current.zoom);
+      node.dataset.cameraOwner=battleScriptCameraLocked(b)?'script':'normal';
+      node.dataset.scriptCamera=b.activeScript?.kind==='native-shoot'?JSON.stringify(b.activeScript.runtime.camera??null):'null';
       const general=b.units.find(u=>u.side==='attacker'&&u.general)!,gp=unitPosition(general);
       node.dataset.generalScreen=JSON.stringify({x:(sceneX+gp.x*sceneScale)/ratio,y:(sceneY+gp.y*sceneScale)/ratio});
       node.dataset.scenery=sceneryKey;
@@ -442,7 +444,7 @@ export function BattleView(props:Props) {
   const knownSkills=commanderMagicSequences(b.commanders.attacker.rawSkill,b.commanders.attacker.level,b.commanders.attacker.skillLearnset);
   return <main ref={battleRoot} className="battle-screen" data-phase={b.phase}>
     <header ref={heading} className="battle-heading"><div><span>{props.training?'校场演武':b.invasionSide==='defender'?'敌军来袭 · 我军守城':'我军攻城'}</span><h1 ref={title} tabIndex={-1}>{props.cityName}之战</h1></div><div><button onClick={()=>setPaused(p=>!p)} disabled={b.phase!=='fighting'||!ready}>{paused?'继续战斗':'暂停战斗'}</button><select aria-label="战场速度" value={speed} onChange={e=>setSpeed(Number(e.target.value))}><option value="1">正常速度</option><option value="2">二倍速</option><option value="4">四倍速</option></select><button disabled={props.training} onClick={()=>{setPaused(true);props.onSave();}}>战中存档</button><button type="button" disabled={!document.fullscreenEnabled} onClick={()=>void toggleFullscreen()}>{isFullscreen?'退出全屏':'全屏战场'}</button><button type="button" aria-pressed={props.music} onClick={props.onMusic}>{props.music?'音乐开':'音乐关'}</button><button type="button" aria-expanded={showRoster} onClick={()=>{setPaused(true);setShowRoster(v=>!v);}}>两军名册</button>{props.training&&<button onClick={props.onLeave}>返回地图</button>}</div>{b.deploymentRules==='native-tables-v1'&&ready&&<BattleCameraControls toolbar camera={camera} battle={b} onChange={()=>refreshCamera(n=>n+1)}/>}</header>
-    <div ref={hud} className="battle-hud-wrap"><BattleHud battle={b} camera={resolveBattleCamera(b,camera.current)} onLocate={(x,y)=>{Object.assign(camera.current,{x,y,follow:null});refreshCamera(n=>n+1);}}/></div>
+    <div ref={hud} className="battle-hud-wrap"><BattleHud battle={b} camera={resolveBattleCamera(b,camera.current)} onLocate={battleScriptCameraLocked(b)?undefined:(x,y)=>{Object.assign(camera.current,{x,y,follow:null});refreshCamera(n=>n+1);}}/></div>
     {fullscreenError&&<p className="fullscreen-notice" role="status">{fullscreenError}<button onClick={()=>setFullscreenError('')} aria-label="关闭全屏提示">×</button></p>}
     {showRoster&&<section className="battle-rosters" aria-label="两军出阵名册">
       {(['attacker','defender'] as const).map(side=><div key={side} role="region" aria-label={side==='attacker'?'我军兵员':'敌军兵员'}><h3>{side==='attacker'?'我军':'敌军'} · 第 {b.round} 阵 <span>全队余兵 {battleTeamSurvivors(b,side)}</span></h3>{b.troopDeployment&&<p>在场 {battleFieldTroops(b,side)} · 现役 {b.units.filter(u=>u.side===side&&!u.general&&u.hp>0&&!u.escaped&&!u.nativeReserve).length} · 预备 {b.units.filter(u=>u.side===side&&!u.general&&u.hp>0&&!u.escaped&&u.nativeReserve).length}{b.reserves[side]>0?` · 超编留营 ${b.reserves[side]}`:''}</p>}<div className="battle-roster-list">{b.rosters[side].map(m=>{

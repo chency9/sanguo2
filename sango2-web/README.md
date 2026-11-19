@@ -45,6 +45,8 @@ pnpm dev
 - `packages/core/src/battle.ts`：固定步长战斗与轮战接入。
 - `packages/core/src/native-*.ts`：原版规则纯函数。
 - `packages/core/src/battle-native-magic.ts`：四种 ShootObject 技能的实战适配。
+- `packages/core/src/native-magic-camera.ts`：原脚本锁定与返回镜头的整数轨迹。
+- `packages/core/src/native-general-tick.ts`：主将逐源集气、撤退与军师恢复。
 - `packages/core/fixtures/`：原机器码和 SO 脚本的对照样本。
 - `tools/convert_assets.py`：资源转换；Python 依赖见 `tools/requirements.txt`。
 
@@ -52,9 +54,11 @@ pnpm dev
 
 ## 本轮验证与证据
 
-2026-11-19：33 个测试文件、11,445 项核心测试、44 个 Chromium 场景、4 项 Python 测试通过；类型检查与生产构建通过。
+2026-11-19：37 个测试文件、12,251 项核心测试、44 个 Chromium 场景、5 项 Python 测试通过；类型检查与生产构建通过。Python 速度测试包含 698 组原码样本。
 
 - [四种飞行武将技：规则、原码对照与限制](docs/NATIVE-MAGIC-SHOOT-PARITY-2026-11-19.md)
+- [主将源更新、装备速度、技能镜头](docs/NATIVE-GENERAL-CAMERA-PARITY-2026-11-19.md)
+- [当前全范围差距](docs/PARITY-STATUS-2026-11-19.md) · [110 技能逐项清单](docs/MAGIC-COVERAGE-2026-11-19.md)
 - [原版 AI 的已验证范围及全局差距](docs/NATIVE-AI-PARITY-2026-11-17.md)
 - [战场渲染与存档边界](docs/BATTLE-RENDER-AUDIT-2026-11-19.md)
 - [命令原始日志](docs/evidence/commands/)

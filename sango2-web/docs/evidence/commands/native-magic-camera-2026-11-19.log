@@ -1,0 +1,9 @@
+
+ RUN  v5.1.0 E:/code/games/sanguo2/sango2-web
+
+
+ Test Files  3 passed (3)
+      Tests  180 passed (180)
+   Start at  09:31:03
+   Duration  526ms (tests 56%, transform 22%, import 21%, worker 1%)
+

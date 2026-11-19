@@ -1,6 +1,7 @@
 """1.05+ initialization, transcribed from the static EXE export.
 
-No equipment effects or post-battle experience awards are inferred here.
+Equipment SPEED follows the original level gate. Other equipment effects and
+post-battle experience awards are outside this module.
 """
 
 
@@ -23,6 +24,15 @@ def initial_vitals(base_hp, base_mp, strength, intelligence, level):
     hp = min(32767, max(base_hp, base_hp + int(strength * 2 * level / 100)))
     mp = min(32767, max(base_mp, base_mp + int(mp_stat * 2 * level / 100)))
     return hp, mp
+
+
+def equipment_speed(level, equipment, speed=0):
+    # 0x4067B0 zeroes officer memory. 0x42D1A3 applies WEAPON, HORSE, THING
+    # through 0x4088FA, which adds the item's signed SPEED only at LEVEL.
+    for item in equipment:
+        if level >= item['level']:
+            speed = (speed + item['speed'] + 32768) % 65536 - 32768
+    return speed
 
 
 def learning_entries(entries, key):

@@ -53,7 +53,8 @@ describe('source ShootObject skills in actual battle snapshots',()=>{
     until(b,()=>!!shot(b).runtime.weapon&&shot(b).runtime.weapon!.x>(35*96-50)*65536);
     b.commanders.defender.charge=120000;
     until(b,()=>battleGeneral(b,'defender').hp<100,5);
-    expect(b.commanders.defender.charge).toBe(60000);validateBattle(b);
+    // The hit occurs before this group's final two general source updates.
+    expect(b.commanders.defender.charge).toBe(60160);validateBattle(b);
   });
   it('鬼戟 kills crossed soldiers and can continue to hit the enemy general',()=>{
     let b=ready(59,3);

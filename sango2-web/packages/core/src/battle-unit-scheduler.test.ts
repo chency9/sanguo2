@@ -8,7 +8,7 @@ function ready(unit='刀',troops=1):BattleState {
   const commander=(id:string)=>({id,name:id,portrait:'',strength:80,intelligence:80,hp:100,mp:40,unit,level:20});
   const b=commandBattle(createBattle({id:'source-clock',attacker:commander('a'),defender:commander('d'),attackingTroops:troops,defendingTroops:troops,seed:184}),{type:'start'});
   // Clock regression fixtures retain the pre-native-animation hit timings.
-  delete b.nativeCommands;delete b.attackRules;delete b.projectileRules;delete b.projectiles;delete b.magicRules;
+  delete b.nativeCommands;delete b.attackRules;delete b.projectileRules;delete b.projectiles;delete b.magicRules;delete b.generalRules;delete b.cameraRules;
   prepareBattleMovement(b);b.opponentAI!.countdown=60;
   for(const u of b.units){u.order='hold';u.movement!.clock!.decision=10000;}
   return b;

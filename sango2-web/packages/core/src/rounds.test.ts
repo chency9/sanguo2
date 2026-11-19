@@ -57,7 +57,7 @@ describe('successive commander encounters',()=>{
   it.each(['native-grid-v2','native-grid-v3'] as const)('triggers damage once with the saved %s event clock',rules=>{
     const a=commander('a');a.appearance={body:600,weapon:700,horse:900,soldier:100,generalAttack:{hitTick:6,ticks:30},soldierAttack:{hitTick:6,ticks:30}};
     const b=commandBattle(createBattle({id:'events',attacker:a,defender:commander('d'),attackingTroops:0,defendingTroops:0,seed:1}),{type:'start'});
-    delete b.deploymentRules;b.movementRules=rules;delete b.attackRules;delete b.projectileRules;delete b.projectiles;delete b.magicRules; // Saved legacy appearance timings.
+    delete b.deploymentRules;b.movementRules=rules;delete b.attackRules;delete b.projectileRules;delete b.projectiles;delete b.magicRules;delete b.generalRules;delete b.cameraRules; // Saved legacy appearance timings.
     battleGeneral(b,'attacker').x=500;battleGeneral(b,'defender').x=520;
     tickBattle(b);expect(battleGeneral(b,'defender').hp).toBe(80);
     tickBattle(b);if(rules==='native-grid-v2'){expect(battleGeneral(b,'defender').hp).toBe(80);tickBattle(b);}

@@ -22,6 +22,7 @@ import {nativeCanAdvance,NATIVE_COMMAND_LABELS} from './native-commands';
 import type {NativeWorldPoint} from './native-projection';
 import {nativeCreateMagicShoot,nativeShootDefinition,type NativeMagicShoot} from './native-magic-shoot';
 import {advanceBattleNativeMagic,battleMagicLocked,validateBattleNativeMagic} from './battle-native-magic';
+import {advanceBattleGeneral} from './battle-general-tick';
 export {NATIVE_COMMAND_LABELS} from './native-commands';
 export {FORMATION_OPTIONS,NATIVE_FORMATIONS,formationDefinition,formationLabel,formationToNativeIndex,nativeFormationMask,nativeIndexToFormation,availableFormations,canUseFormation,isNativeFormation} from './battle-formations';
 export {battleAttackAction,nativeAttackFrame} from './native-attack-animation';
@@ -46,7 +47,7 @@ export type BattleSide = 'attacker' | 'defender';
 export type Order = 'advance' | 'hold' | 'retreat';
 export type Division = 'all' | 'front' | 'rear' | 'general';
 export type {Formation} from './battle-formations';
-export interface BattleCommander extends Partial<NativeOfficerCondition> { id: string; name: string; portrait: string; strength: number; intelligence: number; hp: number; mp: number; unit: string; rawSkill?:string; rawStrategy?:string;level?:number; skillLearnset?:SkillLearning[];strategyLearnset?:SkillLearning[]; maxHp?:number; charge?:number; maxMp?:number; appearance?:CombatAppearance;formations?:string[] }
+export interface BattleCommander extends Partial<NativeOfficerCondition> { id: string; name: string; portrait: string; strength: number; intelligence: number; hp: number; mp: number; unit: string; rawSkill?:string; rawStrategy?:string;level?:number; speed?:number; skillLearnset?:SkillLearning[];strategyLearnset?:SkillLearning[]; maxHp?:number; charge?:number; maxMp?:number; appearance?:CombatAppearance;formations?:string[] }
 export interface BattleMember { commander:BattleCommander; troops:number; withdrawn:boolean;troopSlots?:TroopSlots }
 export interface RoundReport { round:number; attackerId:string; defenderId:string; winner:BattleSide; reason:string }
 export interface BattleUnit {
@@ -116,6 +117,9 @@ export interface BattleState {
   projectileRules?:'native-projectiles-v1';
   /** Missing in old battles: retain their previous magic timing and targeting. */
   magicRules?:'native-shoot-v1';
+  cameraRules?:'native-script-v1';
+  /** Existing saves retain grouped growth and their old retreat gauge. */
+  generalRules?:'native-source-v1';
   projectiles?:BattleProjectile[];
   detached?:BattleDetached[];
   strategies?:BattleStrategies;
@@ -367,6 +371,8 @@ export function createBattle(input: {id:string; armyId?:string; cityId?:string; 
   b.attackRules='native-actions-v1';
   b.projectileRules='native-projectiles-v1';b.projectiles=[];
   b.magicRules='native-shoot-v1';
+  b.cameraRules='native-script-v1';
+  b.generalRules='native-source-v1';
   b.troopDeployment={attacker:{active:0,reserve:0},defender:{active:0,reserve:0}};
   for(const side of ['attacker','defender'] as const) {
     const c=b.commanders[side],member=b.rosters[side].find(m=>m.commander.id===c.id);
@@ -684,7 +690,7 @@ export function tickBattle(b:BattleState,steps=1):void {
   for(let step=0;step<steps&&b.phase==='fighting';step++) {
     b.tick++;
     // EXE 0x43E72E/0x43E964: per-update increment, grouped in three updates.
-    for(const side of ['attacker','defender'] as const) {
+    if(!b.generalRules)for(const side of ['attacker','defender'] as const) {
       const c=b.commanders[side],g=battleGeneral(b,side);
       const effect=b.strategies?.effects[side];
       if(g.hp>0&&!g.escaped&&g.order!=='retreat')c.charge=Math.min(CHARGE_LIMIT,(c.charge??INITIAL_CHARGE)+SOURCE_TICKS_PER_STEP*chargeIncrement(c.strength,c.intelligence,effect&&(effect.flags&32)?effect.chargeModifier:0));
@@ -697,7 +703,7 @@ export function tickBattle(b:BattleState,steps=1):void {
     for(const e of b.effects)e.ticks--;
     b.effects=b.effects.filter(e=>e.ticks>0);
     if(b.movementRules==='native-grid-v3') {
-      updateBattleUnits(b,{sourceStep:()=>advanceBattleNativeMagic(b,(target,caster)=>beginBattleCasualty(b,target,caster,nativeUnitIndex(b.commanders[target.side]))),
+      updateBattleUnits(b,{sourceStep:()=>advanceBattleNativeMagic(b,(target,caster)=>beginBattleCasualty(b,target,caster,nativeUnitIndex(b.commanders[target.side]))),generalStep:u=>advanceBattleGeneral(b,u),
         unitType:u=>nativeUnitIndex(b.commanders[u.side]),hit:(u,target,forced,projectile)=>resolveBattleHit(b,u,target,forced,projectile),
         escaped:u=>{if(u.general)finish(b,opposite(u.side),`${b.commanders[u.side].name}撤离战场。`);}});
     } else {
@@ -819,6 +825,7 @@ export function validateBattle(value:unknown):asserts value is BattleState {
   }
   validateBattleCasualties(b,fail);
   validateBattleMovement(b,fail);
+  if(b.generalRules!==undefined&&(b.generalRules!=='native-source-v1'||b.movementRules!=='native-grid-v3'))fail();
   validateNativeCommands(b,fail);
   if(b.attackRules!==undefined&&(b.attackRules!=='native-actions-v1'||b.movementRules!=='native-grid-v3'))fail();
   for(const side of ['attacker','defender'] as const) {
@@ -840,7 +847,7 @@ export function validateBattle(value:unknown):asserts value is BattleState {
       if(m.troopSlots!==undefined&&(!m.troopSlots||!integer(m.troopSlots.active,Math.max(0,cap.active))||!integer(m.troopSlots.reserve,cap.reserve)||m.troopSlots.active+m.troopSlots.reserve>m.troops))return fail();
     }
     validateAppearance(c,fail);
-    if(c.charge!==undefined&&!integer(c.charge,CHARGE_LIMIT))return fail();
+    if(c.charge!==undefined&&(!Number.isInteger(c.charge)||c.charge>CHARGE_LIMIT||c.charge<(b.generalRules?-2147483648:0)))return fail();
     if(c.maxMp!==undefined&&(!integer(c.maxMp,10000)||c.mp>c.maxMp))return fail();
   }
   validateBattleAttackActions(b,fail);
@@ -892,6 +899,7 @@ export function validateBattle(value:unknown):asserts value is BattleState {
 }
 
 function validateAppearance(c:BattleCommander,fail:()=>never) {
+  if(c.speed!==undefined&&(!Number.isInteger(c.speed)||c.speed < -32768||c.speed>32767))fail();
   for(const key of ['morale','fatigue','loyalty'] as const)if(c[key]!==undefined&&(!Number.isInteger(c[key])||c[key]<0||c[key]>100))fail();
   if(c.formations!==undefined&&(!Array.isArray(c.formations)||c.formations.length>9||c.formations.some(f=>typeof f!=='string'||f.length>10)))fail();
   if(c.level!==undefined&&(!Number.isInteger(c.level)||c.level < -1||c.level>99))fail();

@@ -109,12 +109,12 @@ pnpm dev
 | --- | --- | --- |
 | 天下与内容 | 五剧本；每剧本 60 城、401 人物记录、116 道路；城池归属、内政、出征与战报 | 年度阶段、人才、装备、事件、统一结局及特殊道路 |
 | 战略与战术 AI | 原版候选、权重、性格、双字 RNG、冷却、出阵、阵形、战术与选技函数 | 完整状态与调用顺序、连续战役回放；电脑双方交战仍有暂定自动结算 |
-| 实时战斗 | 13 兵种、九阵、五分队军令、移动占格、普攻伤害、攻击命中帧、普通远程弹道、死亡与轮战 | 原混合对象链的完整调度、部分主将状态及非攻击动作 |
-| 武将技与军师技 | 学习表、集气、部分军师效果；落月弓、御飞刀、落日弓、鬼戟接入原 `ShootObject` 主流程 | 其余技能、完整视觉子协程、命中粒子、镜头、音效与随机调用链 |
+| 实时战斗 | 13 兵种、九阵、五分队军令、移动占格、普攻伤害、攻击命中帧、普通远程弹道、死亡与轮战；逐源集气/恢复、撤退扣气与坐骑速度 | 原混合对象链的完整调度、部分主将状态及非攻击动作；完整装备与成长 |
+| 武将技与军师技 | 学习表、集气、部分军师效果；落月弓、御飞刀、落日弓、鬼戟接入原 `ShootObject` 主流程及追踪/回镜头 | 106 个技能未完整移植，含 2 个仅有回血数值循环；完整视觉子协程、命中粒子、音效与随机调用链 |
 | 画面与操作 | 原素材面板、人物与坐骑；12 地形、24 组景色；原透视表、全屏、镜头与移动端适配 | DirectDraw 调色板逐像素对照、全部菜单与布局、战役地形自动匹配 |
 | 存档 | 三槽位、JSON、战中状态、旧 Web 存档迁移与规则版本兼容 | 原版 SAV、自动保存、云存档与离线安装 |
 
-本轮重点补齐了四种飞行武将技的起手时序、发射时坐标、固定点速度、占格碰撞、直接伤害、扣集气与淡出，并修复御飞刀白光对象的黑底。详细规则和证据边界见 [ShootObject 原码对照](sango2-web/docs/NATIVE-MAGIC-SHOOT-PARITY-2026-11-19.md)。
+最新补齐主将逐源集气/军师恢复、撤退每次扣 50 集气、装备速度对撤退的影响，以及四种飞行武将技的原脚本追踪和回镜头。详见 [本次规则与证据](sango2-web/docs/NATIVE-GENERAL-CAMERA-PARITY-2026-11-19.md)。[当前完整差距表](sango2-web/docs/PARITY-STATUS-2026-11-19.md) 和 [110 技能逐项清单](sango2-web/docs/MAGIC-COVERAGE-2026-11-19.md) 按实际执行路径记录进度。
 
 ## 技术实现
 
@@ -157,7 +157,7 @@ pnpm build
 pnpm preview
 ```
 
-2026-11-19 本地验证结果：**33 个核心测试文件、11,445 项测试通过；44 个 Chromium 场景通过；4 项 Python 测试通过；类型检查与生产构建通过。** 其中新增技能原码差分 207 项、战斗接入 27 项。数字为本次本地运行记录，不表示全局复刻验收或在线 CI 状态。
+2026-11-19 本地验证结果：**37 个核心测试文件、12,251 项测试通过；44 个 Chromium 场景通过；5 项 Python 测试通过；类型检查与生产构建通过。** 本次新增主将源更新 640 组、镜头轨迹 142 组原码差分；Python 另逐项核对 698 组原装备速度样本。数字为本次本地运行记录，不表示全局复刻验收或在线 CI 状态。
 
 [查看命令日志](sango2-web/docs/evidence/commands/) · [开发操作说明](sango2-web/README.md) · [历次开发记录](sango2-web/DEVELOPMENT-HISTORY.md)
 
@@ -169,7 +169,8 @@ pnpm preview
 | 核心 AI | [原版 AI 决策与验收边界](sango2-web/docs/NATIVE-AI-PARITY-2026-11-17.md) · [军师决策](sango2-web/docs/NATIVE-STRATEGIST-PARITY-2026-11-17.md) |
 | 战斗规则 | [普攻与强化](sango2-web/docs/NATIVE-COMBAT-PARITY-2026-11-17.md) · [单位时钟](sango2-web/docs/NATIVE-UNIT-CLOCK-PARITY-2026-11-17.md) · [分队与军令](sango2-web/docs/NATIVE-COMMAND-PARITY-2026-11-18.md) |
 | 战场呈现 | [原透视与镜头](sango2-web/docs/NATIVE-PROJECTION-CAMERA-PARITY-2026-11-18.md) · [渲染审查](sango2-web/docs/BATTLE-RENDER-AUDIT-2026-11-19.md) |
-| 本轮武将技 | [原脚本、碰撞、差分证据与剩余差距](sango2-web/docs/NATIVE-MAGIC-SHOOT-PARITY-2026-11-19.md) |
+| 最新源更新与镜头 | [主将、装备速度与技能镜头](sango2-web/docs/NATIVE-GENERAL-CAMERA-PARITY-2026-11-19.md) · [飞行技能主脚本与碰撞](sango2-web/docs/NATIVE-MAGIC-SHOOT-PARITY-2026-11-19.md) |
+| 完整差距核查 | [全范围当前状态](sango2-web/docs/PARITY-STATUS-2026-11-19.md) · [110 个技能逐项覆盖](sango2-web/docs/MAGIC-COVERAGE-2026-11-19.md) |
 
 研究文档中指向 `data/`、`previews/`、原始二进制证据的路径属于本地分析产物，不在公开仓库中；Web 内核的差分样本和测试源码随仓库提供。
 

@@ -8,13 +8,14 @@ import {launchBattleProjectile,advanceBattleProjectiles} from './battle-projecti
 
 export interface BattleUnitCallbacks {
   sourceStep?:()=>void;
+  generalStep?:(u:BattleUnit)=>void;
   unitType:(u:BattleUnit)=>number;
   hit:(u:BattleUnit,target:BattleUnit,forced:boolean,projectile:boolean)=>boolean|void;
   escaped:(u:BattleUnit)=>void;
 }
 /** Per-source-update unit clock/target adapter. Global AI, effects and casualty
- * lists still run in the outer three-update group; non-attack animations,
- * mixed object ordering and general movement-speed stats remain parity work. */
+ * lists still run in the outer three-update group; non-attack animations and
+ * mixed object ordering remain parity work. */
 export function updateBattleUnits(b:BattleState,callbacks:BattleUnitCallbacks):void {
   for(let step=0;step<3&&b.phase==='fighting';step++) {
     callbacks.sourceStep?.();
@@ -22,18 +23,22 @@ export function updateBattleUnits(b:BattleState,callbacks:BattleUnitCallbacks):v
     const context:BattleYieldContext={tick,active,update};
     function update(u:BattleUnit):void {
       const m=u.movement;
-      if(b.phase!=='fighting'||!m||u.hp<=0||u.escaped||m.updatedAt===tick||active.has(u.id))return;
+      if(b.phase!=='fighting'||!m||u.hp<=0&&(!b.generalRules||!u.general)||u.escaped||m.updatedAt===tick||active.has(u.id))return;
       const c=m.clock!;active.add(u.id);
       try {
+        if(u.general)callbacks.generalStep?.(u);
+        if(u.hp<=0)return;
         if(m.exiting) {
           integrate(u);if(m.remaining===0){u.escaped=true;callbacks.escaped(u);}return;
         }
         if(u.status&&u.status.until>b.tick) {
           m.vx=0;m.vy=0;u.action='wait';u.actionTick=0;u.target=null;c.actionAge=0;return;
         }
-        // General speed is not yet exposed by content/SAV conversion. Equal
-        // speeds are an explicit adapter, never fabricated officer statistics.
-        const result=nativeUnitDecision(c,{general:u.general,retreat:u.order==='retreat',speed:0,enemySpeed:0});
+        // 0x4429FD reads the officer's signed equipment speed. Old snapshots
+        // without the source-general rule keep their equal-speed adapter.
+        const speed=b.generalRules?b.commanders[u.side].speed??0:0;
+        const enemySpeed=b.generalRules?b.commanders[u.side==='attacker'?'defender':'attacker'].speed??0:0;
+        const result=nativeUnitDecision(c,{general:u.general,retreat:u.order==='retreat',speed,enemySpeed});
         if(result.stopped){m.vx=0;m.vy=0;u.action='wait';c.actionAge=0;}
         if(result.ready) {
           m.previousX=m.x;m.previousY=m.y;

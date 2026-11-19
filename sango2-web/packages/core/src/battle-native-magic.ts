@@ -2,6 +2,12 @@ import type {BattleState,BattleUnit} from './battle';
 import {battleMovementCell} from './battle-movement';
 import {nativeAdvanceMagicShoot,nativeAdvanceMagicWeapon,nativeMagicCollision,nativeMagicDirectHit,nativeMagicWeaponHit} from './native-magic-shoot';
 import {nativeMagicDefinition} from './native-magic-manifest';
+import {nativeCreateLockCamera,nativeAdvanceMagicCamera} from './native-magic-camera';
+
+/** 0x43BA59/0x441E61: normal camera management yields to spell scripts. */
+export function battleScriptCameraLocked(b:BattleState):boolean {
+  return b.cameraRules==='native-script-v1'&&b.activeScript?.kind==='native-shoot';
+}
 
 export function battleMagicLocked(b:BattleState,u:BattleUnit):boolean {
   return b.activeScript?.kind==='native-shoot'&&b.activeScript.casterId===u.id&&b.activeScript.runtime.casterLocked;
@@ -14,8 +20,15 @@ export function advanceBattleNativeMagic(b:BattleState,death:(target:BattleUnit,
   // Hosts 261/262 read the caster at source update 40; host 21 attaches to
   // its current full fixed-point coordinates at update 70, not cast time.
   if(!s.weapon)s.origin={x:caster.movement!.px,y:caster.movement!.py,z:0};
-  nativeAdvanceMagicShoot(s,b.opponentAI!.rng);
+  nativeAdvanceMagicShoot(s,b.opponentAI!.rng,event=>{
+    if(b.cameraRules&&event.child==='LockCamera')s.cameraTrack=nativeCreateLockCamera(s.sideFlag,180,-120+s.cameraJitter);
+  });
   const w=s.weapon;
+  if(b.cameraRules&&s.cameraTrack&&s.camera&&w) {
+    const enemy=b.units.find(u=>u.id===script.targetId)!;
+    s.cameraTrack=nativeAdvanceMagicCamera(s.cameraTrack,s.camera,{x:w.x>>16,y:w.y>>16,alive:w.alive},
+      {x:enemy.movement!.px>>16,y:enemy.movement!.py>>16});
+  }
   if(w?.alive) {
     nativeAdvanceMagicWeapon(w);
     if(w.alive) {
@@ -41,6 +54,7 @@ export function advanceBattleNativeMagic(b:BattleState,death:(target:BattleUnit,
 
 export function validateBattleNativeMagic(b:BattleState,fail:()=>never):void {
   if(b.magicRules!==undefined&&(b.magicRules!=='native-shoot-v1'||b.movementRules!=='native-grid-v3'))fail();
+  if(b.cameraRules!==undefined&&(b.cameraRules!=='native-script-v1'||b.movementRules!=='native-grid-v3'))fail();
   const script=b.activeScript;if(script?.kind!=='native-shoot')return;
   if(b.magicRules!=='native-shoot-v1')fail();
   const caster=b.units.find(u=>u.id===script.casterId),target=b.units.find(u=>u.id===script.targetId),s=script.runtime;
@@ -53,6 +67,15 @@ export function validateBattleNativeMagic(b:BattleState,fail:()=>never):void {
   if(s.casterLocked!==(s.phase==='pose'))fail();
   if(s.age>b.tick*3||s.camera!==undefined&&(!integer(s.camera.x,-10000,10000)||!integer(s.camera.y,-10000,10000)))fail();
   if((s.phase!=='darken')!==!!s.camera)fail();
+  if(s.cameraTrack) {
+    if(!b.cameraRules||!s.camera||!s.weapon||!['flight','after','brighten'].includes(s.phase))fail();
+    const c=s.cameraTrack;
+    if(c.kind==='lock') {
+      if(c.side!==s.sideFlag||c.offsetX!==180||c.offsetY!==-120+s.cameraJitter||!integer(c.drift,-1000,1000)||!integer(c.previousX,-10000,10000)||typeof c.waiting!=='boolean')fail();
+    } else if(c.kind==='move') {
+      if(![c.x,c.y,c.dx,c.dy,c.targetX,c.targetY].every(n=>integer(n,-2147483648,2147483647))||!integer(c.remaining,0,30))fail();
+    } else fail();
+  }
   const max={darken:40,pose:15,release:15,flight:1000,after:60,brighten:40,done:0}[s.phase];
   if(s.phaseAge>max)fail();
   if(['flight','after','brighten'].includes(s.phase)!==!!s.weapon)fail();

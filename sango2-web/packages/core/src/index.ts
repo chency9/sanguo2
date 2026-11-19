@@ -3,6 +3,7 @@ import { createBattle, commandBattle, tickBattle, validateBattle, battleTeamSurv
 export * from './battle';
 export * from './native-projection';
 export * from './battle-scene';
+export {battleScriptCameraLocked} from './battle-native-magic';
 import {armyPower,type StrategicAction} from './strategic-ai';
 import {createNativeCampaignAI,runNativeStrategicCallback,type NativeCampaignAI} from './native-ai-campaign';
 import {initialOfficerCondition,initialConditionTimers,type NativeOfficerCondition} from './native-officer-condition';

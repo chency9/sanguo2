@@ -1,4 +1,5 @@
 import {nativeBelow,type NativeRandomState} from './native-strategic-ai';
+import type {NativeMagicCamera} from './native-magic-camera';
 
 /** SCRIPT_MAGIC.SO ShootObject, not the skill sequence or resource directory. */
 export function nativeShootDefinition(script:number):{style:0|1|2;flaming:0|1}|undefined {
@@ -20,6 +21,7 @@ export interface NativeMagicShoot {
   phase:'darken'|'pose'|'release'|'flight'|'after'|'brighten'|'done';
   phaseAge:number;brightness:number;palette:number;cameraJitter:number;
   camera?:{x:number;y:number};
+  cameraTrack?:NativeMagicCamera;
   casterLocked:boolean;weapon?:NativeMagicWeapon;
 }
 export interface NativeMagicShootEvent {t:number;host?:number;child?:string;args:(string|number)[]}
