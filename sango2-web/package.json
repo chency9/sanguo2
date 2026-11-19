@@ -1,0 +1,27 @@
+{
+  "name": "sango2-web",
+  "private": true,
+  "version": "0.4.0",
+  "type": "module",
+  "packageManager": "pnpm@11.13.0",
+  "engines": { "node": ">=22.22.0" },
+  "scripts": {
+    "dev": "pnpm --filter @sango2/game dev",
+    "build": "pnpm typecheck && pnpm --filter @sango2/game build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "preview": "pnpm --filter @sango2/game preview",
+    "assets": "python tools/convert_assets.py"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "6.3.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.8",
+    "vitest": "5.1.0"
+  }
+}

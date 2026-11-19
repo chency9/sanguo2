@@ -1,0 +1,29 @@
+
+Running 20 tests using 2 workers
+
+(node:17416) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26736) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  2 [chromium] › tests\battle-camera.spec.ts:17:31 › native camera drag, keyboard, minimap and focus at 390px (3.2s)
+  ok  1 [chromium] › tests\battle-camera.spec.ts:17:31 › native camera drag, keyboard, minimap and focus at 1440px (3.6s)
+  ok  4 [chromium] › tests\battle-fullscreen.spec.ts:54:1 › formation choices follow the selected commander and retain a valid default (3.0s)
+  ok  3 [chromium] › tests\battle-camera.spec.ts:50:1 › full armies retain camera controls through live native projectiles and casualties (4.1s)
+  ok  6 [chromium] › tests\battle-fullscreen.spec.ts:98:3 › five-division commands are keyboard operable at 1440px (4.5s)
+  ok  5 [chromium] › tests\battle-fullscreen.spec.ts:71:1 › in-flight source projectiles survive campaign save and reload while paused (5.9s)
+  ok  8 [chromium] › tests\battle-fullscreen.spec.ts:98:3 › five-division commands are keyboard operable at 390px (3.7s)
+  ok  7 [chromium] › tests\battle-fullscreen.spec.ts:117:3 › native active and reserve soldiers deploy together at 1440px (10.8s)
+  ok  9 [chromium] › tests\battle-fullscreen.spec.ts:117:3 › native active and reserve soldiers deploy together at 390px (7.9s)
+  ok 10 [chromium] › tests\battle-fullscreen.spec.ts:156:1 › source sword represents charge independently of HP and MP (3.1s)
+  ok 11 [chromium] › tests\battle-fullscreen.spec.ts:174:1 › source learning gates and level-derived vitals agree with the HUD (2.9s)
+  ok 13 [chromium] › tests\battle-fullscreen.spec.ts:220:3 › battle fills 1920x1080 without clipping controls or stretching sprites (4.3s)
+  ok 12 [chromium] › tests\battle-fullscreen.spec.ts:192:1 › learned healing skill reports charge and MP gates and consumes MP once (8.3s)
+  ok 14 [chromium] › tests\battle-fullscreen.spec.ts:220:3 › battle fills 1440x900 without clipping controls or stretching sprites (4.2s)
+  ok 15 [chromium] › tests\battle-fullscreen.spec.ts:220:3 › battle fills 1024x768 without clipping controls or stretching sprites (4.0s)
+  ok 16 [chromium] › tests\battle-fullscreen.spec.ts:220:3 › battle fills 844x390 without clipping controls or stretching sprites (3.5s)
+  ok 17 [chromium] › tests\battle-fullscreen.spec.ts:220:3 › battle fills 390x844 without clipping controls or stretching sprites (3.2s)
+  ok 18 [chromium] › tests\battle-fullscreen.spec.ts:220:3 › battle fills 320x568 without clipping controls or stretching sprites (3.2s)
+  ok 19 [chromium] › tests\battle-fullscreen.spec.ts:233:1 › fullscreen includes campaign save dialogs and keeps the battle paused after saving (3.3s)
+  ok 20 [chromium] › tests\battle-fullscreen.spec.ts:258:1 › denied fullscreen remains a usable battle and does not show an asset loading failure (2.9s)
+
+  20 passed (46.8s)

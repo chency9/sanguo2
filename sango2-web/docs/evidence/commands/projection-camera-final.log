@@ -1,0 +1,12 @@
+
+Running 3 tests using 2 workers
+
+(node:39056) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:49812) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 2 [chromium] › tests\battle-camera.spec.ts:17:31 › native camera drag, keyboard, minimap and focus at 390px (2.9s)
+  ok 1 [chromium] › tests\battle-camera.spec.ts:17:31 › native camera drag, keyboard, minimap and focus at 1440px (3.5s)
+  ok 3 [chromium] › tests\battle-camera.spec.ts:50:1 › full armies retain camera controls through live native projectiles and casualties (3.7s)
+
+  3 passed (7.6s)

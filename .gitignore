@@ -1,0 +1,39 @@
+# Original game distribution and local inspection copies.
+game-original-105plus/
+game-package-inspection/
+sango2-english-patch/
+*.exe
+*.PAK
+*.pak
+*.7z
+*.zip
+*.SO
+*.SO.OLD
+*.i64
+*.id0
+*.id1
+*.id2
+*.nam
+*.til
+
+# Credentials, runtimes and build products.
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+.vite/
+__pycache__/
+*.pyc
+.venv/
+.venv-ai/
+.deps/
+test-results/
+playwright-report/
+.DS_Store
+Thumbs.db
+
+# Recreated locally from the user's game package.
+sango2-web/apps/game/public/assets/
+sango2-web/docs/evidence/commands/dev-*.log
+sango2-web/[{]console.error(e.message)

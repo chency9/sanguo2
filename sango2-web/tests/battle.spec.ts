@@ -1,0 +1,91 @@
+import {test,expect} from '@playwright/test';
+import {delayRivalDecisions} from './campaign-fixture';
+
+test('real sprites, formations, ranged combat, pause and retreat in the drill',async({page})=>{
+  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
+  await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();
+  await page.getByRole('button',{name:'演武场',exact:true}).click();
+  await page.getByLabel('战场阵形').selectOption('xuan');
+  await expect(page.getByRole('button',{name:'擂鼓开战'})).toBeEnabled();
+  await page.screenshot({path:'test-results/battle-deployment.png',fullPage:true});
+  await page.getByRole('button',{name:'前进迎敌'}).click();
+  await page.getByRole('button',{name:'擂鼓开战'}).click();
+  await page.getByLabel('战场速度').selectOption('4');
+  await expect.poll(async()=>Number(await page.getByTestId('battle-attacker-troops').textContent()),{timeout:20000}).toBeLessThan(10);
+  await page.getByRole('button',{name:'暂停战斗',exact:true}).click();
+  const first=await page.locator('.battle-clock span').textContent();
+  await page.getByRole('button',{name:'前军',exact:true}).click();
+  await page.getByRole('button',{name:'原地待命'}).click();
+  await expect(page.locator('.battle-footer')).toContainText('前军待命');
+  expect(await page.locator('.battle-clock span').textContent()).toBe(first);
+  await page.screenshot({path:'test-results/battle-combat.png',fullPage:true});
+  await page.getByRole('button',{name:'全军',exact:true}).click();await page.getByRole('button',{name:'撤离战场'}).click();
+  await page.getByRole('button',{name:'继续战斗',exact:true}).click();
+  await expect(page.getByRole('button',{name:'结束演武'})).toBeVisible({timeout:15000});
+  await page.getByRole('button',{name:'结束演武'}).click();
+  await expect(page.getByLabel('天下地图')).toBeVisible();expect(errors).toEqual([]);
+});
+
+test('enemy encounter pauses campaign, survives reload and settles actual casualties',async({page})=>{
+  await delayRivalDecisions(page);
+  await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();
+  await page.getByRole('button',{name:'调兵出征'}).click();
+  const destination=page.getByLabel('行军目标');
+  await destination.selectOption({label:await destination.locator('option').filter({hasText:'壺關'}).textContent()??''});
+  await page.getByLabel(/出征兵力/).fill('60');await page.getByRole('button',{name:'下令出征'}).click();
+  for(let i=0;i<3;i++)await page.getByRole('button',{name:'下一天',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'壺關之战'})).toBeVisible();
+  const savedFormation=await page.getByLabel('战场阵形').inputValue();
+  await page.getByRole('button',{name:'左军',exact:true}).click();
+  await page.getByLabel('战术军令').selectOption('6');await page.getByRole('button',{name:'下达战术'}).click();
+  const savedCommands='[0,0,0,6,0,0,0,0]';
+  await expect(page.getByRole('img',{name:'实时战场画面'})).toHaveAttribute('data-native-commands',savedCommands);
+  await page.getByRole('button',{name:'擂鼓开战'}).click();
+  await expect(page.getByRole('timer',{name:'交战倒计时'})).not.toHaveAttribute('data-count','99');
+  await page.getByRole('button',{name:'暂停战斗',exact:true}).click();
+  const savedClock=await page.getByRole('timer',{name:'交战倒计时'}).getAttribute('data-count');
+  await page.getByRole('button',{name:'战中存档'}).click();await page.getByRole('button',{name:'保存',exact:true}).first().click();
+  await expect(page.getByRole('dialog').getByRole('status')).toContainText('已保存');await page.reload();
+  await page.getByRole('button',{name:'关闭对话框'}).click();await page.getByRole('button',{name:'存读档',exact:true}).click();
+  await page.getByRole('button',{name:'读取',exact:true}).first().click();
+  await expect(page.getByRole('heading',{name:'壺關之战'})).toBeVisible();
+  await expect(page.getByRole('timer',{name:'交战倒计时'})).toHaveAttribute('data-count',savedClock!);
+  await expect(page.getByLabel('战场阵形')).toHaveValue(savedFormation);
+  await expect(page.getByRole('img',{name:'实时战场画面'})).toHaveAttribute('data-deployment-rules','native-tables-v1');
+  await expect(page.getByRole('img',{name:'实时战场画面'})).toHaveAttribute('data-native-commands',savedCommands);
+  await expect(page.getByTestId('battle-attacker-troops')).toHaveText('10');
+  await page.getByRole('button',{name:'撤离战场'}).click();await page.getByRole('button',{name:'继续战斗',exact:true}).click();
+  await page.getByLabel('战场速度').selectOption('4');
+  await expect(page.getByRole('button',{name:'收兵 · 返回天下'})).toBeVisible({timeout:15000});
+  await page.getByRole('button',{name:'收兵 · 返回天下'}).click();
+  await expect(page.getByTestId('city-troops')).toHaveText('640人');
+  await page.getByRole('button',{name:'战报 1'}).click();await expect(page.locator('.reports article')).toHaveCount(1);
+});
+
+test('phone battle commands are accessible without page overflow',async({page})=>{
+  await page.setViewportSize({width:390,height:844});await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();
+  await page.getByRole('button',{name:'演武场',exact:true}).click();
+  await expect(page.getByRole('button',{name:'擂鼓开战'})).toBeEnabled();
+  await page.getByRole('button',{name:'主将',exact:true}).click();await page.getByRole('button',{name:'原地待命'}).click();
+  await expect(page.locator('.battle-footer')).toContainText('主将待命');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.screenshot({path:'test-results/battle-mobile.png',fullPage:true});
+});
+
+test('successive commander battle exposes roster and preserves next-round selection',async({page})=>{
+  await page.goto('/');
+  await page.getByRole('button',{name:/执掌何進/}).click();
+  await page.getByRole('button',{name:'双将演武',exact:true}).click();
+  await expect(page.getByRole('dialog',{name:'点将出阵'})).toBeVisible();
+  await expect(page.getByRole('radio')).toHaveCount(2);
+  await page.getByRole('button',{name:'确认出阵'}).click();
+  await page.getByRole('button',{name:'两军名册'}).click();
+  await expect(page.locator('.battle-roster-member')).toHaveCount(4);
+  await page.getByRole('button',{name:'两军名册'}).click();
+  await page.getByRole('button',{name:'前进迎敌'}).click();
+  await page.getByRole('button',{name:'擂鼓开战'}).click();
+  await page.getByRole('button',{name:'撤离战场'}).click();
+  await page.getByLabel('战场速度').selectOption('4');
+  await expect(page.getByText(/选将|第 1 阵已毕/)).toBeVisible({timeout:20000});
+  await expect(page.locator('.round-choices input[type="radio"]')).toHaveCount(1);
+});

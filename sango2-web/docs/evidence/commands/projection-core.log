@@ -1,0 +1,30 @@
+$ vitest run
+
+ RUN  v5.1.0 E:/code/games/sanguo2/sango2-web
+
+ ❯ packages/core/src/strategic-ai.test.ts (18 tests | 1 failed) 46290ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/core/src/strategic-ai.test.ts > rival strategy and player defense > real five-era AI remains deterministic and valid across 60 days and defensive settlements
+Error: Test timed out in 20000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ packages/core/src/strategic-ai.test.ts:182:3
+    180|     expect(()=>validateSession(s,c)).not.toThrow();expect(()=>readSess…
+    181|   });
+    182|   it('real five-era AI remains deterministic and valid across 60 days …
+       |   ^
+    183|     const pack=JSON.parse(readFileSync(new URL('../../../apps/game/pub…
+    184|     for(const scene of pack.scenarios) {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+   ❯ rival strategy and player defense (15)
+     × real five-era AI remains deterministic and valid across 60 days and defensive settlements 42816ms
+
+ Test Files  1 failed | 30 passed (31)
+      Tests  1 failed | 10630 passed (10631)
+   Start at  14:53:44
+   Duration  47.20s (tests 88%, transform 7%, import 4%)
+
+[ELIFECYCLE] Test failed. See above for more details.

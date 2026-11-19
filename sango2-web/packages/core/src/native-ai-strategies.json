@@ -1,0 +1,614 @@
+[
+  {
+    "sequence": 0,
+    "attribute": 0,
+    "active": 0,
+    "rate": 0,
+    "execute": 0,
+    "level": 0,
+    "name": "不用军师技"
+  },
+  {
+    "sequence": 1,
+    "attribute": 0,
+    "active": 1,
+    "rate": 4214897,
+    "execute": 4,
+    "level": 1,
+    "name": "鼓舞士氣"
+  },
+  {
+    "sequence": 2,
+    "attribute": 0,
+    "active": 4,
+    "rate": 4214897,
+    "execute": 1,
+    "level": 1,
+    "name": "降敵士氣"
+  },
+  {
+    "sequence": 3,
+    "attribute": 1,
+    "active": 8,
+    "rate": 4214897,
+    "execute": 34,
+    "level": 0,
+    "name": "後選出陣"
+  },
+  {
+    "sequence": 4,
+    "attribute": 0,
+    "active": 8,
+    "rate": 4214897,
+    "execute": 9,
+    "level": 1,
+    "name": "擾亂敵將"
+  },
+  {
+    "sequence": 5,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 12,
+    "level": 1,
+    "name": "減少疲勞"
+  },
+  {
+    "sequence": 6,
+    "attribute": 0,
+    "active": 8,
+    "rate": 4214897,
+    "execute": 30,
+    "level": 1,
+    "name": "離間計"
+  },
+  {
+    "sequence": 7,
+    "attribute": 0,
+    "active": 8,
+    "rate": 4214897,
+    "execute": 65,
+    "level": 1,
+    "name": "減緩集氣"
+  },
+  {
+    "sequence": 8,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 61,
+    "level": 1,
+    "name": "保留氣力"
+  },
+  {
+    "sequence": 9,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 50,
+    "level": 1,
+    "name": "快速集氣"
+  },
+  {
+    "sequence": 10,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 45,
+    "level": 0,
+    "name": "詐敗"
+  },
+  {
+    "sequence": 11,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 35,
+    "level": 1,
+    "name": "恢復體力"
+  },
+  {
+    "sequence": 12,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 38,
+    "level": 1,
+    "name": "恢復技力"
+  },
+  {
+    "sequence": 13,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 18,
+    "level": 1,
+    "name": "增加技力"
+  },
+  {
+    "sequence": 14,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 15,
+    "level": 1,
+    "name": "增加體力"
+  },
+  {
+    "sequence": 15,
+    "attribute": 0,
+    "active": 4,
+    "rate": 4214897,
+    "execute": 27,
+    "level": 1,
+    "name": "混亂敵軍"
+  },
+  {
+    "sequence": 16,
+    "attribute": 0,
+    "active": 4,
+    "rate": 4214897,
+    "execute": 24,
+    "level": 1,
+    "name": "強化士兵"
+  },
+  {
+    "sequence": 17,
+    "attribute": 0,
+    "active": 1,
+    "rate": 4214897,
+    "execute": 21,
+    "level": 1,
+    "name": "增強攻擊"
+  },
+  {
+    "sequence": 18,
+    "attribute": 0,
+    "active": 1,
+    "rate": 4214897,
+    "execute": 5,
+    "level": 2,
+    "name": "鼓舞士氣"
+  },
+  {
+    "sequence": 19,
+    "attribute": 0,
+    "active": 4,
+    "rate": 4214897,
+    "execute": 2,
+    "level": 2,
+    "name": "降敵士氣"
+  },
+  {
+    "sequence": 20,
+    "attribute": 0,
+    "active": 4,
+    "rate": 4214897,
+    "execute": 58,
+    "level": 1,
+    "name": "喝阻敵軍"
+  },
+  {
+    "sequence": 21,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 53,
+    "level": 1,
+    "name": "增加經驗"
+  },
+  {
+    "sequence": 22,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 41,
+    "level": 1,
+    "name": "強化武將"
+  },
+  {
+    "sequence": 23,
+    "attribute": 3,
+    "active": 1,
+    "rate": 4214897,
+    "execute": 49,
+    "level": 0,
+    "name": "逼近敵軍"
+  },
+  {
+    "sequence": 24,
+    "attribute": 2,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 57,
+    "level": 0,
+    "name": "化解計策"
+  },
+  {
+    "sequence": 25,
+    "attribute": 0,
+    "active": 8,
+    "rate": 4214897,
+    "execute": 10,
+    "level": 2,
+    "name": "擾亂敵將"
+  },
+  {
+    "sequence": 26,
+    "attribute": 3,
+    "active": 1,
+    "rate": 4214897,
+    "execute": 47,
+    "level": 0,
+    "name": "包圍敵軍"
+  },
+  {
+    "sequence": 27,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 13,
+    "level": 2,
+    "name": "減少疲勞"
+  },
+  {
+    "sequence": 28,
+    "attribute": 0,
+    "active": 4,
+    "rate": 4214897,
+    "execute": 7,
+    "level": 0,
+    "name": "亂陣"
+  },
+  {
+    "sequence": 29,
+    "attribute": 0,
+    "active": 1,
+    "rate": 4214897,
+    "execute": 8,
+    "level": 0,
+    "name": "太公陣"
+  },
+  {
+    "sequence": 30,
+    "attribute": 3,
+    "active": 1,
+    "rate": 4214897,
+    "execute": 48,
+    "level": 0,
+    "name": "偷襲敵軍"
+  },
+  {
+    "sequence": 31,
+    "attribute": 0,
+    "active": 1,
+    "rate": 4214897,
+    "execute": 46,
+    "level": 0,
+    "name": "保護主將"
+  },
+  {
+    "sequence": 32,
+    "attribute": 1,
+    "active": 8,
+    "rate": 4214897,
+    "execute": 33,
+    "level": 0,
+    "name": "勸降"
+  },
+  {
+    "sequence": 33,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 56,
+    "level": 0,
+    "name": "金蟬脫殼"
+  },
+  {
+    "sequence": 34,
+    "attribute": 0,
+    "active": 8,
+    "rate": 4214897,
+    "execute": 31,
+    "level": 2,
+    "name": "離間計"
+  },
+  {
+    "sequence": 35,
+    "attribute": 0,
+    "active": 8,
+    "rate": 4214897,
+    "execute": 66,
+    "level": 2,
+    "name": "減緩集氣"
+  },
+  {
+    "sequence": 36,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 62,
+    "level": 2,
+    "name": "保留氣力"
+  },
+  {
+    "sequence": 37,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 51,
+    "level": 2,
+    "name": "快速集氣"
+  },
+  {
+    "sequence": 38,
+    "attribute": 0,
+    "active": 1,
+    "rate": 4214897,
+    "execute": 6,
+    "level": 3,
+    "name": "鼓舞士氣"
+  },
+  {
+    "sequence": 39,
+    "attribute": 0,
+    "active": 4,
+    "rate": 4214897,
+    "execute": 3,
+    "level": 3,
+    "name": "降敵士氣"
+  },
+  {
+    "sequence": 40,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 36,
+    "level": 2,
+    "name": "恢復體力"
+  },
+  {
+    "sequence": 41,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 39,
+    "level": 2,
+    "name": "恢復技力"
+  },
+  {
+    "sequence": 42,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 19,
+    "level": 2,
+    "name": "增加技力"
+  },
+  {
+    "sequence": 43,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 16,
+    "level": 2,
+    "name": "增加體力"
+  },
+  {
+    "sequence": 44,
+    "attribute": 0,
+    "active": 4,
+    "rate": 4214897,
+    "execute": 28,
+    "level": 2,
+    "name": "混亂敵軍"
+  },
+  {
+    "sequence": 45,
+    "attribute": 0,
+    "active": 4,
+    "rate": 4214897,
+    "execute": 25,
+    "level": 2,
+    "name": "強化士兵"
+  },
+  {
+    "sequence": 46,
+    "attribute": 0,
+    "active": 1,
+    "rate": 4214897,
+    "execute": 22,
+    "level": 2,
+    "name": "增強攻擊"
+  },
+  {
+    "sequence": 47,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 54,
+    "level": 2,
+    "name": "增加經驗"
+  },
+  {
+    "sequence": 48,
+    "attribute": 0,
+    "active": 4,
+    "rate": 4214897,
+    "execute": 59,
+    "level": 2,
+    "name": "喝阻敵軍"
+  },
+  {
+    "sequence": 49,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 42,
+    "level": 2,
+    "name": "強化武將"
+  },
+  {
+    "sequence": 50,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 14,
+    "level": 3,
+    "name": "減少疲勞"
+  },
+  {
+    "sequence": 51,
+    "attribute": 0,
+    "active": 8,
+    "rate": 4214897,
+    "execute": 11,
+    "level": 3,
+    "name": "擾亂敵將"
+  },
+  {
+    "sequence": 52,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 52,
+    "level": 3,
+    "name": "快速集氣"
+  },
+  {
+    "sequence": 53,
+    "attribute": 0,
+    "active": 8,
+    "rate": 4214897,
+    "execute": 67,
+    "level": 3,
+    "name": "減緩集氣"
+  },
+  {
+    "sequence": 54,
+    "attribute": 0,
+    "active": 8,
+    "rate": 4214897,
+    "execute": 44,
+    "level": 0,
+    "name": "十面埋伏"
+  },
+  {
+    "sequence": 55,
+    "attribute": 0,
+    "active": 8,
+    "rate": 4214897,
+    "execute": 32,
+    "level": 3,
+    "name": "離間計"
+  },
+  {
+    "sequence": 56,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 63,
+    "level": 3,
+    "name": "保留氣力"
+  },
+  {
+    "sequence": 57,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 37,
+    "level": 3,
+    "name": "恢復體力"
+  },
+  {
+    "sequence": 58,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 40,
+    "level": 3,
+    "name": "恢復技力"
+  },
+  {
+    "sequence": 59,
+    "attribute": 0,
+    "active": 8,
+    "rate": 4214897,
+    "execute": 64,
+    "level": 0,
+    "name": "封武將技"
+  },
+  {
+    "sequence": 60,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 20,
+    "level": 3,
+    "name": "增加技力"
+  },
+  {
+    "sequence": 61,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 17,
+    "level": 3,
+    "name": "增加體力"
+  },
+  {
+    "sequence": 62,
+    "attribute": 0,
+    "active": 4,
+    "rate": 4214897,
+    "execute": 29,
+    "level": 3,
+    "name": "混亂敵軍"
+  },
+  {
+    "sequence": 63,
+    "attribute": 0,
+    "active": 4,
+    "rate": 4214897,
+    "execute": 26,
+    "level": 3,
+    "name": "強化士兵"
+  },
+  {
+    "sequence": 64,
+    "attribute": 0,
+    "active": 1,
+    "rate": 4214897,
+    "execute": 23,
+    "level": 3,
+    "name": "增強攻擊"
+  },
+  {
+    "sequence": 65,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 55,
+    "level": 3,
+    "name": "增加經驗"
+  },
+  {
+    "sequence": 66,
+    "attribute": 0,
+    "active": 4,
+    "rate": 4214897,
+    "execute": 60,
+    "level": 3,
+    "name": "喝阻敵軍"
+  },
+  {
+    "sequence": 67,
+    "attribute": 0,
+    "active": 2,
+    "rate": 4214897,
+    "execute": 43,
+    "level": 3,
+    "name": "強化武將"
+  }
+]

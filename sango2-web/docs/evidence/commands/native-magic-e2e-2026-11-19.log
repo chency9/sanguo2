@@ -1,0 +1,15 @@
+
+Running 4 tests using 3 workers
+
+(node:23064) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:30564) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:41324) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 2 [chromium] › tests\battle-native-magic.spec.ts:51:3 › native skill 52 draws original object 13001 at 390px and holds its source clock while paused (7.4s)
+  ok 3 [chromium] › tests\battle-native-magic.spec.ts:51:3 › native skill 13 draws original object 13003 at 1440px and holds its source clock while paused (8.3s)
+  ok 1 [chromium] › tests\battle-native-magic.spec.ts:51:3 › native skill 2 draws original object 13001 at 1440px and holds its source clock while paused (8.5s)
+  ok 4 [chromium] › tests\battle-native-magic.spec.ts:51:3 › native skill 59 draws original object 13005 at 390px and holds its source clock while paused (6.9s)
+
+  4 passed (15.7s)

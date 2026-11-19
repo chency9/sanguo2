@@ -1,0 +1,10 @@
+$ vitest run
+
+ RUN  v5.1.0 E:/code/games/sanguo2/sango2-web
+
+
+ Test Files  31 passed (31)
+      Tests  11192 passed (11192)
+   Start at  15:18:07
+   Duration  12.11s (tests 80%, transform 11%, import 9%, worker 1%)
+

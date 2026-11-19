@@ -1,0 +1,51 @@
+.battle-rosters { display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:.7rem 0; }
+.battle-rosters>div { min-width:0;border:2px ridge #9b7b43;background:linear-gradient(#191127d9,#171021ef),url('/assets/ui/map-texture.png');padding:.6rem; }
+.battle-rosters h3 { display:flex;justify-content:space-between;gap:.6rem;color:#ebcd8e;font:1rem KaiTi,serif;margin-bottom:.6rem; }
+.battle-rosters h3 span { color:#cbb68d;font:.7rem 'Microsoft YaHei',sans-serif; }
+.battle-roster-list { display:flex;gap:.5rem;overflow:auto;max-height:130px;scrollbar-width:thin; }
+.battle-roster-member { display:flex;align-items:center;gap:.5rem;min-width:160px;padding:.35rem;border:1px solid #997a3b66;background:#120e20; }
+.battle-roster-member img { object-fit:cover;border:1px solid #af8d49; }
+.battle-roster-member strong { font:1rem KaiTi,serif;color:#e5cca0; }
+.battle-roster-member small { display:block;margin-top:.35rem;color:#b6a182;font-size:.65rem;white-space:nowrap; }
+.battle-roster-member.active { border-color:#dfba68;box-shadow:inset 0 0 14px #b3914422; }
+.battle-roster-member.withdrawn { opacity:.6; }
+.battle-roster-member.withdrawn img { filter:grayscale(1); }
+.round-selection { padding:1rem 1.2rem;margin:.8rem 0;border:4px ridge #b49452;background:linear-gradient(105deg,#35202be8,#14102de8),url('/assets/ui/map-texture.png');box-shadow:inset 0 0 36px #0007; }
+.round-selection h2 { color:#efcc82;margin:.4rem 0;font-size:1.4rem; }
+.round-selection p { font-size:.8rem;color:#c6b28a; }
+.round-selection fieldset { margin:1rem 0;border-color:#ad8a494d; }
+.round-choices { display:flex;flex-wrap:wrap;gap:.65rem; }
+.round-choices label { display:flex;align-items:center;gap:.6rem;min-height:80px;min-width:180px;padding:.5rem;border:1px solid #aa87476b;background:#0e0b1d;cursor:pointer; }
+.round-choices label:has(input:checked) { border-color:#f3cc77;background:linear-gradient(135deg,#663828,#2c1624); }
+.round-choices input { accent-color:#e4bc69;width:20px;height:20px;flex-shrink:0; }
+.round-choices label:focus-within { outline:2px solid #f3d08c;outline-offset:3px; }
+.round-choices img { border:2px ridge #b99751;object-fit:cover; }
+.round-choices strong { display:block;font:1.2rem KaiTi,serif;color:#f1d59c; }
+.round-choices small { display:block;color:#cfb992;font-size:.7rem;margin-top:.25rem; }
+.round-actions { display:flex;gap:.75rem; }
+.round-actions button { min-height:48px; }
+.strategy-selection { min-width:min(380px,75vw); }
+.strategy-fields { display:grid;gap:.5rem; }
+.strategy-fields label { color:#efcc82; }
+.strategy-fields select { width:100%;min-height:48px;font:inherit;font-size:max(1rem,1em);margin-bottom:.75rem; }
+.strategy-fields select:focus-visible { outline:2px solid #f3d08c;outline-offset:3px; }
+.round-history { padding:.8rem 1rem;border:1px solid #876738;background:#140e24;color:#d8c197;font-size:.8rem; }
+.round-history summary { cursor:pointer;min-height:30px;align-content:center; }
+.round-history ol { padding-left:1.5rem;line-height:1.8; }
+.between-rounds { max-height:220px; }
+.troop-allocation label { display:grid;grid-template-columns:1fr 100px;align-items:center;gap:1rem;padding:.5rem 0;border-bottom:1px solid #aa87472c; }
+.troop-allocation small { display:block;color:#bbaa83;margin-top:.2rem; }
+.troop-allocation input { min-height:48px;font-size:1rem; }
+.troop-allocation p { color:#bfaa80;font-size:.75rem;margin-top:.6rem; }
+@media(max-width:600px) {
+  .battle-rosters { gap:.5rem; }
+  .battle-rosters h3 { flex-direction:column;font-size:.9rem; }
+  .battle-roster-member { min-width:145px; }
+  .round-selection { padding:.75rem;border-width:3px; }
+  .round-selection h2 { font-size:1.2rem; }
+  .round-choices { flex-direction:column; }
+  .round-choices label { min-width:0;width:100%; }
+  .round-actions { flex-wrap:wrap; }
+  .round-actions button { flex:1;font-size:1rem; }
+  .between-rounds { display:none; }
+}

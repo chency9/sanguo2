@@ -1,0 +1,9 @@
+# Local analysis dependencies and generated artifacts; originals stay outside this folder.
+__pycache__/
+*.pyc
+.deps/
+.venv-ai/
+evidence/rules/python-deps/
+evidence/
+data/
+previews/

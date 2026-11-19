@@ -1,0 +1,123 @@
+
+Running 38 tests using 3 workers
+
+(node:34392) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:34844) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:33328) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  2 [chromium] › tests\ai.spec.ts:61:1 › unmodified campaign produces rival expeditions under native weighted decisions (2.8s)
+  ok  3 [chromium] › tests\battle-camera.spec.ts:17:31 › native camera drag, keyboard, minimap and focus at 1440px (5.2s)
+  ok  4 [chromium] › tests\battle-camera.spec.ts:17:31 › native camera drag, keyboard, minimap and focus at 390px (3.8s)
+  ok  5 [chromium] › tests\battle-camera.spec.ts:50:1 › full armies retain camera controls through live native projectiles and casualties (5.0s)
+  ok  6 [chromium] › tests\battle-fullscreen.spec.ts:54:1 › formation choices follow the selected commander and retain a valid default (4.0s)
+  ok  8 [chromium] › tests\battle-fullscreen.spec.ts:98:3 › five-division commands are keyboard operable at 1440px (4.6s)
+  ok  7 [chromium] › tests\battle-fullscreen.spec.ts:71:1 › in-flight source projectiles survive campaign save and reload while paused (9.5s)
+  ok 10 [chromium] › tests\battle-fullscreen.spec.ts:98:3 › five-division commands are keyboard operable at 390px (5.4s)
+  ok  9 [chromium] › tests\battle-fullscreen.spec.ts:117:3 › native active and reserve soldiers deploy together at 1440px (15.0s)
+  ok  1 [chromium] › tests\ai.spec.ts:26:1 › enemy invasion warns the player, opens a defensive battle and preserves the controlled side through a save (30.7s)
+  ok 12 [chromium] › tests\battle-fullscreen.spec.ts:156:1 › source sword represents charge independently of HP and MP (4.5s)
+  ok 13 [chromium] › tests\battle-fullscreen.spec.ts:174:1 › source learning gates and level-derived vitals agree with the HUD (4.0s)
+  ok 11 [chromium] › tests\battle-fullscreen.spec.ts:117:3 › native active and reserve soldiers deploy together at 390px (13.7s)
+  ok 15 [chromium] › tests\battle-fullscreen.spec.ts:220:3 › battle fills 1920x1080 without clipping controls or stretching sprites (5.5s)
+  ok 16 [chromium] › tests\battle-fullscreen.spec.ts:220:3 › battle fills 1440x900 without clipping controls or stretching sprites (5.4s)
+  ok 17 [chromium] › tests\battle-fullscreen.spec.ts:220:3 › battle fills 1024x768 without clipping controls or stretching sprites (5.1s)
+  ok 14 [chromium] › tests\battle-fullscreen.spec.ts:192:1 › learned healing skill reports charge and MP gates and consumes MP once (11.3s)
+  ok 19 [chromium] › tests\battle-fullscreen.spec.ts:220:3 › battle fills 390x844 without clipping controls or stretching sprites (4.6s)
+  x  18 [chromium] › tests\battle-fullscreen.spec.ts:220:3 › battle fills 844x390 without clipping controls or stretching sprites (4.7s)
+  ok 21 [chromium] › tests\battle-fullscreen.spec.ts:233:1 › fullscreen includes campaign save dialogs and keeps the battle paused after saving (3.1s)
+(node:53532) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  20 [chromium] › tests\battle-fullscreen.spec.ts:220:3 › battle fills 320x568 without clipping controls or stretching sprites (5.7s)
+(node:14916) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 23 [chromium] › tests\battle-fullscreen.spec.ts:258:1 › denied fullscreen remains a usable battle and does not show an asset loading failure (4.0s)
+  ok 25 [chromium] › tests\battle.spec.ts:65:1 › phone battle commands are accessible without page overflow (2.2s)
+  ok 22 [chromium] › tests\battle.spec.ts:4:1 › real sprites, formations, ranged combat, pause and retreat in the drill (11.5s)
+  ok 24 [chromium] › tests\battle.spec.ts:29:1 › enemy encounter pauses campaign, survives reload and settles actual casualties (10.5s)
+  ok 27 [chromium] › tests\game.spec.ts:17:1 › map identifies own, other and unclaimed cities without relying on flag color (2.5s)
+  ok 26 [chromium] › tests\battle.spec.ts:75:1 › successive commander battle exposes roster and preserves next-round selection (6.9s)
+  ok 28 [chromium] › tests\game.spec.ts:34:1 › wheel zoom keeps the city under the cursor and does not scroll the page (2.8s)
+  ok 29 [chromium] › tests\game.spec.ts:52:1 › real content, economy, native dialog focus and map render (3.3s)
+  ok 30 [chromium] › tests\game.spec.ts:83:31 › officer conditions survive export/import and remain keyboard-scrollable at 1280 (2.8s)
+  ok 31 [chromium] › tests\game.spec.ts:83:31 › officer conditions survive export/import and remain keyboard-scrollable at 390 (2.9s)
+  ok 32 [chromium] › tests\game.spec.ts:106:1 › another page cannot silently overwrite a newer save (2.9s)
+  ok 34 [chromium] › tests\game.spec.ts:149:1 › all five eras initialize and phone layout remains operable (3.2s)
+  ok 33 [chromium] › tests\game.spec.ts:120:1 › neutral capture, persistent save, export and invalid import (5.0s)
+  ok 35 [chromium] › tests\strategist.spec.ts:28:3 › strategy confirmation, keyboard cancel and actual temporary HP at 1280 (3.9s)
+  ok 36 [chromium] › tests\strategist.spec.ts:28:3 › strategy confirmation, keyboard cancel and actual temporary HP at 390 (3.6s)
+  ok 38 [chromium] › tests\terrain.spec.ts:35:1 › failed scenery loads pause the battle and can retry the same selection (2.9s)
+  ok 37 [chromium] › tests\terrain.spec.ts:17:1 › all 24 terrain variants render without missing assets and select source music (9.3s)
+
+
+  1) [chromium] › tests\battle-fullscreen.spec.ts:220:3 › battle fills 844x390 without clipping controls or stretching sprites 
+
+    Error: 我军主将
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      47 |         const r=el.getBoundingClientRect();const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+      48 |         return r.left>=0&&r.top>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1&&(hit===el||el.contains(hit));
+    > 49 |       }),await control.innerText()).toBe(true);
+         |                                     ^
+      50 |     }
+      51 |   }
+      52 | }
+        at BattleScreen.checkDisplay (E:\code\games\sanguo2\sango2-web\tests\battle-fullscreen.spec.ts:49:37)
+        at E:\code\games\sanguo2\sango2-web\tests\battle-fullscreen.spec.ts:222:61
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\battle-fullscreen-battle-f-d3430-trols-or-stretching-sprites-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\battle-fullscreen-battle-f-d3430-trols-or-stretching-sprites-chromium\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\battle-fullscreen-battle-f-d3430-trols-or-stretching-sprites-chromium\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results\battle-fullscreen-battle-f-d3430-trols-or-stretching-sprites-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [chromium] › tests\battle-fullscreen.spec.ts:220:3 › battle fills 320x568 without clipping controls or stretching sprites 
+
+    Error: 我军主将
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      47 |         const r=el.getBoundingClientRect();const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+      48 |         return r.left>=0&&r.top>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1&&(hit===el||el.contains(hit));
+    > 49 |       }),await control.innerText()).toBe(true);
+         |                                     ^
+      50 |     }
+      51 |   }
+      52 | }
+        at BattleScreen.checkDisplay (E:\code\games\sanguo2\sango2-web\tests\battle-fullscreen.spec.ts:49:37)
+        at E:\code\games\sanguo2\sango2-web\tests\battle-fullscreen.spec.ts:222:61
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\battle-fullscreen-battle-f-fce3e-trols-or-stretching-sprites-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\battle-fullscreen-battle-f-fce3e-trols-or-stretching-sprites-chromium\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\battle-fullscreen-battle-f-fce3e-trols-or-stretching-sprites-chromium\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results\battle-fullscreen-battle-f-fce3e-trols-or-stretching-sprites-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    [chromium] › tests\battle-fullscreen.spec.ts:220:3 › battle fills 844x390 without clipping controls or stretching sprites 
+    [chromium] › tests\battle-fullscreen.spec.ts:220:3 › battle fills 320x568 without clipping controls or stretching sprites 
+  36 passed (1.5m)
