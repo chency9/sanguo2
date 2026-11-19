@@ -31,7 +31,7 @@ const commander=(id:string,execute=0)=>({id,name:id,portrait:'portraits/001.png'
 function duel(execute=0) {
   let b=createBattle({id:'native-combat',attacker:commander('a',execute),defender:commander('d'),attackingTroops:1,defendingTroops:1,seed:184});
   // These fixtures exercise saved v2 hit events, without a new target search.
-  b.formation='line';delete b.deploymentRules;delete b.nativeCommands;b.movementRules='native-grid-v2';delete b.attackRules;delete b.projectileRules;delete b.projectiles;delete b.magicRules;delete b.generalRules;delete b.cameraRules;
+  b.formation='line';delete b.deploymentRules;delete b.nativeCommands;b.movementRules='native-grid-v2';delete b.attackRules;delete b.projectileRules;delete b.projectiles;delete b.magicRules;delete b.generalRules;delete b.cameraRules;delete b.healRules;
   if(execute)b=commandBattle(b,{type:'strategy',advisorId:'a',sequence:NATIVE_STRATEGIES.find(s=>s.execute===execute)!.sequence});
   return commandBattle(b,{type:'start'});
 }

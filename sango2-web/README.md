@@ -54,10 +54,11 @@ pnpm dev
 
 ## 本轮验证与证据
 
-2026-11-19：37 个测试文件、12,251 项核心测试、44 个 Chromium 场景、5 项 Python 测试通过；类型检查与生产构建通过。Python 速度测试包含 698 组原码样本。
+2026-11-19：39 个测试文件、12,346 项核心测试、46 个 Chromium 场景、5 项 Python 测试通过；类型检查与生产构建通过。本次新增 72 组 Heal 脚本树原解释器样本，共 28,224 次源更新；前序装备速度测试包含 698 组原码样本。
 
 - [四种飞行武将技：规则、原码对照与限制](docs/NATIVE-MAGIC-SHOOT-PARITY-2026-11-19.md)
 - [主将源更新、装备速度、技能镜头](docs/NATIVE-GENERAL-CAMERA-PARITY-2026-11-19.md)
+- [命疗术、回天术的 Heal 全部子协程与原光效](docs/NATIVE-HEAL-PARITY-2026-11-19.md)
 - [当前全范围差距](docs/PARITY-STATUS-2026-11-19.md) · [110 技能逐项清单](docs/MAGIC-COVERAGE-2026-11-19.md)
 - [原版 AI 的已验证范围及全局差距](docs/NATIVE-AI-PARITY-2026-11-17.md)
 - [战场渲染与存档边界](docs/BATTLE-RENDER-AUDIT-2026-11-19.md)

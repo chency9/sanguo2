@@ -3,18 +3,32 @@ import {battleMovementCell} from './battle-movement';
 import {nativeAdvanceMagicShoot,nativeAdvanceMagicWeapon,nativeMagicCollision,nativeMagicDirectHit,nativeMagicWeaponHit} from './native-magic-shoot';
 import {nativeMagicDefinition} from './native-magic-manifest';
 import {nativeCreateLockCamera,nativeAdvanceMagicCamera} from './native-magic-camera';
+import {nativeAdvanceMagicHeal,validateNativeMagicHeal} from './native-magic-heal';
 
 /** 0x43BA59/0x441E61: normal camera management yields to spell scripts. */
 export function battleScriptCameraLocked(b:BattleState):boolean {
-  return b.cameraRules==='native-script-v1'&&b.activeScript?.kind==='native-shoot';
+  return b.cameraRules==='native-script-v1'&&(b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal');
 }
 
 export function battleMagicLocked(b:BattleState,u:BattleUnit):boolean {
-  return b.activeScript?.kind==='native-shoot'&&b.activeScript.casterId===u.id&&b.activeScript.runtime.casterLocked;
+  const s=b.activeScript;
+  return (s?.kind==='native-shoot'||s?.kind==='native-heal')&&s.casterId===u.id&&s.runtime.casterLocked;
 }
 /** One source update, next to the unit clock. The original mixed object list,
  * child visual coroutines and their RNG interleaving are still separate work. */
 export function advanceBattleNativeMagic(b:BattleState,death:(target:BattleUnit,caster:BattleUnit)=>void):void {
+  if(b.activeScript?.kind==='native-heal') {
+    const script=b.activeScript,s=script.runtime,caster=b.units.find(u=>u.id===script.casterId)!;
+    // Hosts 261/262 and 17/21 read current object coordinates at their call.
+    s.origin={x:caster.movement!.px,y:caster.movement!.py,z:0};
+    nativeAdvanceMagicHeal(s,b.opponentAI!.rng,caster,event=>{
+      // Host 289 -> 0x43AB60 adds 40*n to unit +60 (deferred decision),
+      // not to its team's charge and not to an animation pose number.
+      if(event.host===289)caster.movement!.clock!.deferred=(caster.movement!.clock!.deferred+40*Number(event.args[1]))|0;
+    });
+    if(s.phase==='done')b.activeScript=undefined;
+    return;
+  }
   const script=b.activeScript;if(script?.kind!=='native-shoot')return;
   const s=script.runtime,caster=b.units.find(u=>u.id===script.casterId)!;
   // Hosts 261/262 read the caster at source update 40; host 21 attaches to
@@ -55,6 +69,14 @@ export function advanceBattleNativeMagic(b:BattleState,death:(target:BattleUnit,
 export function validateBattleNativeMagic(b:BattleState,fail:()=>never):void {
   if(b.magicRules!==undefined&&(b.magicRules!=='native-shoot-v1'||b.movementRules!=='native-grid-v3'))fail();
   if(b.cameraRules!==undefined&&(b.cameraRules!=='native-script-v1'||b.movementRules!=='native-grid-v3'))fail();
+  if(b.healRules!==undefined&&(b.healRules!=='native-heal-v1'||b.movementRules!=='native-grid-v3'))fail();
+  if(b.activeScript?.kind==='native-heal') {
+    const script=b.activeScript,caster=b.units.find(u=>u.id===script.casterId),definition=nativeMagicDefinition(script.magic);
+    if(!b.healRules||!caster?.general||caster.side!==script.side||![1,60].includes(script.magic)||definition?.effectType!=='heal')fail();
+    validateNativeMagicHeal(script.runtime,fail);
+    if(script.runtime.amount!==definition!.attack||script.runtime.style!==(script.magic===1?0:1)||script.runtime.sideFlag!==(script.side==='attacker'?1:0)||script.runtime.age>b.tick*3)fail();
+    return;
+  }
   const script=b.activeScript;if(script?.kind!=='native-shoot')return;
   if(b.magicRules!=='native-shoot-v1')fail();
   const caster=b.units.find(u=>u.id===script.casterId),target=b.units.find(u=>u.id===script.targetId),s=script.runtime;

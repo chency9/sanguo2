@@ -36,6 +36,7 @@ describe('real-time battle',()=>{
     let b=createBattle({id:'heal',attacker:{...commander('a','刀','1, 1'),hp:60,maxHp:100},defender:commander('b'),attackingTroops:0,defendingTroops:0,seed:184});
     b=commandBattle(b,{type:'start'});for(let i=0;i<260;i++)tickBattle(b);
     expect(b.commanders.attacker.charge).toBe(120000);
+    delete b.healRules; // Legacy saves keep the previous immediate loop.
     b=commandBattle(b,{type:'skill',sequence:1});expect(b.commanders.attacker.mp).toBe(20);
     expect(b.activeScript?.kind).toBe('heal');
     if(b.activeScript?.kind!=='heal')throw new Error('expected heal script');

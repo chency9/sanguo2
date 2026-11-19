@@ -47,6 +47,7 @@ class ScriptOracle:
         for i, n in [(2, 1), (3, 2), (4, spec.get('attack', 30)), (5, spec['side'])]:
             vm.put(0x4A6878 + i * 4, n)
         self.spec, self.time, self.brightness = spec, 0, 16
+        self.context = CTX
         self.events, self.created = [], []
         self.objects = {
             1: dict(x=spec['x'] << 16, y=spec['y'] << 16, z=0, facing=spec['side'] * 128, alive=1),
@@ -62,27 +63,31 @@ class ScriptOracle:
 
         def string_push(cpu, address, size, _):
             # Replace only allocation/copy of an immutable literal string.
-            ip = vm.u32(CTX + 16)
+            ctx = self.context
+            values = vm.u32(ctx + 28)
+            ip = vm.u32(ctx + 16)
             index = struct.unpack_from('<I', CODE, ip)[0]
-            vm.put(CTX + 16, ip + 4)
-            top = vm.u32(CTX + 24)
-            vm.put(VALUES + top * 8, TOKEN + index)
-            vm.put(VALUES + top * 8 + 4, 0)
-            vm.put(CTX + 24, top + 1)
+            vm.put(ctx + 16, ip + 4)
+            top = vm.u32(ctx + 24)
+            vm.put(values + top * 8, TOKEN + index)
+            vm.put(values + top * 8 + 4, 0)
+            vm.put(ctx + 24, top + 1)
             ret(1)
 
         vm.cpu.hook_add(UC_HOOK_CODE, string_push, begin=0x466560, end=0x466560)
 
         def child(cpu, address, size, _):
-            top = vm.u32(CTX + 24)
-            values = [vm.i32(VALUES + i * 8) for i in range(top - 5, top)]
-            vm.put(CTX + 24, top - 5)
-            self.events.append(dict(t=self.time, child=self.decode(values[0]), args=values[1:]))
+            ctx = self.context
+            top = vm.u32(ctx + 24)
+            values = [vm.i32(vm.u32(ctx + 28) + i * 8) for i in range(top - 5, top)]
+            vm.put(ctx + 24, top - 5)
+            self.spawn_child(self.decode(values[0]), values[1:])
             ret(1)
 
         vm.cpu.hook_add(UC_HOOK_CODE, child, begin=0x467490, end=0x467490)
         counts = {7:1,17:4,18:1,19:1,21:5,24:4,26:1,38:3,41:2,43:2,44:2,46:3,47:2,
                   256:2,261:1,262:1,272:0,288:2,293:3,295:2,296:2,303:1,304:0,305:0,306:0,309:1,310:0,768:3,784:6}
+        counts.update({23:3,27:3,29:2,37:2,39:2,40:4,279:1,280:2,289:2,769:2})
         for host, count in counts.items():
             address = vm.u32(0x4A69B0 + host * 4)
 
@@ -96,6 +101,9 @@ class ScriptOracle:
 
     def decode(self, n):
         return STRINGS[n-TOKEN]['text_cp950'] if n >= TOKEN else n
+
+    def spawn_child(self, name, args):
+        self.events.append(dict(t=self.time, child=name, args=args))
 
     def host(self, host, a):
         if host in self.recorded_hosts:

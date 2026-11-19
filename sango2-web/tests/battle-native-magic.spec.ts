@@ -15,7 +15,7 @@ class NativeMagicScreen {
       await route.fulfill({response,json:content});
     });
     const response=await page.request.get('/assets/battle/animations.json'),atlas=await response.json();
-    const rectangles=[13001,13003,13005].flatMap(id=>atlas.objects[id].actions.wait.frames.map((frame:{key:string})=>({id,...atlas.frames[frame.key]})));
+    const rectangles=[13001,13003,13005,26001,26002,26004,26005].flatMap(id=>atlas.objects[id].actions.wait.frames.map((frame:{key:string})=>({id,...atlas.frames[frame.key]})));
     await page.addInitScript(({rectangles})=>{
       const state=window as unknown as {nativeMagicDraws:Record<string,number>;nativeMagicBlends:Record<string,string>};state.nativeMagicDraws={};state.nativeMagicBlends={};
       const original=CanvasRenderingContext2D.prototype.drawImage;
@@ -45,6 +45,40 @@ class NativeMagicScreen {
     await expect(this.canvas).toHaveAttribute('data-magic-script-phase','flight');
     await this.page.getByRole('button',{name:'暂停战斗',exact:true}).click();
   }
+  async castHeal(sequence:number) {
+    const page=this.page,name=manifest.find(m=>m.sequence===sequence)!.name;
+    const skill=page.getByRole('button',{name:new RegExp(name)});
+    await page.getByLabel('战场速度').selectOption('4');await page.getByRole('button',{name:'擂鼓开战'}).click();
+    await expect(skill).toBeEnabled({timeout:15000});await page.getByRole('button',{name:'暂停战斗',exact:true}).click();
+    await skill.click();await expect(this.canvas).toHaveAttribute('data-magic-script-kind','native-heal');
+    await expect(this.canvas).toHaveAttribute('data-magic-script-phase','darken');
+    await page.getByLabel('战场速度').selectOption('1');await page.getByRole('button',{name:'继续战斗',exact:true}).click();
+    await expect(this.canvas).toHaveAttribute('data-magic-script-phase','heal');
+    await expect.poll(async()=>Number(await this.canvas.getAttribute('data-magic-script-age'))).toBeGreaterThanOrEqual(170);
+    await page.getByRole('button',{name:'暂停战斗',exact:true}).click();
+  }
+}
+
+for(const [sequence,light,ball,width] of [[1,26001,26004,1440],[60,26002,26005,390]]) {
+  test(`native heal ${sequence} draws original holy objects and preserves its paused script at ${width}px`,async({page})=>{
+    await page.setViewportSize({width,height:width===390?844:900});
+    const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+    const screen=new NativeMagicScreen(page);await screen.open(sequence);await screen.castHeal(sequence);
+    await expect(screen.canvas).toHaveAttribute('data-camera-owner','script');
+    await expect(screen.canvas).toHaveAttribute('data-magic-script-phase','heal');
+    await expect.poll(()=>page.evaluate(ids=>ids.map(id=>(window as unknown as {nativeMagicDraws:Record<string,number>}).nativeMagicDraws[id]??0),[light,ball])).toEqual([expect.any(Number),expect.any(Number)]);
+    for(const id of [light,ball]) {
+      expect(await page.evaluate(id=>(window as unknown as {nativeMagicDraws:Record<string,number>}).nativeMagicDraws[id]??0,id)).toBeGreaterThan(0);
+      expect(await page.evaluate(id=>(window as unknown as {nativeMagicBlends:Record<string,string>}).nativeMagicBlends[id],id)).toBe('screen');
+    }
+    const snapshot=await screen.canvas.evaluate(n=>({age:n.dataset.magicScriptAge,tick:n.dataset.simulationTick,camera:n.dataset.scriptCamera}));
+    await page.getByLabel('战场视距').selectOption('0.65');await expect(screen.canvas).toHaveAttribute('data-camera-zoom','0.65');
+    expect(await screen.canvas.evaluate(n=>({age:n.dataset.magicScriptAge,tick:n.dataset.simulationTick,camera:n.dataset.scriptCamera}))).toEqual(snapshot);
+    await page.screenshot({path:`docs/screenshots/native-heal-${sequence}-${width}.png`});
+    await page.getByLabel('战场速度').selectOption('4');await page.getByRole('button',{name:'继续战斗',exact:true}).click();
+    await expect(screen.canvas).toHaveAttribute('data-magic-script-kind','idle',{timeout:15000});
+    await expect(screen.canvas).toHaveAttribute('data-camera-owner','normal');expect(errors).toEqual([]);
+  });
 }
 
 for(const [sequence,object,width] of [[2,13001,1440],[13,13003,1440],[52,13001,390],[59,13005,390]]) {

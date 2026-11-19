@@ -126,7 +126,8 @@ export function BattleView(props:Props) {
       const age=u.hp>0&&u.movement?.clock?u.movement.clock.actionAge:
         (u.action==='wait'||u.action==='walk'?b.tick+u.id*3:u.actionTick)*SOURCE_TICKS_PER_STEP;
       const action=u.action==='attack'?(battleAttackAction(b,u)?.key??u.action):u.action;
-      const drawObject=(object:number,scale:number)=>{ctx.save();ctx.translate(0,-position.height*scale);ctx.scale(facing*scale,scale);frame(object,action,age);ctx.restore();};
+      const heal=b.activeScript,spell=heal?.kind==='native-heal'&&heal.casterId===u.id&&heal.runtime.age>60&&heal.runtime.age<=124;
+      const drawObject=(object:number,scale:number)=>{ctx.save();ctx.translate(0,-position.height*scale);ctx.scale(facing*scale,scale);frame(object,spell&&object!==horseObject?'spell1':action,spell?heal.runtime.age-61:age);ctx.restore();};
       if(u.general){drawObject(horseObject,horseScale);drawObject(bodyObject,bodyScale);if(u.action!=='death')drawObject(weaponObject,weaponScale);}
       else drawObject(bodyObject,bodyScale);
       ctx.restore();
@@ -201,7 +202,7 @@ export function BattleView(props:Props) {
       node.dataset.cssScale=String(scale/ratio);
       node.dataset.projection=nativeScene?'native-perspective-v1':'legacy';node.dataset.cameraX=String(viewCamera.x);node.dataset.cameraY=String(viewCamera.y);node.dataset.cameraZoom=String(camera.current.zoom);
       node.dataset.cameraOwner=battleScriptCameraLocked(b)?'script':'normal';
-      node.dataset.scriptCamera=b.activeScript?.kind==='native-shoot'?JSON.stringify(b.activeScript.runtime.camera??null):'null';
+      node.dataset.scriptCamera=b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'?JSON.stringify(b.activeScript.runtime.camera??null):'null';
       const general=b.units.find(u=>u.side==='attacker'&&u.general)!,gp=unitPosition(general);
       node.dataset.generalScreen=JSON.stringify({x:(sceneX+gp.x*sceneScale)/ratio,y:(sceneY+gp.y*sceneScale)/ratio});
       node.dataset.scenery=sceneryKey;
@@ -224,10 +225,10 @@ export function BattleView(props:Props) {
       // IncreaseHP VM loop is exposed as one continuous `heal` phase while
       // `magicScriptAge` advances from the number of completed HP writes.
       node.dataset.magicScriptKind=b.activeScript?.kind??'idle';
-      node.dataset.magicScriptPhase=b.activeScript?.kind==='native-shoot'?b.activeScript.runtime.phase:b.activeScript?.kind==='heal'?'heal':
+      node.dataset.magicScriptPhase=b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'?b.activeScript.runtime.phase:b.activeScript?.kind==='heal'?'heal':
         b.activeScript?.kind==='magic-projectile'||b.activeScript?.kind==='magic-area'||
         b.activeScript?.kind==='magic-reinforce'||b.activeScript?.kind==='magic-status'?b.activeScript.phase:'idle';
-      node.dataset.magicScriptAge=String(b.activeScript?.kind==='native-shoot'?b.activeScript.runtime.age:b.activeScript?.kind==='heal'?Math.max(0,b.activeScript.nextPoint-1):
+      node.dataset.magicScriptAge=String(b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'?b.activeScript.runtime.age:b.activeScript?.kind==='heal'?Math.max(0,b.activeScript.nextPoint-1):
         b.activeScript?.kind==='magic-projectile'||b.activeScript?.kind==='magic-area'||
         b.activeScript?.kind==='magic-reinforce'||b.activeScript?.kind==='magic-status'?b.activeScript.age:0);
       node.dataset.specialAttacks=String(b.units.filter(u=>u.hp>0&&u.action==='attack'&&u.movement?.clock?.special).length);
@@ -363,14 +364,24 @@ export function BattleView(props:Props) {
         else {const r=7*to.scale;ctx.moveTo(to.x-r,to.y-r);ctx.lineTo(to.x+r,to.y+r);ctx.moveTo(to.x+r,to.y-r);ctx.lineTo(to.x-r,to.y+r);}
         ctx.stroke();
       }
-      if(magic?.kind==='native-shoot') {
-        const s=magic.runtime,w=s.weapon;
+      if(magic?.kind==='native-shoot'||magic?.kind==='native-heal') {
+        const s=magic.runtime;
         // The source script exposes both screen brightness and palette shade.
         // Canvas composes their scene shade here; OF_WHITELIGHT child artwork
         // is drawn afterwards. Exact DirectDraw palette mixing remains separate.
         const dim=1-s.brightness*s.palette/256;
         if(dim>0){ctx.save();ctx.fillStyle=`rgb(0 0 0 / ${dim})`;ctx.fillRect(left,sceneBounds.top,right-left,sceneBounds.bottom-sceneBounds.top);ctx.restore();}
-        if(w?.alive) {
+        if(magic.kind==='native-heal')for(const o of magic.runtime.objects) {
+          if(o.fade<1||!o.scaleX||!o.scaleY)continue;
+          const p=project(o),scale=spriteScale(o.object,p),animation=atlas.objects[o.object]?.actions.wait;
+          if(!animation)continue;
+          ctx.save();ctx.translate(p.x,p.y);ctx.scale(nativeSpriteFacing(o.facing*65536)*scale*o.scaleX/65536,scale*o.scaleY/65536);
+          ctx.globalAlpha=Math.trunc(o.fade)/16;ctx.globalCompositeOperation='screen';
+          drawSourceFrame(animation.frames[o.frame%animation.frames.length].key);ctx.restore();
+        }
+        const w=magic.kind==='native-shoot'?magic.runtime.weapon:undefined;
+        if(w?.alive&&magic.kind==='native-shoot') {
+          const s=magic.runtime;
           const p=project(w),scale=spriteScale(w.object,p),glow=s.flaming?13007:13002+s.style*2;
           ctx.save();ctx.translate(p.x,p.y);ctx.scale(nativeSpriteFacing(w.facing*65536)*scale,scale);
           ctx.globalAlpha=w.fade/16;
@@ -411,7 +422,9 @@ export function BattleView(props:Props) {
         }
         // All four ShootObject wrappers share these small source resources.
         // Decode them before combat so a cast never advances while art loads.
-        if(latest.current.battle.magicRules)for(const id of [13001,13002,13003,13004,13005,13006,13007]) {
+        const magicObjects=[...(latest.current.battle.magicRules?[13001,13002,13003,13004,13005,13006,13007]:[]),
+          ...(latest.current.battle.healRules?[26001,26002,26004,26005]:[])];
+        for(const id of magicObjects) {
           const object=atlas.objects[id];if(!object)throw new Error(`缺少武将技动画 ${id}`);
           for(const animation of Object.values(object.actions))for(const f of animation.frames)pages.add(atlas.frames[f.key].page);
         }

@@ -1,0 +1,11 @@
+
+Running 2 tests using 2 workers
+
+(node:41068) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:36132) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 [chromium] › tests\battle-native-magic.spec.ts:63:3 › native heal 1 draws original holy objects and preserves its paused script at 1440px (12.9s)
+  ok 2 [chromium] › tests\battle-native-magic.spec.ts:63:3 › native heal 60 draws original holy objects and preserves its paused script at 390px (13.0s)
+
+  2 passed (18.1s)

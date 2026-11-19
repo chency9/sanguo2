@@ -43,7 +43,7 @@ function readyStrike(reserve=true,legacy=false) {
     rosters:{attacker:[{commander:a,troops:1,withdrawn:false}],defender:[{commander:d,troops:1,troopSlots:{active:reserve?0:1,reserve:reserve?1:0},withdrawn:false}]}});
   // Preserve the existing v2 event/RNG fixture; v3 source-clock death has a
   // separate scheduler integration test with its own target-search draws.
-  delete b.deploymentRules;delete b.nativeCommands;b.movementRules='native-grid-v2';delete b.attackRules;delete b.projectileRules;delete b.projectiles;delete b.magicRules;delete b.generalRules;delete b.cameraRules;
+  delete b.deploymentRules;delete b.nativeCommands;b.movementRules='native-grid-v2';delete b.attackRules;delete b.projectileRules;delete b.projectiles;delete b.magicRules;delete b.generalRules;delete b.cameraRules;delete b.healRules;
   if(legacy){delete b.casualtyRules;delete b.detached;}
   b=commandBattle(b,{type:'start'});
   for(const u of b.units){u.order='hold';u.x=u.side==='attacker'?64:1136;u.y=342;}

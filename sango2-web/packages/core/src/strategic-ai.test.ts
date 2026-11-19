@@ -211,7 +211,8 @@ describe('opponent tactical decisions',()=>{
       b=commandBattle(b,{type:'start'});b.commanders.defender.charge=120000;
       tickBattle(b,4);
       if(b.activeScript){casts++;expect(b.commanders.defender.mp).toBe(20);expect(b.activeScript.side).toBe('defender');
-        tickBattle(b,30);expect(battleGeneral(b,'defender').hp).toBe(35);expect(b.commanders.attacker.mp).toBe(40);}
+        expect(b.activeScript.kind).toBe('native-heal');
+        tickBattle(b,140);expect(battleGeneral(b,'defender').hp).toBe(35);expect(b.commanders.attacker.mp).toBe(40);}
       else expect(b.commanders.defender.mp).toBe(40);
     }
     expect(casts).toBeGreaterThan(0);expect(casts).toBeLessThan(32);

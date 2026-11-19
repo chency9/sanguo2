@@ -14,7 +14,7 @@ function uniqueCells(b:BattleState) {
 
 describe('saved native movement in the Web battle',()=>{
   it('updates a blocked ally early, claims the freed cell, and does not advance that ally a second time',()=>{
-    const b=commandBattle(fresh(10),{type:'start'});delete b.deploymentRules;delete b.nativeCommands;b.movementRules='native-grid-v2';delete b.attackRules;delete b.projectileRules;delete b.projectiles;delete b.magicRules;delete b.generalRules;delete b.cameraRules;prepareBattleMovement(b);b.opponentAI!.countdown=60;
+    const b=commandBattle(fresh(10),{type:'start'});delete b.deploymentRules;delete b.nativeCommands;b.movementRules='native-grid-v2';delete b.attackRules;delete b.projectileRules;delete b.projectiles;delete b.magicRules;delete b.generalRules;delete b.cameraRules;delete b.healRules;prepareBattleMovement(b);b.opponentAI!.countdown=60;
     const own=b.units.filter(u=>!u.general&&u.side==='attacker'),enemies=b.units.filter(u=>u.side==='defender');
     const place=(u:typeof own[number],x:number,y:number)=>{
       Object.assign(u.movement!,{x,y,previousX:x,previousY:y,px:(96*x+48)*65536,py:(72*y+36)*65536});
@@ -32,7 +32,7 @@ describe('saved native movement in the Web battle',()=>{
     uniqueCells(b);validateBattle(b);
   });
   it('keeps v1 snapshots on their existing update order and rejects future update timestamps',()=>{
-    let b=fresh();delete b.deploymentRules;delete b.nativeCommands;b.movementRules='native-grid-v1';delete b.attackRules;delete b.projectileRules;delete b.projectiles;delete b.magicRules;delete b.generalRules;delete b.cameraRules;b=commandBattle(b,{type:'start'});tickBattle(b,5);
+    let b=fresh();delete b.deploymentRules;delete b.nativeCommands;b.movementRules='native-grid-v1';delete b.attackRules;delete b.projectileRules;delete b.projectiles;delete b.magicRules;delete b.generalRules;delete b.cameraRules;delete b.healRules;b=commandBattle(b,{type:'start'});tickBattle(b,5);
     expect(b.units.every(u=>u.movement?.updatedAt===undefined)).toBe(true);validateBattle(b);
     const restored=JSON.parse(JSON.stringify(b));tickBattle(b,10);tickBattle(restored,10);expect(restored).toEqual(b);
     const newer=commandBattle(fresh(),{type:'start'});tickBattle(newer);newer.units[0].movement!.updatedAt=4;
@@ -90,7 +90,7 @@ describe('saved native movement in the Web battle',()=>{
     advanceBattleMovement(u,39);expect(u.escaped).toBe(false);advanceBattleMovement(u,1);expect(u.escaped).toBe(true);validateBattle(b);
   });
   it('keeps older saves on continuous movement without adding reservation state',()=>{
-    let b=fresh();delete b.deploymentRules;delete b.nativeCommands;delete b.movementRules;delete b.attackRules;delete b.projectileRules;delete b.projectiles;delete b.magicRules;delete b.generalRules;delete b.cameraRules;b=commandBattle(commandBattle(b,{type:'order',division:'all',order:'advance'}),{type:'start'});
+    let b=fresh();delete b.deploymentRules;delete b.nativeCommands;delete b.movementRules;delete b.attackRules;delete b.projectileRules;delete b.projectiles;delete b.magicRules;delete b.generalRules;delete b.cameraRules;delete b.healRules;b=commandBattle(commandBattle(b,{type:'order',division:'all',order:'advance'}),{type:'start'});
     tickBattle(b,20);expect(b.units.every(u=>u.movement===undefined)).toBe(true);validateBattle(b);
   });
   it('rejects corrupt fixed-point state and duplicate live reservations',()=>{

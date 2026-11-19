@@ -32,7 +32,7 @@ function ready(unit='弓',troops=1) {
   const commander=(id:string)=>({id,name:id,portrait:'',strength:80,intelligence:80,hp:100,mp:40,unit,level:40});
   const b=commandBattle(createBattle({id:'attack-action',attacker:commander('a'),defender:commander('d'),attackingTroops:troops,defendingTroops:troops,seed:184}),{type:'start'});
   // Isolate attack-node events from the separately verified projectile flight.
-  delete b.projectileRules;delete b.projectiles;delete b.magicRules;delete b.generalRules;delete b.cameraRules;
+  delete b.projectileRules;delete b.projectiles;delete b.magicRules;delete b.generalRules;delete b.cameraRules;delete b.healRules;
   prepareBattleMovement(b);b.opponentAI!.countdown=60;
   for(const u of b.units){u.order='hold';u.movement!.clock!.decision=10000;}
   const u=b.units.find(u=>!u.general&&u.side==='attacker')!,enemy=b.units.find(u=>!u.general&&u.side==='defender')!;

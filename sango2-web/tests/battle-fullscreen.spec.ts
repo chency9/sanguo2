@@ -207,8 +207,8 @@ test('learned healing skill reports charge and MP gates and consumes MP once',as
   await page.getByRole('button',{name:'暂停战斗',exact:true}).click();
   await skill.click();
   const canvas=page.getByRole('img',{name:'实时战场画面'});
-  await expect(canvas).toHaveAttribute('data-magic-script-kind','heal');
-  await expect(canvas).toHaveAttribute('data-magic-script-phase','heal');
+  await expect(canvas).toHaveAttribute('data-magic-script-kind','native-heal');
+  await expect(canvas).toHaveAttribute('data-magic-script-phase','darken');
   await expect(canvas).toHaveAttribute('data-magic-script-age',/^[0-9]+$/);
   await expect(page.getByRole('meter',{name:'曹操技力'})).toHaveAttribute('aria-valuenow','0');
   await expect(skill).toContainText('正在施法');await expect(skill).toBeDisabled();
