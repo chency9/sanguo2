@@ -1,5 +1,5 @@
-/** Domestic rules from the pinned 1.05+ executable. System.SO presentation,
- * annual historical events and the complete AI annual chain remain separate. */
+/** Domestic rules from the pinned 1.05+ executable. System.SO presentation
+ * and annual historical appearance events remain separate. */
 import type {ScenarioDefinition} from '@sango2/content';
 import type {Session} from './index';
 import {nativeBelow,type NativeRandomState} from './native-strategic-ai';
@@ -7,12 +7,14 @@ import {allocateBattleTroops,nativeTroopCapacity} from './native-troops';
 import {createDomesticSearch,ensureDomesticSearch,developDomesticOfficer,searchDomesticOfficer,domesticSearchMessage,runDomesticAutonomy,type DomesticSearchState} from './native-policy-actions';
 import {officerLevel} from './native-progression';
 import type {AutonomyMode} from './native-policy-search';
+import {ensureDomesticAnnual,runAnnualDomesticAI,type DomesticAnnualState} from './native-policy-annual';
 
 export interface DomesticResult {year:number;cityId:string;generalId:string;population:number;defense:number;reportedPopulation:number;reportedDefense:number}
 export interface DomesticState {
   version:1;year:number;active:boolean;acted:string[];
   governors:Record<string,string|null>;results:DomesticResult[];
   search?:DomesticSearchState;
+  annual?:DomesticAnnualState;
 }
 export type DomesticCommand =
   | {type:'policy-enable'}
@@ -65,10 +67,11 @@ export function createDomesticState(s:Session,scene:ScenarioDefinition,items:rea
 }
 /** Do not migrate legacy sessions silently: this marker also selects native
  * development, reserve transfer and annual tax instead of old preview rules. */
-export function beginDomesticYear(s:Session,scene:ScenarioDefinition):boolean {
+export function beginDomesticYear(s:Session,scene:ScenarioDefinition,items:readonly Record<string,string>[]=[]):boolean {
   if(!s.policy||s.policy.year>=scene.year+Math.floor(s.day/360))return false;
   s.policy.year=scene.year+Math.floor(s.day/360);s.policy.active=true;s.policy.acted=[];
   refreshPolicyGovernors(s,scene);
+  runAnnualDomesticAI(s,scene,items);
   for(const def of scene.cities)s.cities[def.id].money+=nativeAnnualRevenue(s.cities[def.id].population,def.nativeFlags===2);
   return true;
 }
@@ -76,6 +79,7 @@ export function executeDomestic(s:Session,scene:ScenarioDefinition,command:Domes
   if(command.type==='policy-enable') {
     if(s.policy)throw new Error('此局已启用年度内政。');
     s.policy=createDomesticState(s,scene,items);
+    ensureDomesticAnnual(s,scene);
     return '已启用年度内政，现有资源、兵员和进度已保留。';
   }
   const p=s.policy;if(!p)throw new Error('请先启用年度内政。');

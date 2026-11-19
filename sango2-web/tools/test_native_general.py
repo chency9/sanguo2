@@ -1,10 +1,15 @@
 import unittest
 import json
 from pathlib import Path
-from native_general import experience_threshold, initial_level, initial_vitals, learning_entries, equipment_speed
+from native_general import experience_threshold, initial_level, initial_vitals, learning_entries, equipment_speed, force_mask
 
 
 class NativeGeneralTests(unittest.TestCase):
+    def test_force_mask_keeps_all_native_tokens_and_default(self):
+        self.assertEqual(force_mask('刀 槍 鍊 女'), 1 | 2 | 16 | 4096)
+        self.assertEqual(force_mask(''), 2)
+        self.assertEqual(force_mask('大 鏈'), 2)
+
     def test_equipment_speed_against_original_exe(self):
         path=Path(__file__).resolve().parents[1]/'packages/core/fixtures/native-general-speed-vectors.json'
         for row in json.loads(path.read_text(encoding='utf8'))['cases']:

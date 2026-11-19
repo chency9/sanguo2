@@ -7,6 +7,7 @@ import {allocateBattleTroops,nativeTroopCapacity} from './native-troops';
 import {initialOfficerCondition,initialConditionTimers,nativeRecoverCondition,type NativeConditionTimers} from './native-officer-condition';
 import {policyGovernorId} from './native-policy';
 import {officerLevel,officerMaxHp,officerMaxMp} from './native-progression';
+import {officerIntelligence,officerStrength} from './native-officer-runtime';
 import {nativeStrategyDecision,nativeOfficerReady,nativeCanDispatch,nativeShuffle,nativeBelow,nativeNextDecisionCountdown,
   type NativeRandomState,type NativeOfficerReadiness,type NativeStrategySnapshot,type NativeCandidate} from './native-strategic-ai';
 
@@ -72,7 +73,7 @@ export function nativeMarchPlan(s:Session,scene:ScenarioDefinition,owner:string,
   const gov=selected.indexOf(governor??'');
   if(gov>=0)[selected[0],selected[gov]]=[selected[gov],selected[0]];
   else if(![3,9].includes(kind))for(let i=1;i<selected.length;i++) {
-    if(scene.generals.find(g=>g.id===selected[i])!.intelligence>scene.generals.find(g=>g.id===selected[0])!.intelligence)[selected[0],selected[i]]=[selected[i],selected[0]];
+    if(officerIntelligence(s.generals[selected[i]],scene.generals.find(g=>g.id===selected[i])!)>officerIntelligence(s.generals[selected[0]],scene.generals.find(g=>g.id===selected[0])!))[selected[0],selected[i]]=[selected[i],selected[0]];
   }
   const isPass=scene.cities.find(c=>c.id===from)!.nativeFlags===2;
   const money=isPass&&kind!==3?s.cities[from].money:Math.trunc(s.cities[from].money*(nativeBelow(state.rng,[3,9].includes(kind)?10:30)+([3,9].includes(kind)?5:10))/100);
@@ -85,7 +86,7 @@ export function nativeMarchPlan(s:Session,scene:ScenarioDefinition,owner:string,
 /** 0x401910 fills present and reserve troop slots from city's recruit pool. */
 function replenish(s:Session,scene:ScenarioDefinition,owner:string) {
   const ordered=scene.generals.filter(g=>s.generals[g.id].ownerId===owner&&s.generals[g.id].status==='登')
-    .sort((a,b)=>b.strength-a.strength);
+    .sort((a,b)=>officerStrength(s.generals[b.id],b)-officerStrength(s.generals[a.id],a));
   const ruler=scene.factions.find(f=>f.id===owner)!.leaderId,index=ordered.findIndex(g=>g.id===ruler);
   if(index>0)ordered.unshift(...ordered.splice(index,1));
   for(const def of ordered) {

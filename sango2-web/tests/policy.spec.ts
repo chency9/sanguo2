@@ -2,6 +2,7 @@ import {test,expect,type Page} from '@playwright/test';
 import {delayRivalDecisions} from './campaign-fixture';
 import {readFile} from 'node:fs/promises';
 import type {Session} from '../packages/core/src/index';
+import type {GameContent} from '../packages/content/src/index';
 
 class CouncilPage {
   constructor(readonly page:Page){}
@@ -20,6 +21,31 @@ class CouncilPage {
   async importSession(value:unknown){await this.page.getByLabel('导入存档',{exact:true}).setInputFiles({name:'policy.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(value))});}
 }
 
+test('annual rival governance, wounds and equipment persist through the real save and roster UI',async({page})=>{
+  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));const council=new CouncilPage(page);await council.start();
+  const save=await council.exportSession(),s=save.session,content=await (await page.request.get('/assets/content.json')).json() as GameContent;
+  const scene=content.scenarios[0],rival=scene.factions.find(f=>f.id!==s.factionId&&f.leaderId&&s.generals[f.leaderId].ownerId===f.id)!,id=rival.leaderId!;
+  const g=s.generals[id],def=scene.generals.find(d=>d.id===id)!;s.cities[g.cityId!].troops+=1-g.troops;
+  Object.assign(g,{level:1,experience:0,hp:1,mp:1,troops:1,troopSlots:{active:1,reserve:0}});
+  s.day=359;s.policy!.annual!.battleExperience[s.factionId]=200000;
+  // Isolate annual progression from the ten ordinary recovery/recruit callbacks
+  // that the calendar runs before the annual transition.
+  for(const timer of Object.values(s.nativeAI!.recovery)){timer.hp=9999;timer.mp=9999;}
+  for(const city of scene.cities)s.nativeAI!.recruitTimers[city.id]=9999;
+  await council.importSession(save);await council.finish();await page.getByRole('button',{name:'下一天',exact:true}).click();await expect(council.dialog).toBeVisible();
+  const after=await council.exportSession(),a=after.session;
+  expect(a.policy!.year).toBe(scene.year+1);expect(a.policy!.annual!.reports.length).toBeGreaterThan(0);expect(a.generals[id].level).toBeGreaterThan(1);
+  expect(a.generals[id].hp).toBe(1);expect(a.generals[id].mp).toBe(1);expect(a.generals[id].troops).toBe(1);
+  expect(a.policy!.search!.reports).toEqual([]);expect(a.policy!.results).toEqual([]);
+  await council.importSession(after);const restored=await council.exportSession();expect(restored.session).toEqual(a);
+  await council.importSession(restored);await council.dialog.getByRole('button',{name:'关闭对话框'}).click();
+  await page.getByRole('button',{name:/^武将名册/}).click();
+  await page.getByLabel('名册范围').selectOption('all');await page.getByLabel('检索武将').fill(def.name);
+  const row=page.getByRole('row').filter({has:page.getByRole('rowheader',{name:def.name,exact:true})});
+  await expect(row).toContainText(`等级 ${a.generals[id].level}`);await expect(row).toContainText(`经验 ${a.generals[id].experience}`);await expect(row).toContainText('体 1 /');
+  await page.screenshot({path:'docs/screenshots/policy-annual-roster.png'});expect(errors).toEqual([]);
+});
+
 for(const width of [1440,390])test(`domestic council supports development, appointment, reports and save at ${width}`,async({page})=>{
   await page.setViewportSize({width,height:width===1440?1200:844});const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
   const council=new CouncilPage(page);await council.start();
@@ -30,7 +56,8 @@ for(const width of [1440,390])test(`domestic council supports development, appoi
   await expect(actor).toBeDisabled();await expect(council.dialog.getByRole('status')).toContainText('1将完成开发');
   await expect(council.dialog.getByText('5,336',{exact:true})).toBeVisible();
   await council.command('任命太守');
-  await council.dialog.getByLabel('太守人选').selectOption({label:'曹操 · 智力92 · 武力87'});
+  const cao=await council.dialog.getByRole('option',{name:/^曹操 · 智力/}).getAttribute('value');
+  await council.dialog.getByLabel('太守人选').selectOption(cao!);
   await council.dialog.getByRole('button',{name:'任命为太守',exact:true}).click();
   await expect(council.dialog.getByRole('status')).toContainText('任命曹操为太守');
   await council.command('内政报告');await expect(council.dialog.getByRole('rowheader',{name:'洛陽 · 曹操'})).toBeVisible();

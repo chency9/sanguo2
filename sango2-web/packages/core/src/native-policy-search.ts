@@ -53,7 +53,7 @@ export function nativeRecruitDisposition(owner:string,loyalFaction:string|null,l
 /** 0x426B44: player roster, descending EXP, ruler promoted first, top third.
  * The original stores the multiplication as a 32-bit unsigned integer. */
 export function nativeRecruitExperience(roster:readonly {id:string;experience:number}[],ruler:string|null,rng:NativeRandomState):number {
-  const ordered=[...roster].sort((a,b)=>b.experience-a.experience),index=ordered.findIndex(g=>g.id===ruler);
+  const ordered=roster.toSorted((a,b)=>(b.experience|0)-(a.experience|0)),index=ordered.findIndex(g=>g.id===ruler);
   if(index>0)ordered.unshift(...ordered.splice(index,1));
   const count=Math.max(1,Math.trunc(ordered.length/3));
   const sum=ordered.slice(0,count).reduce((n,g)=>(n+g.experience)|0,0);

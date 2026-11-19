@@ -24,6 +24,7 @@ export interface GeneralDefinition {
   rawSkill: string; rawStrategy: string; sourceLine: number;
   appearance?: CombatAppearance; bodyType?: number; baseExperience?: number;
   loyalFactionId?:string|null;
+  forceMask?:number;
   level?:number; baseHp?:number; baseMp?:number; speed?:number; skillLearnset?:SkillLearning[]; strategyLearnset?:SkillLearning[];
 }
 export interface ScenarioDefinition {
@@ -70,6 +71,7 @@ export function validateContent(value: unknown): asserts value is GameContent {
     if(s.cities.some(c=>c.searchCategory!==undefined&&(!Number.isInteger(c.searchCategory)||c.searchCategory<1||c.searchCategory>5)))throw new Error('城池搜索类别无效。');
     if(s.generals.some(g=>g.loyalFactionId!==undefined&&g.loyalFactionId!==null&&!s.factions.some(f=>f.id===g.loyalFactionId)))throw new Error('武将情义势力资料无效。');
     if(s.generals.some(g=>g.speed!==undefined&&(!Number.isInteger(g.speed)||g.speed < -32768||g.speed>32767)))throw new Error('武将速度资料无效。');
+    if(s.generals.some(g=>g.forceMask!==undefined&&(!Number.isInteger(g.forceMask)||g.forceMask<0||g.forceMask>8191)))throw new Error('武将兵种资料无效。');
     if (s.roads.some(r => !cities.has(r.from) || !cities.has(r.to) || !Number.isFinite(r.length) || r.points.length < 2)) throw new Error('道路资料无效。');
   }
 }

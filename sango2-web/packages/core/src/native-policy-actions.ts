@@ -3,6 +3,9 @@ import type {Session} from './index';
 import {nativeAutonomy,nativeRecruitDisposition,nativeRecruitExperience,nativeSearchItem,nativeSearchRoute,type AutonomyMode,type SearchItem,type RecruitmentCode} from './native-policy-search';
 import {nativeDevelop,policyGovernorId} from './native-policy';
 import {applyRecruitExperience,officerExperience,officerLevel} from './native-progression';
+import {officerStrength,officerIntelligence} from './native-officer-runtime';
+import {nativeCityCapacity} from './native-ai-campaign';
+import {ensureDomesticAnnual} from './native-policy-annual';
 
 export interface SearchReport {year:number;cityId:string;generalId:string;kind:'none'|'item'|'officer';itemId?:number;candidateId?:string;code?:RecruitmentCode;levels?:number}
 export interface DomesticSearchState {
@@ -33,19 +36,22 @@ export function ensureDomesticSearch(s:Session,scene:ScenarioDefinition,items:re
   }
   return state;
 }
-export function developDomesticOfficer(s:Session,scene:ScenarioDefinition,cityId:string,id:string) {
+export function developDomesticOfficer(s:Session,scene:ScenarioDefinition,cityId:string,id:string,publish=true) {
   const city=s.cities[cityId],def=scene.cities.find(c=>c.id===cityId)!,actor=scene.generals.find(g=>g.id===id)!;
   const governor=policyGovernorId(s,scene,cityId);if(!governor||!s.nativeAI)throw new Error('当前城池缺少太守或征战状态。');
   const result=nativeDevelop({population:city.population,defense:city.defense,isPass:def.nativeFlags===2,
-    strength:actor.strength,intelligence:actor.intelligence,governorIntelligence:scene.generals.find(g=>g.id===governor)!.intelligence},s.nativeAI.rng);
+    strength:officerStrength(s.generals[id],actor),intelligence:officerIntelligence(s.generals[id],actor),
+    governorIntelligence:officerIntelligence(s.generals[governor],scene.generals.find(g=>g.id===governor)!)},s.nativeAI.rng);
   const population=result.population-city.population,defense=result.defense-city.defense;
   city.population=result.population;city.defense=result.defense;
-  s.policy!.results.unshift({year:s.policy!.year,cityId,generalId:id,population,defense,reportedPopulation:result.reportedPopulation,reportedDefense:result.reportedDefense});
-  s.policy!.results.length=Math.min(100,s.policy!.results.length);
-  if(!s.policy!.acted.includes(id))s.policy!.acted.push(id);
+  if(publish) {
+    s.policy!.results.unshift({year:s.policy!.year,cityId,generalId:id,population,defense,reportedPopulation:result.reportedPopulation,reportedDefense:result.reportedDefense});
+    s.policy!.results.length=Math.min(100,s.policy!.results.length);
+    if(!s.policy!.acted.includes(id))s.policy!.acted.push(id);
+  }
   return {population,defense};
 }
-export function searchDomesticOfficer(s:Session,scene:ScenarioDefinition,cityId:string,id:string,items:readonly Record<string,string>[]):SearchReport {
+export function searchDomesticOfficer(s:Session,scene:ScenarioDefinition,cityId:string,id:string,items:readonly Record<string,string>[],publish=true):SearchReport {
   const p=s.policy!,state=ensureDomesticSearch(s,scene,items),rng=s.nativeAI!.rng,actor=scene.generals.find(g=>g.id===id)!;
   // 0x4010C6 accepts every affiliation; hidden cities (FLAGS==1) are skipped.
   // Long/restricted paths remain neighbors for searching in the original.
@@ -65,22 +71,31 @@ export function searchDomesticOfficer(s:Session,scene:ScenarioDefinition,cityId:
   } else if(route.kind==='officer') {
     const candidate=scene.generals.find(g=>g.id===route.generalId)!,g=s.generals[candidate.id],owner=s.generals[id].ownerId!;
     const loyal=candidate.loyalFactionId??null,leader=scene.factions.find(f=>f.id===loyal)?.leaderId;
-    const code=nativeRecruitDisposition(owner,loyal,leader?s.generals[leader].ownerId:null,candidate.intelligence,rng);
+    const code=nativeRecruitDisposition(owner,loyal,leader?s.generals[leader].ownerId:null,officerIntelligence(g,candidate),rng);
     Object.assign(report,{kind:'officer',candidateId:candidate.id,code});
     if(code===16||code===17) {
-      Object.assign(g,{ownerId:owner,cityId,armyId:null,status:'登'});
-      state.residentOrder[cityId].unshift(candidate.id);
+      // 0x4230ED relocates AI recruits from a full city to the first owned,
+      // visible city with room; if all are full, the source city still accepts.
+      const target=owner!==s.factionId&&residents(s,cityId).length>=nativeCityCapacity(s.cities[cityId].population)?
+        scene.cities.find(c=>c.nativeFlags!==1&&s.cities[c.id].ownerId===owner&&residents(s,c.id).length<nativeCityCapacity(s.cities[c.id].population))?.id??cityId:cityId;
+      Object.assign(g,{ownerId:owner,cityId:target,armyId:null,status:'登'});
+      state.residentOrder[target].unshift(candidate.id);
+      const annual=ensureDomesticAnnual(s,scene);
+      annual.rosterOrder[owner]=[candidate.id,...annual.rosterOrder[owner].filter(id=>id!==candidate.id)];
       // 0x406F3F marks a newly joined officer as already used this year.
       if(!p.acted.includes(candidate.id))p.acted.push(candidate.id);
       const roster=scene.generals.filter(d=>s.generals[d.id].ownerId===s.factionId&&s.generals[d.id].status==='登')
         .map(d=>({id:d.id,experience:officerExperience(s.generals[d.id],d)}));
       const experience=nativeRecruitExperience(roster,scene.factions.find(f=>f.id===s.factionId)?.leaderId??null,rng);
       report.levels=applyRecruitExperience(g,candidate,experience);
-      s.cities[cityId].troops+=g.troops;
+      s.cities[target].troops+=g.troops;
     }
   }
-  if(!p.acted.includes(id))p.acted.push(id);
-  state.reports.unshift(report);state.reports.length=Math.min(100,state.reports.length);return report;
+  if(publish) {
+    if(!p.acted.includes(id))p.acted.push(id);
+    state.reports.unshift(report);state.reports.length=Math.min(100,state.reports.length);
+  }
+  return report;
 }
 export function domesticSearchMessage(report:SearchReport,scene:ScenarioDefinition,items:readonly Record<string,string>[]):string {
   const actor=scene.generals.find(g=>g.id===report.generalId)!.name;

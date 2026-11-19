@@ -13,7 +13,7 @@ import shutil
 import struct
 from io import BytesIO
 from PIL import Image
-from native_general import initial_level, initial_vitals, learning_entries, equipment_speed
+from native_general import initial_level, initial_vitals, learning_entries, equipment_speed, force_mask
 from native_animation import attack_frames, attack_timeline
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -276,7 +276,7 @@ def main():
                 'ownerId':faction(city.get('KING','')) if city and g['STATUS']=='登' else None,
                 'weapon':g.get('WEAPON',''),'horse':g.get('HORSE',''),'item':g.get('THING',''),
                 'appearance':appearance(g),'bodyType':number(g.get('TYPE')),'baseExperience':number(g.get('BASEEXP')),
-                'unit':g.get('USEFORCE',''),'formations':g.get('BATTLEARRAY','').split(),
+                'unit':g.get('USEFORCE',''),'forceMask':force_mask(g.get('FORCE','')),'formations':g.get('BATTLEARRAY','').split(),
                 'skillLearnset':learning_entries(fields,'SKILL'),'strategyLearnset':learning_entries(fields,'WISESKILL'),
                 'rawSkill':'\n'.join(v for k,v in fields if k=='SKILL'),
                 'rawStrategy':'\n'.join(v for k,v in fields if k=='WISESKILL'),'sourceLine':g['_line']})

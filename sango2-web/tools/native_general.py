@@ -49,3 +49,13 @@ def learning_entries(entries, key):
         if len(result) == 8:
             break
     return result
+
+
+def force_mask(value):
+    # 0x42C9C2 / 0x42CB4D. Exact tokens; the native fallback is spear (bit 1).
+    names = ['刀', '槍', '關', '弓', '鍊', '飛', '武', '蠻', '鐵', '籐', '賊', '弩', '女']
+    mask = 0
+    for token in value.split():
+        if token in names:
+            mask |= 1 << names.index(token)
+    return mask or 2

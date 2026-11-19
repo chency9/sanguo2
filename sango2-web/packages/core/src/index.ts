@@ -9,9 +9,12 @@ import {createNativeCampaignAI,runNativeStrategicCallback,type NativeCampaignAI}
 import {initialOfficerCondition,initialConditionTimers,type NativeOfficerCondition} from './native-officer-condition';
 import {nativeTroopCapacity,type TroopSlots} from './native-troops';
 import {officerLevel,officerMaxHp,officerMaxMp,type OfficerProgress} from './native-progression';
+import {initializeOfficerEquipment,officerDefinition,type OfficerEquipment} from './native-officer-runtime';
+import {ensureDomesticAnnual} from './native-policy-annual';
 import {createDomesticState,executeDomestic,beginDomesticYear,refreshPolicyGovernors,type DomesticState,type DomesticCommand} from './native-policy';
 export {policyGovernorId,nativeDevelop,nativeAnnualRevenue} from './native-policy';
 export * from './native-progression';
+export {officerDefinition,officerStrength,officerIntelligence,officerSpeed,officerForceMask,officerFormations} from './native-officer-runtime';
 export {domesticSearchMessage} from './native-policy-actions';
 export type {AutonomyMode} from './native-policy-search';
 
@@ -21,7 +24,7 @@ export const RULES = { initialTroopsPerGeneral: 80, developCost: 300, developDef
   developPopulation: 500, recruitCost: 200, recruitTroops: 50, roadUnitsPerDay: 60, maxArmyGenerals: 5 } as const;
 
 export interface CityState { ownerId: string | null; money: number; population: number; defense: number; troops: number; lastActionDay: number }
-export interface GeneralState extends Partial<NativeOfficerCondition>,Partial<OfficerProgress> { ownerId: string | null; cityId: string | null; armyId: string | null; status: string; hp:number; mp:number; troops:number;troopSlots?:TroopSlots }
+export interface GeneralState extends Partial<NativeOfficerCondition>,Partial<OfficerProgress>,Partial<OfficerEquipment> { ownerId: string | null; cityId: string | null; armyId: string | null; status: string; hp:number; mp:number; troops:number;troopSlots?:TroopSlots }
 export interface Army {
   id: string; ownerId: string; from: string; to: string; roadId: string; generalIds: string[];
   troops: number; totalDays: number; remainingDays: number;
@@ -77,11 +80,13 @@ export function createSession(content: GameContent, scenarioId: string, factionI
       const g=generals[def.id],capacity=nativeTroopCapacity(def.level??20);
       Object.assign(g,{level:def.level??20,experience:def.baseExperience??0,maxHp:def.hp,maxMp:def.mp,
         troopSlots:{active:Math.max(0,capacity.active),reserve:capacity.reserve},troops:Math.max(0,capacity.active)+capacity.reserve});
+      initializeOfficerEquipment(g,def,content.items);
     }
     for(const c of scene.cities)cities[c.id].troops=stationedGenerals(s,c.id).reduce((n,id)=>n+generals[id].troops,0);
   }
   s.nativeAI=createNativeCampaignAI(s,scene);
   s.policy=createDomesticState(s,scene,content.items);
+  ensureDomesticAnnual(s,scene);
   note(s, `${scene.title}，${faction.name}起兵。选择城池，经营内政，沿道路调兵遣将。`);
   return s;
 }
@@ -133,7 +138,7 @@ function tacticalOutcome(s:Session,battle:BattleState):EncounterOutcome {
 /** AI-versus-AI only: bounded, deterministic Web auto-resolution; not native combat. */
 function resolveRivalEncounter(s:Session,army:Army,scene:ScenarioDefinition):EncounterOutcome {
   const ids=stationedGenerals(s,army.to),defending=s.cities[army.to].troops;
-  const a=armyPower(scene,army.troops,army.generalIds),d=armyPower(scene,defending,ids);
+  const a=armyPower(scene,army.troops,army.generalIds,s.generals),d=armyPower(scene,defending,ids,s.generals);
   const attackerWon=a>d;
   const winnerPower=attackerWon?a:d,loserPower=attackerWon?d:a;
   const winnerLoss=Math.min(.65,.15+.5*loserPower/Math.max(1,winnerPower));
@@ -190,7 +195,7 @@ function arrive(s:Session,army:Army,scene:ScenarioDefinition,outcome?:EncounterO
   refreshPolicyGovernors(s,scene);
 }
 
-function encounter(s:Session,army:Army,scene:ScenarioDefinition) {
+function encounter(s:Session,army:Army,scene:ScenarioDefinition,items:readonly Record<string,string>[]) {
   // Include every stationed defender; one commander and that commander's soldiers fight each round.
   const stationed=stationedGenerals(s,army.to);
   // 0x446B52 preserves the city list then swaps the governor into slot zero.
@@ -202,7 +207,7 @@ function encounter(s:Session,army:Army,scene:ScenarioDefinition) {
   // Preserve per-officer soldiers, including zero-HP officers. Redistributing
   // here changes native commander weights before its very first decision.
   reconcileCityTroops(s,army.to);
-  const member=(id:string):BattleMember=>{const def=scene.generals.find(g=>g.id===id)!,state=s.generals[id];return {commander:{...def,level:officerLevel(state,def),hp:state.hp,mp:state.mp,maxHp:officerMaxHp(state,def),maxMp:officerMaxMp(state,def),morale:state.morale??80,fatigue:state.fatigue??0,loyalty:state.loyalty??90},troops:state.troops,troopSlots:state.troopSlots?{...state.troopSlots}:undefined,withdrawn:state.hp===0};};
+  const member=(id:string):BattleMember=>{const def=scene.generals.find(g=>g.id===id)!,state=s.generals[id];return {commander:{...officerDefinition(state,def,items),level:officerLevel(state,def),hp:state.hp,mp:state.mp,maxHp:officerMaxHp(state,def),maxMp:officerMaxMp(state,def),morale:state.morale??80,fatigue:state.fatigue??0,loyalty:state.loyalty??90},troops:state.troops,troopSlots:state.troopSlots?{...state.troopSlots}:undefined,withdrawn:state.hp===0};};
   const attackers=army.generalIds.map(member),defenders=defenderIds.map(member);
   if(!defenders.some(m=>!m.withdrawn)) {
     // Existing Web garrison fallback when there is no deployable officer.
@@ -220,11 +225,11 @@ function encounter(s:Session,army:Army,scene:ScenarioDefinition) {
   s.battle.fortifications={attacker:defendingPlayer?s.cities[army.to].defense:0,defender:defendingPlayer?0:s.cities[army.to].defense};
   note(s,`${defendingPlayer?'敌军来袭！':''}${scene.cities.find(c=>c.id===army.to)!.name}双方列阵，我军由${a.commander.name}出战。`,'march');
 }
-function arrivals(s:Session,scene:ScenarioDefinition) {
+function arrivals(s:Session,scene:ScenarioDefinition,items:readonly Record<string,string>[]) {
   for(const army of [...s.armies].filter(a=>a.remainingDays===0).sort((a,b)=>a.id.localeCompare(b.id))) {
     const target=s.cities[army.to];
     if(target.ownerId&&target.ownerId!==army.ownerId) {
-      if(target.ownerId===s.factionId||army.ownerId===s.factionId){encounter(s,army,scene);return;}
+      if(target.ownerId===s.factionId||army.ownerId===s.factionId){encounter(s,army,scene,items);return;}
       arrive(s,army,scene,resolveRivalEncounter(s,army,scene));
     } else arrive(s,army,scene);s.armies=s.armies.filter(a=>a.id!==army.id);
   }
@@ -243,9 +248,9 @@ export function dispatch(previous: Session, command: Command, content: GameConte
       const army=s.armies.find(a=>a.id===s.battle!.armyId);if(!army)throw new Error('战斗军队不存在。');
       if(s.nativeAI&&s.battle.opponentAI)s.nativeAI.rng=[...s.battle.opponentAI.rng];
       arrive(s,army,scene,tacticalOutcome(s,s.battle));s.rng=s.battle.rng;s.armies=s.armies.filter(a=>a.id!==army.id);s.battle=null;
-      arrivals(s,scene);
+      arrivals(s,scene,content.items);
       refreshPolicyGovernors(s,scene);
-      if(!s.battle&&beginDomesticYear(s,scene))note(s,`${s.policy!.year}年内政时间到了，年度赋税已入库。`);
+      if(!s.battle&&beginDomesticYear(s,scene,content.items))note(s,`${s.policy!.year}年内政时间到了，年度赋税已入库。`);
     }
     return s;
   }
@@ -256,7 +261,7 @@ export function dispatch(previous: Session, command: Command, content: GameConte
   if(s.policy?.active)throw new Error('当前为内政阶段，请先完成内政，再返回征战。');
   if (command.type === 'advance') {
     if (!Number.isInteger(command.days) || command.days < 1 || command.days > 30) throw new Error('推进天数必须在1至30天之间。');
-    arrivals(s,scene);if(s.battle)return s;
+    arrivals(s,scene,content.items);if(s.battle)return s;
     for (let day = 0; day < command.days; day++) {
       s.day++;
       // Every faction uses the same economy and march validation as the player.
@@ -265,7 +270,7 @@ export function dispatch(previous: Session, command: Command, content: GameConte
         for (const c of Object.values(s.cities)) if (c.ownerId) c.money += Math.floor(c.population / 1000);
         note(s, '月初赋税入库，各城获得人口数千分之一的金钱。');
       }
-      arrivals(s,scene);if(s.battle)break;
+      arrivals(s,scene,content.items);if(s.battle)break;
       refreshPolicyGovernors(s,scene);
       // Patched native calendar 0x41B7F2: 300 callbacks/month, 10/day.
       // Movement still uses the Web daily road model; no claim of global timing parity.
@@ -275,7 +280,7 @@ export function dispatch(previous: Session, command: Command, content: GameConte
         s.armies[s.armies.length-1].treasury=plan.money;
       });
       refreshPolicyGovernors(s,scene);
-      if(beginDomesticYear(s,scene)) {note(s,`${s.policy!.year}年内政时间到了，年度赋税已入库。`);break;}
+      if(beginDomesticYear(s,scene,content.items)) {note(s,`${s.policy!.year}年内政时间到了，年度赋税已入库。`);break;}
     }
     return s;
   }
@@ -394,6 +399,10 @@ export function validateSession(value: unknown, content: GameContent): asserts v
     if(g.experience!==undefined&&!integer(g.experience,4294967295))return fail();
     if(g.maxHp!==undefined&&(!integer(g.maxHp,32767)||g.maxHp<1))return fail();
     if(g.maxMp!==undefined&&(!integer(g.maxMp,32767)||g.maxMp<1))return fail();
+    for(const key of ['strength','intelligence','speed'] as const)if(g[key]!==undefined&&(!Number.isInteger(g[key])||g[key]!< -32768||g[key]!>32767))return fail();
+    for(const key of ['weaponId','horseId','thingId'] as const)if(g[key]!==undefined&&(!integer(g[key],127)||(g[key]!==0&&!content.items.some(i=>Number(i.SEQUENCE)===g[key]))))return fail();
+    if(g.forceMask!==undefined&&!integer(g.forceMask,8191)||g.battleMask!==undefined&&!integer(g.battleMask,511))return fail();
+    if(g.legacyEquipment!==undefined&&(!Array.isArray(g.legacyEquipment)||g.legacyEquipment.length>3||new Set(g.legacyEquipment).size!==g.legacyEquipment.length||g.legacyEquipment.some(id=>!integer(id,127)||id===0||!content.items.some(i=>Number(i.SEQUENCE)===id))))return fail();
   }
   for(const city of scene.cities)if(stationedGenerals(s,city.id).reduce((n,id)=>n+s.generals[id].troops,0)>s.cities[city.id].troops)return fail();
   if(s.policy!==undefined) {
@@ -408,6 +417,16 @@ export function validateSession(value: unknown, content: GameContent): asserts v
     }
     for(const r of p.results)if(!r||!integer(r.year,p.year)||r.year<scene.year||!cityIds.has(r.cityId)||!scene.generals.some(g=>g.id===r.generalId)||
       ![r.population,r.defense,r.reportedPopulation,r.reportedDefense].every(n=>integer(n)))return fail();
+    if(p.annual!==undefined) {
+      const a=p.annual,factions=scene.factions.map(f=>f.id),ids=new Set(scene.generals.map(g=>g.id));
+      if(!a||a.version!==1||!a.rosterOrder||Object.keys(a.rosterOrder).length!==factions.length||!a.battleExperience||Object.keys(a.battleExperience).length!==factions.length||!Array.isArray(a.reports)||a.reports.length>100)return fail();
+      const listed=new Set<string>();
+      for(const faction of factions) {
+        const order=a.rosterOrder[faction];if(!Array.isArray(order)||order.length>ids.size||!integer(a.battleExperience[faction],4294967295))return fail();
+        for(const id of order){if(!ids.has(id)||listed.has(id))return fail();listed.add(id);}
+      }
+      for(const r of a.reports)if(!r||!integer(r.year,p.year)||r.year<scene.year||!factions.includes(r.factionId)||!['searches','developments','recruits','levels','items'].every(key=>integer(r[key as 'searches'],100000)))return fail();
+    }
     if(p.search!==undefined) {
       const q=p.search,generalIds=new Set(scene.generals.map(g=>g.id)),factions=scene.factions.map(f=>f.id);
       const itemIds=new Set(content.items.map(item=>Number(item.SEQUENCE)));

@@ -79,7 +79,7 @@ describe('search, autonomy and growth campaign integration',()=>{
     expect(s.policy!.results.length+s.policy!.search!.reports.length).toBe(total);expect(s.nativeAI!.rng).not.toEqual(rng);
     s=dispatch(s,{type:'policy-finish'},content);s.day=359;for(const key of Object.keys(s.cities))s.nativeAI!.recruitTimers[key]=9999;
     for(const f of scene.factions)s.nativeAI!.countdowns[f.id]=999;
-    s=dispatch(s,{type:'advance',days:1},content);expect(s.policy!.acted).toEqual([]);expect(s.policy!.search!.autonomy[city.id]).toBe(4);validateSession(s,content);
+    s=dispatch(s,{type:'advance',days:1},content);expect(s.policy!.acted.filter(id=>s.generals[id].ownerId===faction)).toEqual([]);expect(s.policy!.search!.autonomy[city.id]).toBe(4);validateSession(s,content);
   });
   it('finds actual wild officers, transfers their full state once and feeds live level to AI and saves',()=>{
     const city=owned(fresh());let recruited=false;

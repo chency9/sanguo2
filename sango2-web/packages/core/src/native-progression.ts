@@ -1,6 +1,6 @@
 import type {GeneralDefinition} from '@sango2/content';
 import type {GeneralState} from './index';
-import {nativeTroopCapacity} from './native-troops';
+import {allocateBattleTroops,nativeTroopCapacity} from './native-troops';
 
 export interface OfficerProgress {level:number;experience:number;maxHp:number;maxMp:number}
 export const officerLevel=(state:GeneralState,def:GeneralDefinition)=>state.level??def.level??20;
@@ -14,20 +14,24 @@ export function nativeLevelVitals(baseHp:number,baseMp:number,strength:number,in
   return {hp:Math.min(32767,Math.max(baseHp,baseHp+Math.trunc(strength*2*level/100))),
     mp:Math.min(32767,Math.max(baseMp,baseMp+Math.trunc(mpStat*2*level/100)))};
 }
-/** 0x426B44's level-up loop: EXP can decrease; level never does. Its refill
- * happens only after an actual level-up, including zero-level-up recruits. */
-export function applyRecruitExperience(state:GeneralState,def:GeneralDefinition,experience:number):number {
+/** 0x40F3C6 / 0x40F23C. Ordinary progression preserves wounds, MP and soldiers.
+ * Recruit progression below adds the separate per-level refill in 0x426B44. */
+export function applyOfficerExperience(state:GeneralState,def:GeneralDefinition,experience:number,refill=false):number {
   let level=officerLevel(state,def),hp=officerMaxHp(state,def),mp=officerMaxMp(state,def),gained=0;
   const baseHp=def.baseHp??def.hp,baseMp=def.baseMp??def.mp;
-  while(level<99&&experience>=nativeExperienceThreshold(level+1)) {
-    const before=nativeLevelVitals(baseHp,baseMp,def.strength,def.intelligence,level);
-    const after=nativeLevelVitals(baseHp,baseMp,def.strength,def.intelligence,++level);
+  while(level<99&&(experience|0)>=nativeExperienceThreshold(level+1)) {
+    const strength=state.strength??def.strength,intelligence=state.intelligence??def.intelligence;
+    const slots=allocateBattleTroops(state.troops,level,state.troopSlots);
+    const before=nativeLevelVitals(baseHp,baseMp,strength,intelligence,level);
+    const after=nativeLevelVitals(baseHp,baseMp,strength,intelligence,++level);
     hp=short(hp-before.hp+after.hp);mp=short(mp-before.mp+after.mp);
     const capacity=nativeTroopCapacity(level);
-    state.troopSlots={active:Math.max(0,capacity.active),reserve:capacity.reserve};
-    state.troops=state.troopSlots.active+state.troopSlots.reserve;
-    state.hp=hp;state.mp=mp;gained++;
+    state.troopSlots=refill?{active:Math.max(0,capacity.active),reserve:capacity.reserve}:
+      {active:Math.min(slots.active,Math.max(0,capacity.active)),reserve:Math.min(capacity.reserve,slots.reserve+Math.max(0,slots.active-capacity.active))};
+    state.troops=state.troopSlots.active+state.troopSlots.reserve+slots.overflow;
+    if(refill){state.hp=hp;state.mp=mp;}gained++;
   }
   Object.assign(state,{level,experience,maxHp:hp,maxMp:mp});return gained;
 }
+export const applyRecruitExperience=(state:GeneralState,def:GeneralDefinition,experience:number)=>applyOfficerExperience(state,def,experience,true);
 const short=(n:number)=>(n<<16)>>16;

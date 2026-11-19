@@ -1,6 +1,6 @@
-import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { scenarioById, type GameContent, type ScenarioDefinition } from '@sango2/content';
-import { adjacentRoads, createSession, dispatch, gameDate, RULES, stationedGenerals, readSession, createBattle, nativeTroopCapacity, officerLevel, officerMaxHp, officerMaxMp, officerExperience, commandBattle, tickBattle, type BattleState, type BattleCommand, type Command, type Session } from '@sango2/core';
+import { adjacentRoads, createSession, dispatch, gameDate, RULES, stationedGenerals, readSession, createBattle, nativeTroopCapacity, officerLevel, officerMaxHp, officerMaxMp, officerExperience, officerDefinition, commandBattle, tickBattle, type BattleState, type BattleCommand, type Command, type Session } from '@sango2/core';
 import { exportGame, importGame, listSaves, saveGame, type SaveSlot } from './storage';
 import { cityOwnership } from './city-ownership';
 import {PolicyScreen} from './PolicyScreen';
@@ -84,7 +84,8 @@ type Panel = 'new' | 'roster' | 'saves' | 'march' | 'help' | 'reports' | 'policy
 export function App({ content }: { content: GameContent }) {
   const [session, setSession] = useState(() => createSession(content, content.scenarios[0].id, content.scenarios[0].factions[0].id));
   const sessionRef = useRef(session);
-  const scene = scenarioById(content, session.scenarioId);
+  const sourceScene = scenarioById(content, session.scenarioId);
+  const scene=useMemo(()=>({...sourceScene,generals:sourceScene.generals.map(d=>officerDefinition(session.generals[d.id],d,content.items))}),[sourceScene,session,content.items]);
   const [selected, setSelected] = useState(() => scene.cities.find(c => c.ownerId === session.factionId)!.id);
   const [panel, setPanel] = useState<Panel>('new'); const [started, setStarted] = useState(false);
   const [running, setRunning] = useState(false); const [speed, setSpeed] = useState(1);
