@@ -55,6 +55,28 @@ describe('player item campaign commands',()=>{
     expect(after.policy!.search!.inventory[faction.id]['2']).toBe(1);expect(()=>use(after,def.id,2)).toThrow('已会');
     expect(officerDefinition(after.generals[def.id],def,content.items).formations.length).toBe(2);
   });
+  it('keeps the learned force separate from the currently fielded force',()=>{
+    const {s,def,g,stock}=setup();g.forceMask=1;stock['2']=1;
+    const learned=use(s,def.id,2),before=structuredClone(learned);
+    expect(learned.generals[def.id].currentUnit).toBeUndefined();
+    expect(officerDefinition(learned.generals[def.id],def,content.items).unit).toBe(def.unit);
+    const switched=dispatch(learned,{type:'policy-unit',cityId:g.cityId!,generalId:def.id,unit:'槍'},content);
+    expect(switched.generals[def.id].currentUnit).toBe('槍');
+    expect(officerDefinition(switched.generals[def.id],def,content.items).unit).toBe('槍');
+    expect(officerDefinition(switched.generals[def.id],def,content.items).appearance?.soldier).toBe(101);
+    expect(switched.generals[def.id].troops).toBe(before.generals[def.id].troops);
+    expect(switched.rng).toBe(before.rng);expect(switched.nativeAI?.rng).toEqual(before.nativeAI?.rng);
+    expect(switched.policy?.acted).toEqual(before.policy?.acted);
+  });
+  it('rejects an unlearned force and restores a selected force through saves',()=>{
+    const {s,def,g,stock}=setup();const before=structuredClone(s);
+    expect(()=>dispatch(s,{type:'policy-unit',cityId:g.cityId!,generalId:def.id,unit:'槍'},content)).toThrow('尚未');
+    expect(s).toEqual(before);
+    g.forceMask=3;const switched=dispatch(s,{type:'policy-unit',cityId:g.cityId!,generalId:def.id,unit:'槍'},content);
+    expect(readSession(JSON.parse(JSON.stringify(switched)),content)).toEqual(switched);
+    const invalid=structuredClone(switched);invalid.generals[def.id].currentUnit='弩';
+    expect(()=>readSession(invalid,content)).toThrow();
+  });
   it('enforces ownership, location, stock, level and battle guard transactionally',()=>{
     const {s,def,g,stock}=setup();g.level=1;stock['47']=1;const before=structuredClone(s);
     for(const id of [-1,1.5,128,999,NaN])expect(()=>use(s,def.id,id)).toThrow('编号');

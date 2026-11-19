@@ -6,6 +6,7 @@ import {nativeBelow,type NativeRandomState} from './native-strategic-ai';
 import {allocateBattleTroops,nativeTroopCapacity} from './native-troops';
 import {createDomesticSearch,ensureDomesticSearch,developDomesticOfficer,searchDomesticOfficer,domesticSearchMessage,runDomesticAutonomy,type DomesticSearchState} from './native-policy-actions';
 import {officerLevel} from './native-progression';
+import {officerForceMask,nativeForceNames} from './native-officer-runtime';
 import type {AutonomyMode} from './native-policy-search';
 import {ensureDomesticAnnual,runAnnualDomesticAI,type DomesticAnnualState} from './native-policy-annual';
 import {previewPlayerItem} from './native-player-items';
@@ -26,6 +27,7 @@ export type DomesticCommand =
   | {type:'policy-autonomy-run'}
   | {type:'policy-governor';cityId:string;generalId:string}
   | {type:'policy-item';cityId:string;generalId:string;itemId:number}
+  | {type:'policy-unit';cityId:string;generalId:string;unit:string}
   | {type:'policy-recruit';cityId:string;generalId:string;amount:number};
 export interface DevelopmentInput {population:number;defense:number;isPass:boolean;strength:number;intelligence:number;governorIntelligence:number}
 
@@ -115,6 +117,15 @@ export function executeDomestic(s:Session,scene:ScenarioDefinition,command:Domes
     const name=(id:number)=>items.find(i=>Number(i.SEQUENCE)===id)?.NAME??String(id);
     return command.itemId===0?`${officer.name}卸下${name(preview.returnedId)}，已归还物品库。`:
       `${officer.name}${preview.consumable?'使用':'装备'}${name(command.itemId)}。${preview.returnedId?`${name(preview.returnedId)}已归还物品库。`:''}`;
+  }
+  if(command.type==='policy-unit') {
+    if(!ids.includes(command.generalId))throw new Error('请选择本城在任武将。');
+    if(!nativeForceNames.includes(command.unit as typeof nativeForceNames[number]))throw new Error('兵种无效。');
+    const officer=scene.generals.find(g=>g.id===command.generalId)!;
+    const index=nativeForceNames.indexOf(command.unit as typeof nativeForceNames[number]);
+    if((officerForceMask(s.generals[officer.id],officer)&(1<<index))===0)throw new Error('该兵种尚未学会。');
+    s.generals[officer.id].currentUnit=command.unit;
+    return `${officer.name}当前兵种已切换为${command.unit}。`;
   }
   if(command.type==='policy-recruit') {
     if(!ids.includes(command.generalId))throw new Error('请选择本城在任武将。');

@@ -6,10 +6,15 @@ import {officerLevel,officerMaxHp,officerMaxMp} from './native-progression';
 import {nativeAttackAction} from './native-attack-animation';
 
 export type OfficerEquipment=Pick<NativeItemOfficer,'strength'|'intelligence'|'speed'|'forceMask'|'battleMask'|'weaponId'|'horseId'|'thingId'>&{legacyEquipment?:number[]};
+/** The learned troop mask and the troop currently fielded are separate native
+ * values. A force talisman only sets the former; policy-unit changes the
+ * latter without changing soldiers, morale, or the annual action ledger. */
+export type NativeUnit=typeof nativeForceNames[number];
 export const officerStrength=(g:GeneralState,d:GeneralDefinition)=>g.strength??d.strength;
 export const officerIntelligence=(g:GeneralState,d:GeneralDefinition)=>g.intelligence??d.intelligence;
 export const officerSpeed=(g:GeneralState,d:GeneralDefinition)=>g.speed??d.speed??0;
 export const nativeForceNames=['刀','槍','關','弓','鍊','飛','武','蠻','鐵','籐','賊','弩','女'] as const;
+export function officerUnit(g:GeneralState,d:GeneralDefinition):string { return g.currentUnit??d.unit; }
 export function officerForceMask(g:GeneralState,d:GeneralDefinition) {
   return g.forceMask??d.forceMask??(1<<Math.max(0,nativeForceNames.indexOf(d.unit as typeof nativeForceNames[number])));
 }
@@ -47,13 +52,21 @@ export function initializeOfficerEquipment(g:GeneralState,d:GeneralDefinition,it
 export function officerDefinition(g:GeneralState,d:GeneralDefinition,items:readonly Record<string,string>[]):GeneralDefinition {
   const row=(slot:'weaponId'|'horseId'|'thingId',fallback:string)=>g[slot]===undefined?items.find(i=>i.NAME===fallback):items.find(i=>Number(i.SEQUENCE)===g[slot]);
   const weapon=row('weaponId',d.weapon),horse=row('horseId',d.horse),thing=row('thingId',d.item);
+  const unit=officerUnit(g,d);
   let appearance=d.appearance;
+  if(appearance&&g.currentUnit!==undefined) {
+    const soldier=100+nativeForceNames.indexOf(g.currentUnit as NativeUnit);
+    const active=nativeAttackAction(soldier,false),reserve=nativeAttackAction(soldier+40,false);
+    appearance={...appearance,soldier,
+      soldierAttack:active?{hitTick:active.hitTicks[0],ticks:active.ticks}:appearance.soldierAttack,
+      reserveSoldierAttack:reserve?{hitTick:reserve.hitTicks[0],ticks:reserve.ticks}:appearance.reserveSoldierAttack};
+  }
   if(appearance&&(g.weaponId!==undefined||g.horseId!==undefined)) {
     const type=Number(weapon?.WEAPONTYPE)||0,body=600+((d.bodyType??1)>=1&&(d.bodyType??1)<=15?(d.bodyType??1)-1:14)*4+type;
     const timing=nativeAttackAction(body,false);
     appearance={...appearance,body,weapon:Number(weapon?.WEAPONOBJECT)||700,horse:Number(horse?.WEAPONOBJECT)||900,
       generalAttack:timing?{hitTick:timing.hitTicks[0],ticks:timing.ticks}:appearance.generalAttack};
   }
-  return {...d,level:officerLevel(g,d),hp:officerMaxHp(g,d),mp:officerMaxMp(g,d),strength:officerStrength(g,d),intelligence:officerIntelligence(g,d),speed:officerSpeed(g,d),formations:officerFormations(g,d),
+  return {...d,level:officerLevel(g,d),hp:officerMaxHp(g,d),mp:officerMaxMp(g,d),strength:officerStrength(g,d),intelligence:officerIntelligence(g,d),speed:officerSpeed(g,d),unit,formations:officerFormations(g,d),
     weapon:g.weaponId===undefined?d.weapon:weapon?.NAME??'',horse:g.horseId===undefined?d.horse:horse?.NAME??'',item:g.thingId===undefined?d.item:thing?.NAME??'',appearance};
 }

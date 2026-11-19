@@ -9,12 +9,12 @@ import {createNativeCampaignAI,runNativeStrategicCallback,type NativeCampaignAI}
 import {initialOfficerCondition,initialConditionTimers,type NativeOfficerCondition} from './native-officer-condition';
 import {nativeTroopCapacity,type TroopSlots} from './native-troops';
 import {officerLevel,officerMaxHp,officerMaxMp,type OfficerProgress} from './native-progression';
-import {initializeOfficerEquipment,officerDefinition,type OfficerEquipment} from './native-officer-runtime';
+import {initializeOfficerEquipment,officerDefinition,officerForceMask,nativeForceNames,type OfficerEquipment} from './native-officer-runtime';
 import {ensureDomesticAnnual} from './native-policy-annual';
 import {createDomesticState,executeDomestic,beginDomesticYear,refreshPolicyGovernors,type DomesticState,type DomesticCommand} from './native-policy';
 export {policyGovernorId,nativeDevelop,nativeAnnualRevenue} from './native-policy';
 export * from './native-progression';
-export {officerDefinition,officerStrength,officerIntelligence,officerSpeed,officerForceMask,officerFormations,nativeForceNames} from './native-officer-runtime';
+export {officerDefinition,officerStrength,officerIntelligence,officerSpeed,officerForceMask,officerFormations,officerUnit,nativeForceNames} from './native-officer-runtime';
 export {domesticSearchMessage} from './native-policy-actions';
 export {previewPlayerItem} from './native-player-items';
 export type {AutonomyMode} from './native-policy-search';
@@ -25,7 +25,7 @@ export const RULES = { initialTroopsPerGeneral: 80, developCost: 300, developDef
   developPopulation: 500, recruitCost: 200, recruitTroops: 50, roadUnitsPerDay: 60, maxArmyGenerals: 5 } as const;
 
 export interface CityState { ownerId: string | null; money: number; population: number; defense: number; troops: number; lastActionDay: number }
-export interface GeneralState extends Partial<NativeOfficerCondition>,Partial<OfficerProgress>,Partial<OfficerEquipment> { ownerId: string | null; cityId: string | null; armyId: string | null; status: string; hp:number; mp:number; troops:number;troopSlots?:TroopSlots }
+export interface GeneralState extends Partial<NativeOfficerCondition>,Partial<OfficerProgress>,Partial<OfficerEquipment> { ownerId: string | null; cityId: string | null; armyId: string | null; status: string; hp:number; mp:number; troops:number; troopSlots?:TroopSlots; currentUnit?:string }
 export interface Army {
   id: string; ownerId: string; from: string; to: string; roadId: string; generalIds: string[];
   troops: number; totalDays: number; remainingDays: number;
@@ -403,6 +403,7 @@ export function validateSession(value: unknown, content: GameContent): asserts v
     for(const key of ['strength','intelligence','speed'] as const)if(g[key]!==undefined&&(!Number.isInteger(g[key])||g[key]!< -32768||g[key]!>32767))return fail();
     for(const key of ['weaponId','horseId','thingId'] as const)if(g[key]!==undefined&&(!integer(g[key],127)||(g[key]!==0&&!content.items.some(i=>Number(i.SEQUENCE)===g[key]))))return fail();
     if(g.forceMask!==undefined&&!integer(g.forceMask,8191)||g.battleMask!==undefined&&!integer(g.battleMask,511))return fail();
+    if(g.currentUnit!==undefined&&(!nativeForceNames.includes(g.currentUnit as typeof nativeForceNames[number])||(officerForceMask(g,def)&(1<<nativeForceNames.indexOf(g.currentUnit as typeof nativeForceNames[number])))===0))return fail();
     if(g.legacyEquipment!==undefined&&(!Array.isArray(g.legacyEquipment)||g.legacyEquipment.length>3||new Set(g.legacyEquipment).size!==g.legacyEquipment.length||g.legacyEquipment.some(id=>!integer(id,127)||id===0||!content.items.some(i=>Number(i.SEQUENCE)===id))))return fail();
   }
   for(const city of scene.cities)if(stationedGenerals(s,city.id).reduce((n,id)=>n+s.generals[id].troops,0)>s.cities[city.id].troops)return fail();
