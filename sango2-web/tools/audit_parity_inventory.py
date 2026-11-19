@@ -26,12 +26,12 @@ def main():
         status = '入口部分已接' if execute in supported else '效果未接'
         lines.append(f"| {record['SEQUENCE']} | {record['NAME']} / {record['WISELEVEL']} | {execute} | {status} | STR-01～04：逐级、成败、化解/冲突、对象、跨轮与结算；MAGIC.INI:{record['_line']} |")
     lines += ['', '## 物品：77项', '',
-              '全77项已接入搜索与势力库存；新局初始装备、电脑年度换装及物品属性内核已有原码差分。该EXE分类函数屏蔽USED位，电脑年度不会自动使用消耗品。玩家分配/使用/卸装、兵种切换与特殊坐骑仍缺。RATE是相对权重，不是掉落百分比。原效果字段保持原词，空值略去。[年度装备证据与边界](NATIVE-POLICY-ANNUAL-PARITY-2026-11-19.md)。', '',
+              '全77项已接入搜索与势力库存；新局初始装备、电脑年度换装及物品属性内核已有原码差分。该EXE分类函数屏蔽USED位，电脑年度不会自动使用消耗品。玩家分配/使用、替换归库、卸随身物品、兵阵学习与赏赐已接，新增384组玩家入口原x86样本；主动兵种切换、特殊坐骑及原窗口/外围时机仍缺。RATE是相对权重，不是掉落百分比。原效果字段保持原词，空值略去。[玩家物品证据与边界](NATIVE-PLAYER-ITEMS-PARITY-2026-11-19.md)。', '',
               '| SEQUENCE | 名称 | 类别 | 等级 / RATE | 原效果字段 | 仍需完成 |', '| --- | --- | --- | --- | --- | --- |']
     keys = ['STR','INT','MAXHP','MAXMP','FORCE','BATTLE','SKILL','SPEED','HP','MP','SPIRIT','LOYAL','TIRE']
     for record in content['items']:
         effects = '；'.join(f'{k}={record[k]}' for k in keys if record.get(k)) or '按原属性/类型处理'
-        progress = '初始/AI换装与属性已接；玩家操作/特殊效果待补' if record['TYPE'] != 'JEWEL_MISC' else '搜索/属性内核已接；玩家使用/兵种操作待补'
+        progress = '初始/AI/玩家换装、归库、卸随身物品已接；特殊效果/原窗口及连续流程待验' if record['TYPE'] != 'JEWEL_MISC' else '搜索/玩家使用与学习/赏赐已接；主动兵种切换/原窗口及连续流程待验'
         lines.append(f"| {record['SEQUENCE']} | {record['NAME']} | {record['TYPE']} / {record['ATTRIB']} | {record['LEVEL']} / {record['RATE']} | {effects} | ITM-01～04：{progress}；SANGO.INI:{record['_line']} |")
     lines += ['', '## 剧本：5个', '', '| 剧本 | 年份 | 当前与缺口 |', '| --- | --- | --- |']
     for scene in content['scenarios']:

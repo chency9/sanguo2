@@ -38,6 +38,23 @@ export function nativeApplyItem(g:NativeItemOfficer,item:NativeItem,remove=false
   return true;
 }
 export interface AnnualItemUse {officerId:string;itemId:number;returnedId:number}
+/** Player command 0x424509. Its list caller guarantees stock; unlike the AI
+ * pass it tests the complete USED flag. ID zero unloads THING only. */
+export function nativePlayerItem(g:NativeItemOfficer,inventory:Record<string,number>,items:readonly NativeItem[],itemId:number,ruler:boolean,
+  unload:(g:NativeItemOfficer,item:NativeItem)=>void=(g,item)=>{nativeApplyItem(g,item,true);}):{applied:boolean;returnedId:number} {
+  const table=new Map(items.map(item=>[item.id,item]));
+  const restore=(id:number)=>{if(id>0)inventory[String(id)]=Math.min(99,(inventory[String(id)]??0)+1);};
+  if(itemId===0) {
+    const old=g.thingId;if(!old)return {applied:false,returnedId:0};
+    restore(old);unload(g,table.get(old)??emptyItem);return {applied:true,returnedId:old};
+  }
+  const item=table.get(itemId);if(!item||!nativeCanUseItem(g,item,ruler))return {applied:false,returnedId:0};
+  const slot=nativeItemSlot(item.flags),old=!(item.flags&1)&&slot?g[slot]:0;
+  if(old)unload(g,table.get(old)??emptyItem);
+  nativeApplyItem(g,item);restore(old);
+  if(inventory[String(itemId)]>0&&--inventory[String(itemId)]===0)delete inventory[String(itemId)];
+  return {applied:true,returnedId:old};
+}
 const emptyItem:NativeItem={id:0,flags:0,level:0,strength:0,intelligence:0,maxHp:0,maxMp:0,forceMask:0,battleMask:0,speed:0,hp:0,mp:0,morale:0,loyalty:0,fatigue:0};
 /** Caller supplies the native EXP order with its ruler moved to the front. */
 export function nativeAnnualInventory(officers:readonly {id:string;state:NativeItemOfficer;ruler:boolean}[],inventory:Record<string,number>,items:readonly NativeItem[],rng:NativeRandomState,

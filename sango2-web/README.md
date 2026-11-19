@@ -45,6 +45,7 @@ pnpm dev
 - `packages/core/src/native-policy.ts`：原开发和税收规则、内政阶段与行动记录。
 - `packages/core/src/native-policy-search.ts`：搜索、物品权重、登用/经验和自治原函数内核。
 - `packages/core/src/native-policy-actions.ts`：搜索落城、库存、报告、自治执行与名单适配。
+- `packages/core/src/native-player-items.ts`：玩家物品预览、使用资格与库存/装备提交。
 - `packages/core/src/native-progression.ts`：运行等级、归附逐级成长与体技力上限。
 - `packages/core/src/index.ts`：战役命令、存档迁移与校验。
 - `packages/core/src/battle.ts`：固定步长战斗与轮战接入。
@@ -59,8 +60,9 @@ pnpm dev
 
 ## 本轮验证与证据
 
-2026-11-19：42 个测试文件、14,231 项核心测试、52 个 Chromium 场景、6 项 Python 测试通过；类型检查与生产构建通过。本次新增840组电脑年度/普通升级/装备属性原x86样本；前序有780组搜索/登用/成长/自治及240组开发/税收原机器码样本；前序有72组Heal脚本树原解释器样本，共28,224次源更新；前序装备速度测试包含 698 组原码样本。
+2026-11-19：43 个测试文件、14,701 项核心测试、54 个 Chromium 场景、6 项 Python 测试通过；类型检查与生产构建通过。本次新增384组玩家物品入口原x86样本，并验证全部77件物品提交与读档、开发收益和真实出征；前序有840组电脑年度/普通升级/装备属性原x86样本；前序有780组搜索/登用/成长/自治及240组开发/税收原机器码样本；前序有72组Heal脚本树原解释器样本，共28,224次源更新；前序装备速度测试包含 698 组原码样本。
 
+- [玩家物品分配、使用与卸装：384组原x86样本及全部77件物品验证](docs/NATIVE-PLAYER-ITEMS-PARITY-2026-11-19.md)
 - [电脑年度内政、普通升级与装备属性：840组原x86样本](docs/NATIVE-POLICY-ANNUAL-PARITY-2026-11-19.md)
 - [搜索、登用、库存与四种自治：780组原x86样本](docs/NATIVE-POLICY-SEARCH-PARITY-2026-11-19.md)
 - [年度内政规则、240组原码样本与未完成范围](docs/NATIVE-POLICY-PARITY-2026-11-19.md)

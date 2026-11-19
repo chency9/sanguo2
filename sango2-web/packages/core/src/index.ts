@@ -14,8 +14,9 @@ import {ensureDomesticAnnual} from './native-policy-annual';
 import {createDomesticState,executeDomestic,beginDomesticYear,refreshPolicyGovernors,type DomesticState,type DomesticCommand} from './native-policy';
 export {policyGovernorId,nativeDevelop,nativeAnnualRevenue} from './native-policy';
 export * from './native-progression';
-export {officerDefinition,officerStrength,officerIntelligence,officerSpeed,officerForceMask,officerFormations} from './native-officer-runtime';
+export {officerDefinition,officerStrength,officerIntelligence,officerSpeed,officerForceMask,officerFormations,nativeForceNames} from './native-officer-runtime';
 export {domesticSearchMessage} from './native-policy-actions';
+export {previewPlayerItem} from './native-player-items';
 export type {AutonomyMode} from './native-policy-search';
 
 // Explicit prototype rules. These numbers are not a reconstruction of the 1.05+ executable.

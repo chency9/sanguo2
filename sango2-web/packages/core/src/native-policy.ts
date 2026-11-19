@@ -8,6 +8,7 @@ import {createDomesticSearch,ensureDomesticSearch,developDomesticOfficer,searchD
 import {officerLevel} from './native-progression';
 import type {AutonomyMode} from './native-policy-search';
 import {ensureDomesticAnnual,runAnnualDomesticAI,type DomesticAnnualState} from './native-policy-annual';
+import {previewPlayerItem} from './native-player-items';
 
 export interface DomesticResult {year:number;cityId:string;generalId:string;population:number;defense:number;reportedPopulation:number;reportedDefense:number}
 export interface DomesticState {
@@ -24,6 +25,7 @@ export type DomesticCommand =
   | {type:'policy-autonomy-set';cityId:string;mode:AutonomyMode}
   | {type:'policy-autonomy-run'}
   | {type:'policy-governor';cityId:string;generalId:string}
+  | {type:'policy-item';cityId:string;generalId:string;itemId:number}
   | {type:'policy-recruit';cityId:string;generalId:string;amount:number};
 export interface DevelopmentInput {population:number;defense:number;isPass:boolean;strength:number;intelligence:number;governorIntelligence:number}
 
@@ -104,6 +106,16 @@ export function executeDomestic(s:Session,scene:ScenarioDefinition,command:Domes
     return `${def.name}自治方针已保存。`;
   }
   if(!ids.length)throw new Error('城中须有我方在任武将。');
+  if(command.type==='policy-item') {
+    if(!ids.includes(command.generalId))throw new Error('请选择本城在任武将。');
+    const officer=scene.generals.find(g=>g.id===command.generalId)!,search=ensureDomesticSearch(s,scene,items);
+    const preview=previewPlayerItem(s.generals[officer.id],officer,items,search.inventory[s.factionId],scene.factions.find(f=>f.id===s.factionId)?.leaderId===officer.id,command.itemId);
+    if(preview.reason)throw new Error(preview.reason);
+    Object.assign(s.generals[officer.id],preview.after);search.inventory[s.factionId]=preview.inventory;
+    const name=(id:number)=>items.find(i=>Number(i.SEQUENCE)===id)?.NAME??String(id);
+    return command.itemId===0?`${officer.name}卸下${name(preview.returnedId)}，已归还物品库。`:
+      `${officer.name}${preview.consumable?'使用':'装备'}${name(command.itemId)}。${preview.returnedId?`${name(preview.returnedId)}已归还物品库。`:''}`;
+  }
   if(command.type==='policy-recruit') {
     if(!ids.includes(command.generalId))throw new Error('请选择本城在任武将。');
     const g=s.generals[command.generalId],officer=scene.generals.find(g=>g.id===command.generalId)!;
