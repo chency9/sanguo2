@@ -2,7 +2,7 @@ import {useId,useState} from 'react';
 import type {GeneralDefinition} from '@sango2/content';
 import {allocateBattleTroops,nativeTroopCapacity,nativeReserveCapacity,nativeTransferTroops,officerLevel,type Session,type Command} from '@sango2/core';
 
-export function PolicyAllocation({session,officer,cityId,execute}:{session:Session;officer:GeneralDefinition;cityId:string;execute:(command:Command)=>boolean}) {
+export function PolicyAllocation({session,officer,cityId,execute,autofill}:{session:Session;officer:GeneralDefinition;cityId:string;execute:(command:Command)=>boolean;autofill:{active:boolean;start:(cityId:string,generalId:string,maximum:number)=>void;finish:()=>void}}) {
   const id=useId(),[draft,setDraft]=useState<string|null>(null),[amount,setAmount]=useState('1');
   const g=session.generals[officer.id],cap=nativeTroopCapacity(officerLevel(g,officer));
   const slots=allocateBattleTroops(g.troops,officerLevel(g,officer),g.troopSlots),current=slots.active+slots.reserve;
@@ -29,8 +29,10 @@ export function PolicyAllocation({session,officer,cityId,execute}:{session:Sessi
         <button type="button" disabled={!canReturn} onClick={()=>adjust(Math.max(0,current-1))}>退回一兵</button>
         <button type="button" disabled={!canAdd} onClick={()=>adjust(Math.min(maximum,current+1))}>补充一兵</button>
         <button type="button" disabled={!canReturn} onClick={()=>adjust(0)}>尽量退回</button>
-        <button type="button" disabled={!canAdd} onClick={()=>adjust(maximum)}>补满部队</button>
+        <button type="button" disabled={!canAdd} onClick={()=>{setDraft(null);autofill.start(cityId,officer.id,maximum);}}>补满部队</button>
       </div>
+      <p className="policy-fill-status" aria-live="polite">{autofill.active?'正在补兵 · 先现役，后预备':'点击补满后逐兵调配，切换武将或离开时完成剩余补兵。'}</p>
+      {autofill.active&&<button type="button" onClick={autofill.finish}>立即完成补兵</button>}
     </form>
     {!!slots.overflow&&<p className="policy-hint">另有 {slots.overflow} 名旧存档营中兵员，调整现役/预备时继续保留。</p>}
     <form className="policy-recruit-exact" aria-label="按数量补兵" onSubmit={e=>{e.preventDefault();execute({type:'policy-recruit',cityId,generalId:officer.id,amount:Number(amount)});}}>

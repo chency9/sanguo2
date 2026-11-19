@@ -25,7 +25,7 @@ for(const width of [1440,390])test(`bidirectional allocation conserves troops an
   await allocation.getByRole('button',{name:'退回一兵',exact:true}).click();await expect(council.dialog.getByRole('status')).toContainText('现役69、预备70');
   await allocation.getByRole('button',{name:'补充一兵',exact:true}).focus();await page.keyboard.press('Space');await expect(council.dialog.getByRole('status')).toContainText('现役70、预备70');
   await allocation.getByRole('button',{name:'尽量退回',exact:true}).click();await expect(council.dialog.getByRole('status')).toContainText('现役0、预备0，城内预备池140');
-  await allocation.getByRole('button',{name:'补满部队',exact:true}).click();await expect(council.dialog.getByRole('status')).toContainText('现役100、预备40，城内预备池0');
+  await allocation.getByRole('button',{name:'补满部队',exact:true}).click();await allocation.getByRole('button',{name:'立即完成补兵'}).click();await expect(council.dialog.getByRole('status')).toContainText('现役100、预备40，城内预备池0');
   await council.dialog.getByRole('button',{name:/^長槍兵/}).click();
   const after=await council.exportSession(),a=after.session;
   expect(a.generals[officer.id]).toEqual({...before.generals[officer.id],troops:140,troopSlots:{active:100,reserve:40},currentUnit:'槍'});
@@ -43,7 +43,7 @@ for(const width of [1440,390])test(`bidirectional allocation conserves troops an
   else await allocation.screenshot({path:`docs/screenshots/troop-transfer-${width}.png`});
   const full=await council.exportSession();expect(full.session.generals[officer.id].troopSlots).toEqual({active:1,reserve:5});
   await council.importSession(full);await council.finish();await council.reopen();await open();
-  await expect(target).toHaveValue('6');await allocation.getByRole('button',{name:'补满部队',exact:true}).click();
+  await expect(target).toHaveValue('6');await allocation.getByRole('button',{name:'补满部队',exact:true}).click();await allocation.getByRole('button',{name:'立即完成补兵'}).click();
   await expect(council.dialog.getByRole('status')).toContainText('现役100、预备56，城内预备池0');
   expect(errors).toEqual([]);
 });

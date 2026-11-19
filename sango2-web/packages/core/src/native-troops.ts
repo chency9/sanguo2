@@ -18,6 +18,19 @@ export function nativeTransferTroops(input:TroopTransferInput,target:number):Tro
   }
   return {active,reserve,pool};
 }
+/** 0x41A7CE: activation starts autofill; releasing the button does not stop it.
+ * Each update moves one soldier. The boundary is observed on the following
+ * update, so moving the last soldier leaves pending=1 until that next update.
+ * 0x41A6FB finishes pending work before switching officers or closing a window. */
+export function nativeAutofillTroops(input:TroopTransferInput,pending:number,event:number|'flush'):TroopSlots&{pool:number;pending:number} {
+  const current={active:input.active,reserve:input.reserve,pool:input.pool};
+  if(event===4)return {...current,pending:1};
+  if(pending!==1||(event!==8&&event!=='flush'))return {...current,pending};
+  const vacancies=Math.max(0,input.maxActive-input.active)+Math.max(0,input.maxReserve-input.reserve);
+  const amount=event==='flush'?vacancies:1;
+  const after=nativeTransferTroops(input,input.active+input.reserve+amount);
+  return {...after,pending:event==='flush'||after.pool===input.pool?0:1};
+}
 /** 0x409FB6 / 0x409FD8, including the native -1-level sentinel behavior. */
 export function nativeTroopCapacity(level:number):TroopSlots {
   return {active:level<20?level*5:100,reserve:Math.min(100,Math.max(0,(level-20)*5))};

@@ -3,7 +3,7 @@
 import type {ScenarioDefinition} from '@sango2/content';
 import type {Session} from './index';
 import {nativeBelow,type NativeRandomState} from './native-strategic-ai';
-import {allocateBattleTroops,nativeTroopCapacity,nativeTransferTroops,nativeReserveCapacity} from './native-troops';
+import {allocateBattleTroops,nativeTroopCapacity,nativeTransferTroops,nativeAutofillTroops,nativeReserveCapacity} from './native-troops';
 import {createDomesticSearch,ensureDomesticSearch,developDomesticOfficer,searchDomesticOfficer,domesticSearchMessage,runDomesticAutonomy,type DomesticSearchState} from './native-policy-actions';
 import {officerLevel} from './native-progression';
 import {officerForceMask,nativeForceNames} from './native-officer-runtime';
@@ -29,6 +29,7 @@ export type DomesticCommand =
   | {type:'policy-item';cityId:string;generalId:string;itemId:number}
   | {type:'policy-unit';cityId:string;generalId:string;unit:string}
   | {type:'policy-troops';cityId:string;generalId:string;target:number}
+  | {type:'policy-troops-fill';cityId:string;generalId:string;mode:'step'|'finish'}
   | {type:'policy-recruit';cityId:string;generalId:string;amount:number};
 export interface DevelopmentInput {population:number;defense:number;isPass:boolean;strength:number;intelligence:number;governorIntelligence:number}
 
@@ -130,7 +131,7 @@ export function executeDomestic(s:Session,scene:ScenarioDefinition,command:Domes
     s.generals[officer.id].currentUnit=command.unit;
     return `${officer.name}当前兵种已切换为${command.unit}。`;
   }
-  if(command.type==='policy-recruit'||command.type==='policy-troops') {
+  if(command.type==='policy-recruit'||command.type==='policy-troops'||command.type==='policy-troops-fill') {
     if(!ids.includes(command.generalId))throw new Error('请选择本城在任武将。');
     const g=s.generals[command.generalId],officer=scene.generals.find(g=>g.id===command.generalId)!;
     const level=officerLevel(g,officer),cap=nativeTroopCapacity(level),maximum=Math.max(0,cap.active)+cap.reserve;
@@ -139,15 +140,18 @@ export function executeDomestic(s:Session,scene:ScenarioDefinition,command:Domes
     if(command.type==='policy-recruit') {
       if(!Number.isInteger(command.amount)||command.amount<1||command.amount>maximum-g.troops)throw new Error('配兵数量超出武将统兵上限。');
       if(command.amount>s.nativeAI.reserves[command.cityId])throw new Error('城中预备兵不足，请等待城内征募。');
+    } else if(command.type==='policy-troops-fill') {
+      if(command.mode!=='step'&&command.mode!=='finish')throw new Error('自动配兵模式无效。');
     } else if(!Number.isInteger(command.target)||command.target<0||command.target>maximum)throw new Error('目标兵数超出武将统兵上限。');
-    const target=command.type==='policy-recruit'?slots.active+slots.reserve+command.amount:command.target;
-    const after=nativeTransferTroops({...slots,maxActive:Math.max(0,cap.active),maxReserve:cap.reserve,
-      pool:s.nativeAI.reserves[command.cityId],poolCapacity:nativeReserveCapacity(city.population)},target);
+    const target=command.type==='policy-recruit'?slots.active+slots.reserve+command.amount:command.type==='policy-troops'?command.target:maximum;
+    const input={...slots,maxActive:Math.max(0,cap.active),maxReserve:cap.reserve,
+      pool:s.nativeAI.reserves[command.cityId],poolCapacity:nativeReserveCapacity(city.population)};
+    const after=command.type==='policy-troops-fill'?nativeAutofillTroops(input,1,command.mode==='step'?8:'flush'):nativeTransferTroops(input,target);
     const delta=after.active+after.reserve-slots.active-slots.reserve;
     g.troopSlots={active:after.active,reserve:after.reserve};
     g.troops+=delta;city.troops+=delta;s.nativeAI.reserves[command.cityId]=after.pool;
     return command.type==='policy-recruit'?`${def.name}为${officer.name}补充${delta}兵，取自城内预备池。`:
-      `${officer.name}兵力已调整：现役${after.active}、预备${after.reserve}，城内预备池${after.pool}。${after.active+after.reserve!==target?'受兵槽或预备池限制，已调整到可达到的人数。':''}`;
+      `${officer.name}兵力已调整：现役${after.active}、预备${after.reserve}，城内预备池${after.pool}。${command.type!=='policy-troops-fill'&&after.active+after.reserve!==target?'受兵槽或预备池限制，已调整到可达到的人数。':''}`;
   }
   if(!p.active)throw new Error('本年内政已经结束，下一年度可再执行。');
   if(command.type==='policy-governor') {

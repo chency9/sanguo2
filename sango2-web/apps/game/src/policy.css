@@ -45,3 +45,4 @@ dialog:modal{overscroll-behavior:contain}dialog::backdrop{overflow:hidden;oversc
 .policy-allocation .policy-allocation-preview{min-height:3.5em;line-height:1.8;margin-block:.5rem .8rem;font-size:.8rem;color:#f3d596}
 .policy-allocation-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;margin-block:1rem}.policy-allocation-actions button{min-width:0;padding-inline:.5rem}
 .policy-recruit-exact{border-top:1px solid #a6864c66;padding-block-start:.3rem}.policy-recruit-exact button{width:100%;margin-block-start:.3rem}
+.policy-allocation .policy-fill-status{min-height:3.6em;font-size:.75rem;line-height:1.8;color:#edcd8a;margin-block:.5rem}.policy-fill-status+button{width:100%;margin-block-end:1rem}

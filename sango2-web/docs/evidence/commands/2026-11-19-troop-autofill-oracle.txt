@@ -1,0 +1,1 @@
+200 direct + 7 mouse sequences / 2987 native events; no substituted callbacks, soldiers and RNG conserved

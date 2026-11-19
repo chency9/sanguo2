@@ -17,7 +17,7 @@ export * from './native-progression';
 export {officerDefinition,officerStrength,officerIntelligence,officerSpeed,officerForceMask,officerFormations,officerUnit,nativeForceNames,nativeForceLabels} from './native-officer-runtime';
 export {domesticSearchMessage} from './native-policy-actions';
 export {previewPlayerItem} from './native-player-items';
-export {allocateBattleTroops,nativeTransferTroops,nativeReserveCapacity} from './native-troops';
+export {allocateBattleTroops,nativeTransferTroops,nativeAutofillTroops,nativeReserveCapacity} from './native-troops';
 export type {AutonomyMode} from './native-policy-search';
 
 // Explicit prototype rules. These numbers are not a reconstruction of the 1.05+ executable.
@@ -258,7 +258,10 @@ export function dispatch(previous: Session, command: Command, content: GameConte
   }
   if(s.battle)throw new Error('请先完成当前战斗，战略时间已暂停。');
   if(command.type.startsWith('policy-')) {
-    note(s,executeDomestic(s,scene,command as DomesticCommand,content.items));return s;
+    const message=executeDomestic(s,scene,command as DomesticCommand,content.items);
+    // Per-update autofill is one user action, not a new report per soldier.
+    if(command.type!=='policy-troops-fill'||command.mode!=='step')note(s,message);
+    return s;
   }
   if(s.policy?.active)throw new Error('当前为内政阶段，请先完成内政，再返回征战。');
   if (command.type === 'advance') {

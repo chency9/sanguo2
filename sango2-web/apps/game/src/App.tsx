@@ -108,7 +108,7 @@ export function App({ content }: { content: GameContent }) {
   const actionReason = !isOwn ? '此城不属我方' : !stationed.length ? '城中暂无武将' : session.policy?.active?'当前为内政阶段，请先内政終了，再出征。':'';
   function commit(next: Session) { sessionRef.current = next; setSession(next); }
   function run(command: Command) {
-    try { const before=sessionRef.current,next = dispatch(before, command, content); commit(next); if(next.battle){setRunning(false);if(!before.battle)setMessage(next.chronicle[0].text);}if(next.policy?.active&&!before.policy?.active){setRunning(false);setPanel('policy');}if (!['advance','battle-tick','battle-command'].includes(command.type)) setMessage(next.chronicle[0].text);return {ok:true,message:next.chronicle[0].text}; }
+    try { const before=sessionRef.current,next = dispatch(before, command, content); commit(next); if(next.battle){setRunning(false);if(!before.battle)setMessage(next.chronicle[0].text);}if(next.policy?.active&&!before.policy?.active){setRunning(false);setPanel('policy');}if (!['advance','battle-tick','battle-command'].includes(command.type)&&!(command.type==='policy-troops-fill'&&command.mode==='step')) setMessage(next.chronicle[0].text);return {ok:true,message:next.chronicle[0].text}; }
     catch (e) { const message=e instanceof Error ? e.message : '命令执行失败';setRunning(false);setMessage(message);return {ok:false,message}; }
   }
   function load(next: Session) {
@@ -190,7 +190,7 @@ export function App({ content }: { content: GameContent }) {
     <footer className="statusbar"><span role="status">{message}</span><span>v0.4 · 全屏战场开发版</span></footer>
     <audio ref={audio} loop preload="none" />
     {panel && <Modal key={panel} title={{ new: '择时而起', roster: '群英名册', saves: '军机存档', march: `${city.name} · 调兵出征`, help: '行军用兵 · 先行版说明', reports: '历次战报',policy:'内政经营' }[panel]} wide={panel === 'new' || panel === 'roster' || panel === 'policy'} onClose={() => setPanel(null)}>
-      {panel === 'policy' && <PolicyScreen session={session} scene={scene} items={content.items} initialCityId={city.id} onCommand={run} onClose={()=>setPanel(null)}/>}
+      {panel === 'policy' && <PolicyScreen session={session} scene={scene} items={content.items} initialCityId={city.id} getSession={()=>sessionRef.current} onCommand={run} onClose={()=>setPanel(null)}/>}
       {panel === 'new' && <NewGame content={content} onStart={load} replacing={started} />}
       {panel === 'march' && <March session={session} scene={scene} cityId={city.id} onMarch={command => { run(command); setPanel(null); }} />}
       {panel === 'roster' && <Roster scene={scene} session={session} />}
