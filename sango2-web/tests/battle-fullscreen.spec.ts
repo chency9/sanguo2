@@ -1,10 +1,11 @@
+import {finishInitialPolicy} from './campaign-fixture';
 import {test,expect,type Page} from '@playwright/test';
 
 class BattleScreen {
   constructor(readonly page:Page) {}
   async open(multiple=false) {
     await this.page.goto('/');
-    await this.page.getByRole('button',{name:/执掌何進/}).click();
+    await this.page.getByRole('button',{name:/执掌何進/}).click();await finishInitialPolicy(this.page);
     await this.page.getByRole('button',{name:multiple?'双将演武':'演武场',exact:true}).click();
     if(multiple)await this.page.getByRole('dialog',{name:'点将出阵'}).getByRole('button',{name:'确认出阵'}).click();
     await expect(this.page.getByRole('button',{name:'擂鼓开战'})).toBeEnabled();
@@ -21,7 +22,7 @@ class BattleScreen {
       }
       await route.fulfill({response,json:content});
     });
-    await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();
+    await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();await finishInitialPolicy(page);
     await page.getByRole('button',{name:'调兵出征'}).click();
     const destination=page.getByLabel('行军目标');
     await destination.selectOption({label:(await destination.getByRole('option').filter({hasText:'壺關'}).textContent())!});
@@ -231,7 +232,7 @@ for(const viewport of [{width:1920,height:1080},{width:1440,height:900},{width:1
 }
 
 test('fullscreen includes campaign save dialogs and keeps the battle paused after saving',async({page})=>{
-  await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();
+  await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();await finishInitialPolicy(page);
   await page.getByRole('button',{name:'调兵出征'}).click();
   const target=page.getByLabel('行军目标');
   const option=target.getByRole('option').filter({hasText:'壺關'});

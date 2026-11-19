@@ -3,6 +3,7 @@ import { scenarioById, type GameContent, type ScenarioDefinition } from '@sango2
 import { adjacentRoads, createSession, dispatch, gameDate, RULES, stationedGenerals, readSession, createBattle, nativeTroopCapacity, commandBattle, tickBattle, type BattleState, type BattleCommand, type Command, type Session } from '@sango2/core';
 import { exportGame, importGame, listSaves, saveGame, type SaveSlot } from './storage';
 import { cityOwnership } from './city-ownership';
+import {PolicyScreen} from './PolicyScreen';
 
 const WorldMap = lazy(() => import('./WorldMap').then(module => ({ default: module.WorldMap })));
 const BattleView = lazy(() => import('./BattleView').then(module => ({ default: module.BattleView })));
@@ -79,7 +80,7 @@ function Saves({ content, session, onLoad, notify }: { content: GameContent; ses
   </>;
 }
 
-type Panel = 'new' | 'roster' | 'saves' | 'march' | 'help' | 'reports' | null;
+type Panel = 'new' | 'roster' | 'saves' | 'march' | 'help' | 'reports' | 'policy' | null;
 export function App({ content }: { content: GameContent }) {
   const [session, setSession] = useState(() => createSession(content, content.scenarios[0].id, content.scenarios[0].factions[0].id));
   const sessionRef = useRef(session);
@@ -103,23 +104,23 @@ export function App({ content }: { content: GameContent }) {
   const totals = ownCities.reduce((t,c) => ({ money: t.money + session.cities[c.id].money, troops: t.troops + session.cities[c.id].troops }), { money: 0, troops: 0 });
   const date = gameDate(session, scene);
   const cityList = scene.cities.filter(c => (cityScope === 'all' || session.cities[c.id].ownerId === session.factionId) && c.name.includes(cityQuery.trim()));
-  const actionReason = !isOwn ? '此城不属我方' : !stationed.length ? '城中暂无武将' : state.lastActionDay === session.day ? '今日内政已毕，推进一天可再下令' : '';
+  const actionReason = !isOwn ? '此城不属我方' : !stationed.length ? '城中暂无武将' : session.policy?.active?'当前为内政阶段，请先内政終了，再出征。':'';
   function commit(next: Session) { sessionRef.current = next; setSession(next); }
   function run(command: Command) {
-    try { const next = dispatch(sessionRef.current, command, content); commit(next); if(next.battle){setRunning(false);if(!session.battle)setMessage(next.chronicle[0].text);}if (!['advance','battle-tick','battle-command'].includes(command.type)) setMessage(next.chronicle[0].text); }
-    catch (e) { setRunning(false); setMessage(e instanceof Error ? e.message : '命令执行失败'); }
+    try { const before=sessionRef.current,next = dispatch(before, command, content); commit(next); if(next.battle){setRunning(false);if(!before.battle)setMessage(next.chronicle[0].text);}if(next.policy?.active&&!before.policy?.active){setRunning(false);setPanel('policy');}if (!['advance','battle-tick','battle-command'].includes(command.type)) setMessage(next.chronicle[0].text);return {ok:true,message:next.chronicle[0].text}; }
+    catch (e) { const message=e instanceof Error ? e.message : '命令执行失败';setRunning(false);setMessage(message);return {ok:false,message}; }
   }
   function load(next: Session) {
     trainingRef.current=null;setTraining(null);
     commit(next); const nextScene = scenarioById(content, next.scenarioId);
     setSelected(nextScene.cities.find(c => next.cities[c.id].ownerId === next.factionId)?.id ?? nextScene.cities[0].id);
-    setRunning(false); setPanel(null); setStarted(true); setCityScope('own'); setCityQuery(''); setMessage('战役已就绪。选择城池，下达军令。');
+    setRunning(false); setPanel(next.policy?.active?'policy':null); setStarted(true); setCityScope('own'); setCityQuery(''); setMessage(next.policy?.active?'进入内政。选择武将开发城池、任命太守或补充部队。':'战役已就绪。选择城池，下达军令。');
   }
   useEffect(() => {
-    if (!running || panel || session.battle || training) return;
+    if (!running || panel || session.battle || training || session.policy?.active) return;
     const id = window.setInterval(() => run({ type: 'advance', days: 1 }), 2000 / speed);
     return () => clearInterval(id);
-  }, [running, speed, panel, !!session.battle, !!training]);
+  }, [running, speed, panel, !!session.battle, !!training,session.policy?.active]);
   useEffect(() => { const pause = () => { if (document.hidden) setRunning(false); }; document.addEventListener('visibilitychange', pause); return () => document.removeEventListener('visibilitychange', pause); }, []);
   async function toggleMusic() {
     if (!audio.current) return;
@@ -159,7 +160,7 @@ export function App({ content }: { content: GameContent }) {
     return()=>{cancelled=true;};
   },[musicSource]);
   return <div className="app">
-    <header className="topbar"><a className="brand" href="#realm"><span className="seal">群</span><span><strong>三國群英傳 <b>II</b></strong><small>修正版 1.05+ · WEB 重制</small></span></a><div className="edition"><span>乱世逐鹿</span><small>{scene.title} · {faction.name}</small></div><nav aria-label="游戏菜单"><button onClick={() => setPanel('new')}>新征程</button><button disabled={!!activeBattle} onClick={()=>practice()}>演武场</button><button disabled={!!activeBattle} onClick={()=>practice(true)}>双将演武</button><button onClick={() => setPanel('saves')}>存读档</button><button onClick={() => setPanel('help')}>玩法说明</button><button className="music-button" aria-pressed={music} onClick={() => void toggleMusic()}>{music ? '♫ 音乐开' : '♪ 音乐关'}</button></nav></header>
+    <header className="topbar"><a className="brand" href="#realm"><span className="seal">群</span><span><strong>三國群英傳 <b>II</b></strong><small>修正版 1.05+ · WEB 重制</small></span></a><div className="edition"><span>乱世逐鹿</span><small>{scene.title} · {faction.name}</small></div><nav aria-label="游戏菜单"><button disabled={!started||!!activeBattle} onClick={()=>setPanel('policy')}>内政经营</button><button onClick={() => setPanel('new')}>新征程</button><button disabled={!!activeBattle} onClick={()=>practice()}>演武场</button><button disabled={!!activeBattle} onClick={()=>practice(true)}>双将演武</button><button onClick={() => setPanel('saves')}>存读档</button><button onClick={() => setPanel('help')}>玩法说明</button><button className="music-button" aria-pressed={music} onClick={() => void toggleMusic()}>{music ? '♫ 音乐开' : '♪ 音乐关'}</button></nav></header>
     {activeBattle?<Suspense fallback={<div className="boot">正在进入战场…</div>}><BattleView skills={content.skills} terrains={content.terrains} music={music} onMusic={()=>void toggleMusic()} key={activeBattle.id} battle={activeBattle} cityName={training?'校场':scene.cities.find(c=>c.id===activeBattle.cityId)?.name??'城池'} training={!!training} blocked={!!panel} onCommand={battleCommand} onTick={battleTick} onSave={()=>{if(training)setMessage('演武不写入战役存档。');else setPanel('saves');}} onLeave={()=>{trainingRef.current=null;setTraining(null);}} onFinish={()=>{if(training){trainingRef.current=null;setTraining(null);}else run({type:'battle-finish'});}}/></Suspense>:<main id="realm" className="realm">
       <aside className="empire"><div className="faction-header">{leader && <Portrait path={leader.portrait} name={leader.name} />}<div><span className="eyebrow">主 公</span><h1>{faction.name}</h1><p><i style={{ background: faction.color }} />据守 {ownCities.length} 城</p></div></div>
         <div className="empire-totals"><div><span>府库总金</span><strong>{number(totals.money)}</strong></div><div><span>城内驻军</span><strong>{number(totals.troops)}</strong></div></div>
@@ -169,14 +170,14 @@ export function App({ content }: { content: GameContent }) {
         <div className="city-list" aria-label="城池列表">{cityList.map(c => { const cs = session.cities[c.id],owner=cityOwnership(scene,session,c.id); return <button key={c.id} aria-pressed={c.id === city.id} onClick={() => setSelected(c.id)}><i style={{ background: owner.color }} /><span className="city-list-name">{c.name}<em>{owner.label} · {owner.name}</em></span><small>{number(cs.troops)} 兵</small></button>; })}{!cityList.length && <p className="empty">没有符合条件的城池</p>}</div>
         <p className="sidebar-note">天下六十城<br />一城一策，步步为营。</p>
       </aside>
-      <section className="map-column"><div className="campaign-bar"><div><span className="eyebrow">建业纪年</span><strong>{date.year}<small> 年 </small>{date.month}<small> 月 </small>{date.day}<small> 日</small></strong></div><div className="time-controls"><button aria-pressed={running} disabled={!started} onClick={() => setRunning(!running)}>{running ? 'Ⅱ 暂停' : '▶ 推进'}</button><button disabled={!started} onClick={() => run({ type: 'advance', days: 1 })}>下一天</button><select aria-label="时间速度" value={speed} onChange={e => setSpeed(Number(e.target.value))}><option value="1">一倍速</option><option value="2">二倍速</option><option value="4">四倍速</option></select></div></div>
+      <section className="map-column"><div className="campaign-bar"><div><span className="eyebrow">建业纪年</span><strong>{date.year}<small> 年 </small>{date.month}<small> 月 </small>{date.day}<small> 日</small></strong></div><div className="time-controls"><button aria-pressed={running} disabled={!started||session.policy?.active} onClick={() => setRunning(!running)}>{running ? 'Ⅱ 暂停' : '▶ 推进'}</button><button disabled={!started||session.policy?.active} onClick={() => run({ type: 'advance', days: 1 })}>下一天</button><select aria-label="时间速度" value={speed} onChange={e => setSpeed(Number(e.target.value))}><option value="1">一倍速</option><option value="2">二倍速</option><option value="4">四倍速</option></select></div></div>
         {incoming.length>0&&<section className="invasion-notice" aria-label="敌军来袭"><strong>敌军来袭</strong>{incoming.map(a=><button key={a.id} onClick={()=>setSelected(a.to)}>{scene.factions.find(f=>f.id===a.ownerId)?.name} → {scene.cities.find(c=>c.id===a.to)?.name} · {a.troops}兵 · {a.remainingDays}天后抵达</button>)}</section>}
         <Suspense fallback={<section className="map-shell"><p className="map-loading">正在准备地图…</p></section>}><WorldMap scene={scene} session={session} selected={city.id} onSelect={setSelected} /></Suspense>
         <section className="chronicle"><div className="section-title"><h2>军情纪要</h2><button onClick={() => setPanel('reports')}>战报 {session.reports.length} ↗</button></div><div className="chronicle-items">{session.chronicle.slice(0,4).map(e => <p key={e.id} className={e.kind}><time>第 {e.day} 天</time><span>{e.text}</span></p>)}</div></section>
       </section>
       <aside className="city-panel" aria-label="城池详情"><div className="city-title"><span className="eyebrow">城 池 军 机</span><div><h2>{city.name}</h2><span className="owner-tag" style={{ borderColor: cityOwner?.color }}>{cityOwner?.name ?? '无主之城'}</span></div><p>{isOwn ? '我方领地 · 可下达军令' : state.ownerId ? '他方领地 · 沿道路出征攻取' : '无人据守 · 可派兵进驻'}</p></div>
         <dl className="city-stats"><div><dt>金钱</dt><dd data-testid="city-money">{number(state.money)}<small>金</small></dd></div><div><dt>人口</dt><dd>{number(state.population)}</dd></div><div><dt>城防</dt><dd>{number(state.defense)}</dd></div><div><dt>驻军</dt><dd data-testid="city-troops">{number(state.troops)}<small>人</small></dd></div></dl>
-        <div className="city-actions"><button disabled={!started || !!actionReason || state.money < RULES.developCost} title={actionReason || '耗费300金，城防+20，人口+500'} onClick={() => run({ type: 'develop', cityId: city.id })}>开发城池<small>300 金</small></button><button disabled={!started || !!actionReason || state.money < RULES.recruitCost || state.population < 50} title={actionReason || '耗费200金，招募50名士兵'} onClick={() => run({ type: 'recruit', cityId: city.id })}>征募士兵<small>200 金</small></button><button className="primary march-action" disabled={!started || !isOwn || !stationed.length || state.troops < 1 || !adjacentRoads(scene, city.id).some(r => !r.restricted)} onClick={() => setPanel('march')}>调兵出征 <span>→</span></button><p>{actionReason || '每城每日可执行一次内政'}</p></div>
+        <div className="city-actions"><button disabled={!started||!isOwn} onClick={()=>setPanel('policy')}>内政经营<small>{session.policy?.active?'议政中':'城务 / 配兵'}</small></button><button className="primary march-action" disabled={!started||!!actionReason||state.troops<1||!adjacentRoads(scene,city.id).some(r=>!r.restricted)} onClick={()=>setPanel('march')}>调兵出征 <span>→</span></button><p>{actionReason||'每年内政，每将一次行动。城内预备兵可随时补充到部队。'}</p></div>
         <section className="officers"><div className="section-title"><h3>驻城武将</h3><span>{stationed.length} 人</span></div><div className="officer-list">{stationed.map(g => <div className="officer" key={g.id}><Portrait small path={g.portrait} name={g.name} /><div><strong>{g.name}</strong><small>武 <b>{g.strength}</b> · 智 {g.intelligence}</small></div><span>{g.unit}<small>体 {session.generals[g.id].hp} · 兵 {session.generals[g.id].troops}</small></span></div>)}{!stationed.length && <p className="empty">城中暂无在任武将</p>}</div></section>
         {session.armies.length > 0 && <section className="marching" aria-label="在途部队"><h3>在途部队</h3>{session.armies.map(a => {
           const ours=a.ownerId===session.factionId,incoming=!ours&&session.cities[a.to].ownerId===session.factionId;
@@ -187,12 +188,13 @@ export function App({ content }: { content: GameContent }) {
     </main>}
     <footer className="statusbar"><span role="status">{message}</span><span>v0.4 · 全屏战场开发版</span></footer>
     <audio ref={audio} loop preload="none" />
-    {panel && <Modal title={{ new: '择时而起', roster: '群英名册', saves: '军机存档', march: `${city.name} · 调兵出征`, help: '行军用兵 · 先行版说明', reports: '历次战报' }[panel]} wide={panel === 'new' || panel === 'roster'} onClose={() => setPanel(null)}>
+    {panel && <Modal key={panel} title={{ new: '择时而起', roster: '群英名册', saves: '军机存档', march: `${city.name} · 调兵出征`, help: '行军用兵 · 先行版说明', reports: '历次战报',policy:'内政经营' }[panel]} wide={panel === 'new' || panel === 'roster' || panel === 'policy'} onClose={() => setPanel(null)}>
+      {panel === 'policy' && <PolicyScreen session={session} scene={scene} initialCityId={city.id} onCommand={run} onClose={()=>setPanel(null)}/>}
       {panel === 'new' && <NewGame content={content} onStart={load} replacing={started} />}
       {panel === 'march' && <March session={session} scene={scene} cityId={city.id} onMarch={command => { run(command); setPanel(null); }} />}
       {panel === 'roster' && <Roster scene={scene} session={session} />}
       {panel === 'saves' && <Saves content={content} session={session} onLoad={load} notify={setMessage} />}
-      {panel === 'help' && <div className="help"><p className="intro">从一城出发，重走群雄逐鹿之路。</p><ol><li>在「新征程」选择时代和势力。点选地图或左侧列表查看城池。</li><li>开发增加城防与人口，征募增加兵力。每城每日可执行一次内政。</li><li>选择驻城武将和兵力，沿相邻道路出征。点「下一天」或「推进」让部队行进。</li><li>友城接收增援，无主城归入领地，敌城进入实时战场。结果见军情与战报。</li><li>随时暂停并存档。导出的 JSON 可在其他浏览器导入。</li></ol><h3>当前已接入</h3><p>五个原版剧本、每剧本 60 城 / 401 条武将记录 / 116 条道路、原地图与头像、武将基础属性与装备资料。</p><h3>实时战场</h3><p>点击「演武场」可按武将等级体验步兵对弓兵，「双将演武」可练习轮番出阵；出征敌城抵达后也会进入战场。选择前军、后军或主将下达前进、待命、撤退命令，开战前可布阵。单将败退、撤离或倒计时耗尽收兵后，本将退出交锋；仍有可战武将时继续选将出阵，体力与余兵不会重置。所有交锋结束后统一结算，也可在两阵之间全军收兵。战中可暂停并存档。现役兵与预备兵在开战时共同上场：20级以前现役上限为等级乘5，20级起现役上限100，之后每级增加5名预备兵，40级达到200人。旧版存档中超出统兵上限的兵员暂留营中，战后保留；图像与动画来自原包，攻击触发点来自原始动作脚本，普攻命中、伤害与兵种克制已按原程序规则接入，移动、碰撞和完整阵形仍在校准。每阵战后会累积疲劳，驻城休整可恢复；高疲劳会降低士气，低士气会影响忠诚。军师鼓舞和打击士气只在本阵生效，离间造成的忠诚损失则会保留。武将名册可查看当前状态。</p><h3>尚未复刻</h3><p>完整武将技与军师技效果、俘虏招降、搜索物品与历史事件。其他势力按性格、战况和行动冷却决定进攻、增援或暂不行动；玩家城池遇袭进入守城战，诸侯之间采用后台战斗结算。</p><h3>本版规则</h3><p>初始驻军按在任武将每人 80 兵配置；开发 300 金，城防 +20、人口 +500；征兵 200 金，将 50 人口转为 50 兵。城内会自动花费100金补充一名预备兵，补充速度受人口与城防影响；电脑军团会从预备池补兵。每月收入为人口的千分之一。每月 30 天，每年 360 天；行军速度为每日 60 道路单位，至少 2 天。</p><p>上述初始配兵、手动内政与行军仍含 Web 暂定规则，不代表整个游戏已完成还原。战败余部即时返回出发城。保留特殊道路但暂不开放通行。</p><p>地图支持滚轮围绕鼠标缩放、拖动、按钮放大和复位；也可用键盘操作左侧城池列表。音乐需主动开启。</p></div>}
+      {panel === 'help' && <div className="help"><p className="intro">从一城出发，重走群雄逐鹿之路。</p><ol><li>在「新征程」选择时代和势力。点选地图或左侧列表查看城池。</li><li>新局先处理年度内政：选择武将开发、任命太守或配兵，再点「内政終了」返回征战。每将每年可行动一次，开发不扣金钱；部队从城内预备池补兵。</li><li>选择驻城武将和兵力，沿相邻道路出征。点「下一天」或「推进」让部队行进。</li><li>友城接收增援，无主城归入领地，敌城进入实时战场。结果见军情与战报。</li><li>随时暂停并存档。导出的 JSON 可在其他浏览器导入。</li></ol><h3>当前已接入</h3><p>五个原版剧本、每剧本 60 城 / 401 条武将记录 / 116 条道路、原地图与头像、武将基础属性与装备资料。</p><h3>实时战场</h3><p>点击「演武场」可按武将等级体验步兵对弓兵，「双将演武」可练习轮番出阵；出征敌城抵达后也会进入战场。选择前军、后军或主将下达前进、待命、撤退命令，开战前可布阵。单将败退、撤离或倒计时耗尽收兵后，本将退出交锋；仍有可战武将时继续选将出阵，体力与余兵不会重置。所有交锋结束后统一结算，也可在两阵之间全军收兵。战中可暂停并存档。现役兵与预备兵在开战时共同上场：20级以前现役上限为等级乘5，20级起现役上限100，之后每级增加5名预备兵，40级达到200人。旧版存档中超出统兵上限的兵员暂留营中，战后保留；图像与动画来自原包，攻击触发点来自原始动作脚本，普攻命中、伤害与兵种克制已按原程序规则接入，移动、碰撞和完整阵形仍在校准。每阵战后会累积疲劳，驻城休整可恢复；高疲劳会降低士气，低士气会影响忠诚。军师鼓舞和打击士气只在本阵生效，离间造成的忠诚损失则会保留。武将名册可查看当前状态。</p><h3>尚未复刻</h3><p>完整武将技与军师技效果、俘虏招降、内政搜索/自治、物品库存、AI年度经营与历史事件。内政页面当前提供开发、太守任命、预备池配兵和开发记录；完整漏项与验收条件已登记在仓库的一比一复刻总账。其他势力按性格、战况和行动冷却决定进攻、增援或暂不行动；玩家城池遇袭进入守城战，诸侯之间采用后台战斗结算。</p><h3>本版规则</h3><p>初始驻军按在任武将每人 80 兵配置；开发按执行武将武力/智力及太守智力计算收益，人口上限100万，城防上限999，关隘不增加人口。城内会自动花费100金补充一名预备兵，补充速度受人口与城防影响；电脑军团会从预备池补兵。启用年度内政后，非关隘每年收入为人口乘75除10000取整，再加2250金。旧存档可在内政经营中主动切换年度规则。每月 30 天，每年 360 天；行军速度为每日 60 道路单位，至少 2 天。</p><p>上述初始配兵、行军、自动太守接任与年度事件顺序仍含 Web 适配规则，不代表整个游戏已完成还原。战败余部即时返回出发城。保留特殊道路但暂不开放通行。</p><p>地图支持滚轮围绕鼠标缩放、拖动、按钮放大和复位；也可用键盘操作左侧城池列表。音乐需主动开启。</p></div>}
       {panel === 'reports' && <div className="reports"><p className="notice">先行版战报 · 由实时战斗的胜负和实际剩余兵力结算；旧版历史战报保留。</p>{session.reports.map(r => <article key={r.id}><span className={r.won ? 'victory' : 'defeat'}>{r.won ? '捷' : '退'}</span><div><h3>{r.text}</h3><p>第 {r.day} 天 · 出征 {r.attackingTroops} / 守军 {r.defendingTroops} / 我方余兵 {r.survivors}</p></div></article>)}{!session.reports.length && <p className="empty">尚无交战。兵戈未动，先谋后行。</p>}</div>}
     </Modal>}
   </div>;

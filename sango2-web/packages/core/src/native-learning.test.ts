@@ -1,7 +1,7 @@
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import type {GameContent} from '@sango2/content';
-import {createSession,dispatch,readSession,validateSession} from './index';
+import {createSession as createNativeSession,dispatch,readSession,validateSession} from './index';
 import {knownMagicSequences,learnedMagicSequences} from './native-battle-rules';
 import {battleGeneral,battleSkillUnavailable,commandBattle,createBattle,validateBattle} from './battle';
 
@@ -86,3 +86,7 @@ describe('native general initialization and learning',()=>{
     expect(()=>validateBattle(loaded.battle)).toThrow();
   });
 });
+
+function createSession(...args:Parameters<typeof createNativeSession>) {
+  return dispatch(createNativeSession(...args),{type:"policy-finish"},args[0]);
+}

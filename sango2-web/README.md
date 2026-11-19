@@ -1,6 +1,6 @@
 # 三国群英传 II · Web 开发说明
 
-项目介绍、实机截图、快速开始与复刻进度见 [仓库首页](../README.md)。当前为 v0.4 开发版，整体尚未达到原版一比一验收标准。
+项目介绍、实机截图、快速开始与复刻进度见 [仓库首页](../README.md)。当前为 v0.4 开发版，整体尚未达到原版一比一验收标准。[全系统漏项总账](docs/FULL-PARITY-BACKLOG.md)与[原内容逐条核对表](docs/PARITY-CONTENT-INVENTORY.md)是后续开发和验收入口。
 
 ## 本地运行
 
@@ -41,6 +41,8 @@ pnpm dev
 - `apps/game/src/BattleView.tsx`：Canvas 战场、素材解码、军令和显示时钟。
 - `apps/game/src/BattleCamera.tsx`：镜头拖动、定位与视距。
 - `apps/game/src/classic.css`：原素材主题与全屏战斗布局。
+- `apps/game/src/PolicyScreen.tsx`：年度内政、选将开发、太守任命、配兵与报告。
+- `packages/core/src/native-policy.ts`：原开发和税收规则、内政阶段与行动记录。
 - `packages/core/src/index.ts`：战役命令、存档迁移与校验。
 - `packages/core/src/battle.ts`：固定步长战斗与轮战接入。
 - `packages/core/src/native-*.ts`：原版规则纯函数。
@@ -54,8 +56,9 @@ pnpm dev
 
 ## 本轮验证与证据
 
-2026-11-19：39 个测试文件、12,346 项核心测试、46 个 Chromium 场景、5 项 Python 测试通过；类型检查与生产构建通过。本次新增 72 组 Heal 脚本树原解释器样本，共 28,224 次源更新；前序装备速度测试包含 698 组原码样本。
+2026-11-19：40 个测试文件、12,594 项核心测试、49 个 Chromium 场景、5 项 Python 测试通过；类型检查与生产构建通过。本次新增240组开发/税收原机器码样本；前序有72组Heal脚本树原解释器样本，共28,224次源更新；前序装备速度测试包含 698 组原码样本。
 
+- [年度内政规则、240组原码样本与未完成范围](docs/NATIVE-POLICY-PARITY-2026-11-19.md)
 - [四种飞行武将技：规则、原码对照与限制](docs/NATIVE-MAGIC-SHOOT-PARITY-2026-11-19.md)
 - [主将源更新、装备速度、技能镜头](docs/NATIVE-GENERAL-CAMERA-PARITY-2026-11-19.md)
 - [命疗术、回天术的 Heal 全部子协程与原光效](docs/NATIVE-HEAL-PARITY-2026-11-19.md)

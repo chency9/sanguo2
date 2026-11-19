@@ -1,0 +1,22 @@
+
+Running 11 tests using 3 workers
+
+(node:38944) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:49272) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:58824) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  2 [chromium] › tests\game.spec.ts:18:1 › map identifies own, other and unclaimed cities without relying on flag color (3.4s)
+  ok  1 [chromium] › tests\game.spec.ts:35:1 › wheel zoom keeps the city under the cursor and does not scroll the page (3.5s)
+  ok  3 [chromium] › tests\game.spec.ts:53:1 › real content, economy, native dialog focus and map render (4.1s)
+  ok  4 [chromium] › tests\game.spec.ts:81:31 › officer conditions survive export/import and remain keyboard-scrollable at 1280 (2.4s)
+  ok  5 [chromium] › tests\game.spec.ts:81:31 › officer conditions survive export/import and remain keyboard-scrollable at 390 (2.4s)
+  ok  6 [chromium] › tests\game.spec.ts:104:1 › another page cannot silently overwrite a newer save (3.1s)
+  ok  8 [chromium] › tests\game.spec.ts:147:1 › all five eras initialize and phone layout remains operable (3.6s)
+  ok  7 [chromium] › tests\game.spec.ts:118:1 › neutral capture, persistent save, export and invalid import (4.1s)
+  ok  9 [chromium] › tests\policy.spec.ts:13:31 › domestic council supports development, appointment, reports and save at 1440 (3.9s)
+  ok 11 [chromium] › tests\policy.spec.ts:47:1 › native reserve transfer consumes existing soldiers and preserves gold (1.8s)
+  ok 10 [chromium] › tests\policy.spec.ts:13:31 › domestic council supports development, appointment, reports and save at 390 (2.9s)
+
+  11 passed (16.6s)

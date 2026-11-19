@@ -1,0 +1,14 @@
+
+Running 3 tests using 3 workers
+
+(node:53756) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:35548) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:59956) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 [chromium] › tests\policy.spec.ts:47:1 › native reserve transfer consumes existing soldiers and preserves gold (2.7s)
+  ok 3 [chromium] › tests\policy.spec.ts:13:31 › domestic council supports development, appointment, reports and save at 390 (3.4s)
+  ok 2 [chromium] › tests\policy.spec.ts:13:31 › domestic council supports development, appointment, reports and save at 1440 (3.6s)
+
+  3 passed (4.3s)

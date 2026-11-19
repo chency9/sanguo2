@@ -1,7 +1,7 @@
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import type {GameContent} from '@sango2/content';
-import {createSession,dispatch,readSession,validateSession,battleGeneral,createBattle,commandBattle,tickBattle,type Session} from './index';
+import {createSession as createNativeSession,dispatch,readSession,validateSession,battleGeneral,createBattle,commandBattle,tickBattle,type Session} from './index';
 import {nativeReadiness} from './native-ai-campaign';
 
 function fixture():GameContent {
@@ -239,3 +239,7 @@ describe('opponent tactical decisions',()=>{
     expect(casts).toBeGreaterThan(0);
   });
 });
+
+function createSession(...args:Parameters<typeof createNativeSession>) {
+  return dispatch(createNativeSession(...args),{type:"policy-finish"},args[0]);
+}

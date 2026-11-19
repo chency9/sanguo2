@@ -1,3 +1,4 @@
+import {finishInitialPolicy} from './campaign-fixture';
 import {test,expect,type Page} from '@playwright/test';
 
 class DefensePage {
@@ -18,7 +19,7 @@ class DefensePage {
       });
       await route.fulfill({response,json:content});
     });
-    await this.page.goto('/');await this.page.getByRole('button',{name:/执掌何進/}).click();
+    await this.page.goto('/');await this.page.getByRole('button',{name:/执掌何進/}).click();await finishInitialPolicy(this.page);
   }
   async days(n:number) {for(let i=0;i<n;i++)await this.page.getByRole('button',{name:'下一天',exact:true}).click();}
 }
@@ -59,7 +60,7 @@ test('enemy invasion warns the player, opens a defensive battle and preserves th
 });
 
 test('unmodified campaign produces rival expeditions under native weighted decisions',async({page})=>{
-  await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();
+  await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();await finishInitialPolicy(page);
   const game=new DefensePage(page);
   for(let day=0;day<60&&!await page.getByRole('region',{name:'在途部队'}).getByRole('progressbar').count();day++)await game.days(1);
   await expect(page.getByRole('region',{name:'在途部队'})).toContainText(/他方|敌军来袭/);

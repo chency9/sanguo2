@@ -1,3 +1,4 @@
+import {finishInitialPolicy} from './campaign-fixture';
 import {test,expect,type Page} from '@playwright/test';
 import manifest from '../packages/core/src/native-magic-manifest.json' with {type:'json'};
 
@@ -26,7 +27,7 @@ class NativeMagicScreen {
         if(sprite){state.nativeMagicDraws[sprite.id]=(state.nativeMagicDraws[sprite.id]??0)+1;state.nativeMagicBlends[sprite.id]=this.globalCompositeOperation;}
       } as typeof original;
     },{rectangles});
-    await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();
+    await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();await finishInitialPolicy(page);
     await page.getByRole('button',{name:'演武场',exact:true}).click();
     await expect(page.getByRole('button',{name:'擂鼓开战'})).toBeEnabled();
     await expect(this.canvas).toHaveAttribute('data-magic-rules','native-shoot-v1');

@@ -1,9 +1,10 @@
+import {finishInitialPolicy} from './campaign-fixture';
 import {test,expect} from '@playwright/test';
 import {delayRivalDecisions} from './campaign-fixture';
 
 test('real sprites, formations, ranged combat, pause and retreat in the drill',async({page})=>{
   const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
-  await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();
+  await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();await finishInitialPolicy(page);
   await page.getByRole('button',{name:'演武场',exact:true}).click();
   await page.getByLabel('战场阵形').selectOption('xuan');
   await expect(page.getByRole('button',{name:'擂鼓开战'})).toBeEnabled();
@@ -28,7 +29,7 @@ test('real sprites, formations, ranged combat, pause and retreat in the drill',a
 
 test('enemy encounter pauses campaign, survives reload and settles actual casualties',async({page})=>{
   await delayRivalDecisions(page);
-  await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();
+  await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();await finishInitialPolicy(page);
   await page.getByRole('button',{name:'调兵出征'}).click();
   const destination=page.getByLabel('行军目标');
   await destination.selectOption({label:await destination.locator('option').filter({hasText:'壺關'}).textContent()??''});
@@ -63,7 +64,7 @@ test('enemy encounter pauses campaign, survives reload and settles actual casual
 });
 
 test('phone battle commands are accessible without page overflow',async({page})=>{
-  await page.setViewportSize({width:390,height:844});await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();
+  await page.setViewportSize({width:390,height:844});await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();await finishInitialPolicy(page);
   await page.getByRole('button',{name:'演武场',exact:true}).click();
   await expect(page.getByRole('button',{name:'擂鼓开战'})).toBeEnabled();
   await page.getByRole('button',{name:'主将',exact:true}).click();await page.getByRole('button',{name:'原地待命'}).click();
@@ -74,7 +75,7 @@ test('phone battle commands are accessible without page overflow',async({page})=
 
 test('successive commander battle exposes roster and preserves next-round selection',async({page})=>{
   await page.goto('/');
-  await page.getByRole('button',{name:/执掌何進/}).click();
+  await page.getByRole('button',{name:/执掌何進/}).click();await finishInitialPolicy(page);
   await page.getByRole('button',{name:'双将演武',exact:true}).click();
   await expect(page.getByRole('dialog',{name:'点将出阵'})).toBeVisible();
   await expect(page.getByRole('radio')).toHaveCount(2);

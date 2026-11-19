@@ -1,9 +1,10 @@
+import {finishInitialPolicy} from './campaign-fixture';
 import {test,expect,type Page} from '@playwright/test';
 
 class TerrainScreen {
   constructor(readonly page:Page){}
   async open(){
-    await this.page.goto('/');await this.page.getByRole('button',{name:/执掌何進/}).click();
+    await this.page.goto('/');await this.page.getByRole('button',{name:/执掌何進/}).click();await finishInitialPolicy(this.page);
     await this.page.getByRole('button',{name:'演武场',exact:true}).click();
     await expect(this.page.getByRole('button',{name:'擂鼓开战'})).toBeEnabled();
   }

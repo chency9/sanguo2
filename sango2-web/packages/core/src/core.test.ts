@@ -12,7 +12,8 @@ const content: GameContent = {
     generals: ['g1','g2'].map((id,i) => ({ id, name: id, portrait: '', strength: i ? 40 : 90, intelligence: 80, hp: 80, mp: 50, loyalty: 100, status: '登', cityId: i ? 'enemy' : 'home', ownerId: i ? 'b' : 'a', weapon: '', horse: '', item: '', unit: '', formations: [], rawSkill: '', rawStrategy: '', sourceLine: 1 })),
   }],
 };
-const fresh = () => createSession(content, 'era', 'a');
+// Retain the original preview-save regression suite independently of new policy rules.
+const fresh = () => { const s=createSession(content, 'era', 'a');delete s.policy;return s; };
 const march = (to = 'neutral', troops = 60) => ({ type: 'march' as const, from: 'home', to, generalIds: ['g1'], troops });
 
 describe('strategic preview rules', () => {
@@ -91,7 +92,7 @@ describe('strategic preview rules', () => {
   it('queues simultaneous arrivals without advancing an extra day after battle',()=>{
     const pack=structuredClone(content);
     pack.scenarios[0].generals.push({...pack.scenarios[0].generals[0],id:'g3',name:'g3'});
-    let s=createSession(pack,'era','a');
+    let s=createSession(pack,'era','a');delete s.policy;
     s=dispatch(s,march('enemy',60),pack);
     s=dispatch(s,{...march('neutral',40),generalIds:['g3']},pack);
     s=dispatch(s,{type:'advance',days:30},pack);

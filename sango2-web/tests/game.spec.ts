@@ -1,3 +1,4 @@
+import {finishInitialPolicy} from './campaign-fixture';
 import { expect, test, type Page } from '@playwright/test';
 import {delayRivalDecisions} from './campaign-fixture';
 
@@ -5,7 +6,7 @@ class GamePage {
   constructor(readonly page: Page) {}
   async start() {
     await this.page.goto('/');
-    await this.page.getByRole('button', { name: '执掌何進 · 开始征程' }).click();
+    await this.page.getByRole('button', { name: '执掌何進 · 开始征程' }).click();await finishInitialPolicy(this.page);
     await expect(this.page.getByRole('dialog')).toHaveCount(0);
     await expect(this.page.locator('canvas')).toBeVisible();
     await expect(this.page.getByText('正在展开山河图…')).toHaveCount(0);
@@ -61,11 +62,8 @@ test('real content, economy, native dialog focus and map render', async ({ page 
   await page.getByRole('button',{name:'全图',exact:true}).click();
   await game.selectCity('洛陽');
   await expect(page.getByTestId('city-money')).toHaveText('5,336金');
-  await page.getByRole('button',{name:'开发城池'}).click();
-  await expect(page.getByTestId('city-money')).toHaveText('5,036金');
-  await expect(page.getByRole('button',{name:'征募士兵'})).toBeDisabled();
-  await game.next(); await page.getByRole('button',{name:'征募士兵'}).click();
-  await expect(page.getByTestId('city-money')).toHaveText('4,736金'); // native passive reserve recruitment: 100 gold
+  await game.next();
+  await expect(page.getByTestId('city-money')).toHaveText('5,236金'); // one native passive recruit
   await page.getByRole('button',{name:'武将名册'}).click();
   await expect(page.getByRole('dialog',{name:'群英名册'})).toBeVisible();
   await page.getByRole('searchbox',{name:'检索武将'}).fill('曹操');
@@ -152,7 +150,7 @@ test('all five eras initialize and phone layout remains operable', async ({ page
   for (const [year,title] of [[189,'討伐董卓'],[200,'群雄割據'],[208,'赤壁之戰'],[219,'三國鼎立']] as const) {
     await page.getByRole('button',{name:'新征程'}).click();
     await page.getByRole('button',{name:`${year} ${title}`}).click();
-    await page.getByRole('button',{name:/执掌.*开始征程/}).click();
+    await page.getByRole('button',{name:/执掌.*开始征程/}).click();await finishInitialPolicy(page);
     await expect(page.locator('.campaign-bar')).toContainText(String(year));
   }
   expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -168,7 +166,8 @@ test('all five eras initialize and phone layout remains operable', async ({ page
   await page.getByRole('button',{name:'放大地图'}).click();
   await expect.poll(()=>cityLabels.count()).toBeGreaterThan(labelCount);
   await page.getByRole('button',{name:'全图',exact:true}).click();
-  await page.getByRole('button',{name:'开发城池'}).click();
-  await expect(page.locator('.statusbar').getByRole('status')).toContainText('完成开发');
+  await page.getByRole('navigation',{name:'游戏菜单'}).getByRole('button',{name:'内政经营',exact:true}).click();
+  await expect(page.getByRole('dialog',{name:'内政经营'}).getByRole('button',{name:'执行开发',exact:true})).toBeDisabled();
+  await page.getByRole('button',{name:'关闭对话框'}).click();
   await page.screenshot({path:'test-results/realm-mobile.png',fullPage:true});
 });

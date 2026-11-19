@@ -1,0 +1,6010 @@
+{
+  "exeSha256": "1098558aaea96ae552753df786a8d3910df08fda11c8219dfa133ca001d8e419",
+  "addresses": [
+    "0x427a84",
+    "0x427947",
+    "0x423824"
+  ],
+  "cases": [
+    {
+      "input": {
+        "population": 0,
+        "defense": 0,
+        "isPass": true,
+        "strength": 17,
+        "intelligence": 26,
+        "governorIntelligence": 45
+      },
+      "rng": [
+        523704626,
+        3859092955
+      ],
+      "output": {
+        "population": 0,
+        "defense": 10,
+        "reportedPopulation": 0,
+        "reportedDefense": 10
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        1047409254,
+        2730187968
+      ]
+    },
+    {
+      "input": {
+        "population": 30000,
+        "defense": 998,
+        "isPass": false,
+        "strength": 117,
+        "intelligence": 60,
+        "governorIntelligence": 48
+      },
+      "rng": [
+        3544764110,
+        2837441713
+      ],
+      "output": {
+        "population": 35399,
+        "defense": 999,
+        "reportedPopulation": 5399,
+        "reportedDefense": 42
+      },
+      "annualRevenue": 2475,
+      "rngAfter": [
+        2644747921,
+        1054433618
+      ]
+    },
+    {
+      "input": {
+        "population": 999999,
+        "defense": 999,
+        "isPass": false,
+        "strength": 53,
+        "intelligence": 0,
+        "governorIntelligence": 81
+      },
+      "rng": [
+        3682282261,
+        3408116187
+      ],
+      "output": {
+        "population": 1000000,
+        "defense": 999,
+        "reportedPopulation": 1110,
+        "reportedDefense": 0
+      },
+      "annualRevenue": 9749,
+      "rngAfter": [
+        2997972407,
+        2397530924
+      ]
+    },
+    {
+      "input": {
+        "population": 1000000,
+        "defense": 1000,
+        "isPass": false,
+        "strength": 116,
+        "intelligence": 13,
+        "governorIntelligence": 94
+      },
+      "rng": [
+        3526159937,
+        2054248885
+      ],
+      "output": {
+        "population": 1000000,
+        "defense": 1000,
+        "reportedPopulation": 0,
+        "reportedDefense": 0
+      },
+      "annualRevenue": 9750,
+      "rngAfter": [
+        3526159937,
+        2054248885
+      ]
+    },
+    {
+      "input": {
+        "population": 422458,
+        "defense": 241,
+        "isPass": true,
+        "strength": 113,
+        "intelligence": 107,
+        "governorIntelligence": 113
+      },
+      "rng": [
+        3443794654,
+        1006142753
+      ],
+      "output": {
+        "population": 422458,
+        "defense": 311,
+        "reportedPopulation": 0,
+        "reportedDefense": 70
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        2592622014,
+        2012285504
+      ]
+    },
+    {
+      "input": {
+        "population": 112674,
+        "defense": 789,
+        "isPass": false,
+        "strength": 92,
+        "intelligence": 95,
+        "governorIntelligence": 108
+      },
+      "rng": [
+        3093787005,
+        2882481137
+      ],
+      "output": {
+        "population": 127202,
+        "defense": 845,
+        "reportedPopulation": 14528,
+        "reportedDefense": 56
+      },
+      "annualRevenue": 3095,
+      "rngAfter": [
+        3212587960,
+        3885365301
+      ]
+    },
+    {
+      "input": {
+        "population": 336810,
+        "defense": 570,
+        "isPass": false,
+        "strength": 91,
+        "intelligence": 4,
+        "governorIntelligence": 58
+      },
+      "rng": [
+        3409726580,
+        905345090
+      ],
+      "output": {
+        "population": 338287,
+        "defense": 604,
+        "reportedPopulation": 1477,
+        "reportedDefense": 34
+      },
+      "annualRevenue": 4776,
+      "rngAfter": [
+        3838270643,
+        1736708957
+      ]
+    },
+    {
+      "input": {
+        "population": 647800,
+        "defense": 556,
+        "isPass": false,
+        "strength": 70,
+        "intelligence": 49,
+        "governorIntelligence": 62
+      },
+      "rng": [
+        3572332316,
+        3421416193
+      ],
+      "output": {
+        "population": 653782,
+        "defense": 586,
+        "reportedPopulation": 5982,
+        "reportedDefense": 30
+      },
+      "annualRevenue": 7108,
+      "rngAfter": [
+        3345725678,
+        3579843965
+      ]
+    },
+    {
+      "input": {
+        "population": 590947,
+        "defense": 733,
+        "isPass": true,
+        "strength": 12,
+        "intelligence": 31,
+        "governorIntelligence": 55
+      },
+      "rng": [
+        1299845723,
+        180247280
+      ],
+      "output": {
+        "population": 590947,
+        "defense": 746,
+        "reportedPopulation": 0,
+        "reportedDefense": 13
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        308039034,
+        2883956464
+      ]
+    },
+    {
+      "input": {
+        "population": 72988,
+        "defense": 667,
+        "isPass": false,
+        "strength": 19,
+        "intelligence": 66,
+        "governorIntelligence": 65
+      },
+      "rng": [
+        117069913,
+        719737601
+      ],
+      "output": {
+        "population": 79489,
+        "defense": 685,
+        "reportedPopulation": 6501,
+        "reportedDefense": 18
+      },
+      "annualRevenue": 2797,
+      "rngAfter": [
+        3880454976,
+        2571894939
+      ]
+    },
+    {
+      "input": {
+        "population": 270869,
+        "defense": 149,
+        "isPass": false,
+        "strength": 112,
+        "intelligence": 116,
+        "governorIntelligence": 72
+      },
+      "rng": [
+        431456503,
+        836697466
+      ],
+      "output": {
+        "population": 285266,
+        "defense": 196,
+        "reportedPopulation": 14397,
+        "reportedDefense": 47
+      },
+      "annualRevenue": 4281,
+      "rngAfter": [
+        4064878,
+        2033245949
+      ]
+    },
+    {
+      "input": {
+        "population": 957315,
+        "defense": 692,
+        "isPass": false,
+        "strength": 76,
+        "intelligence": 101,
+        "governorIntelligence": 0
+      },
+      "rng": [
+        3200490538,
+        1271012012
+      ],
+      "output": {
+        "population": 963218,
+        "defense": 711,
+        "reportedPopulation": 5903,
+        "reportedDefense": 19
+      },
+      "annualRevenue": 9429,
+      "rngAfter": [
+        969063916,
+        1436934409
+      ]
+    },
+    {
+      "input": {
+        "population": 597573,
+        "defense": 929,
+        "isPass": true,
+        "strength": 52,
+        "intelligence": 120,
+        "governorIntelligence": 15
+      },
+      "rng": [
+        1521912884,
+        482387875
+      ],
+      "output": {
+        "population": 597573,
+        "defense": 942,
+        "reportedPopulation": 0,
+        "reportedDefense": 13
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        2913144150,
+        87888102
+      ]
+    },
+    {
+      "input": {
+        "population": 389911,
+        "defense": 300,
+        "isPass": false,
+        "strength": 23,
+        "intelligence": 20,
+        "governorIntelligence": 20
+      },
+      "rng": [
+        1439514580,
+        2328867497
+      ],
+      "output": {
+        "population": 392619,
+        "defense": 311,
+        "reportedPopulation": 2708,
+        "reportedDefense": 11
+      },
+      "annualRevenue": 5174,
+      "rngAfter": [
+        1780394670,
+        1146453397
+      ]
+    },
+    {
+      "input": {
+        "population": 833844,
+        "defense": 735,
+        "isPass": false,
+        "strength": 28,
+        "intelligence": 94,
+        "governorIntelligence": 13
+      },
+      "rng": [
+        3278941345,
+        848003173
+      ],
+      "output": {
+        "population": 840423,
+        "defense": 748,
+        "reportedPopulation": 6579,
+        "reportedDefense": 13
+      },
+      "annualRevenue": 8503,
+      "rngAfter": [
+        741804754,
+        683148803
+      ]
+    },
+    {
+      "input": {
+        "population": 233627,
+        "defense": 712,
+        "isPass": false,
+        "strength": 39,
+        "intelligence": 17,
+        "governorIntelligence": 42
+      },
+      "rng": [
+        2261319834,
+        3234627405
+      ],
+      "output": {
+        "population": 235505,
+        "defense": 730,
+        "reportedPopulation": 1878,
+        "reportedDefense": 18
+      },
+      "annualRevenue": 4002,
+      "rngAfter": [
+        910691548,
+        2361914571
+      ]
+    },
+    {
+      "input": {
+        "population": 714334,
+        "defense": 29,
+        "isPass": true,
+        "strength": 62,
+        "intelligence": 115,
+        "governorIntelligence": 98
+      },
+      "rng": [
+        4217041617,
+        887649941
+      ],
+      "output": {
+        "population": 714334,
+        "defense": 63,
+        "reportedPopulation": 0,
+        "reportedDefense": 34
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        1273850827,
+        497356090
+      ]
+    },
+    {
+      "input": {
+        "population": 940487,
+        "defense": 966,
+        "isPass": false,
+        "strength": 12,
+        "intelligence": 113,
+        "governorIntelligence": 99
+      },
+      "rng": [
+        2883364962,
+        3412295336
+      ],
+      "output": {
+        "population": 955907,
+        "defense": 980,
+        "reportedPopulation": 15420,
+        "reportedDefense": 14
+      },
+      "annualRevenue": 9303,
+      "rngAfter": [
+        1471770823,
+        4202638733
+      ]
+    },
+    {
+      "input": {
+        "population": 165187,
+        "defense": 335,
+        "isPass": false,
+        "strength": 69,
+        "intelligence": 25,
+        "governorIntelligence": 57
+      },
+      "rng": [
+        3966299475,
+        3264433651
+      ],
+      "output": {
+        "population": 167691,
+        "defense": 361,
+        "reportedPopulation": 2504,
+        "reportedDefense": 26
+      },
+      "annualRevenue": 3488,
+      "rngAfter": [
+        1732733607,
+        1872106522
+      ]
+    },
+    {
+      "input": {
+        "population": 990844,
+        "defense": 371,
+        "isPass": false,
+        "strength": 74,
+        "intelligence": 4,
+        "governorIntelligence": 98
+      },
+      "rng": [
+        1403803586,
+        3041215682
+      ],
+      "output": {
+        "population": 992029,
+        "defense": 411,
+        "reportedPopulation": 1185,
+        "reportedDefense": 40
+      },
+      "annualRevenue": 9681,
+      "rngAfter": [
+        372298987,
+        2829621046
+      ]
+    },
+    {
+      "input": {
+        "population": 596501,
+        "defense": 402,
+        "isPass": true,
+        "strength": 16,
+        "intelligence": 84,
+        "governorIntelligence": 58
+      },
+      "rng": [
+        2072220026,
+        655977049
+      ],
+      "output": {
+        "population": 596501,
+        "defense": 418,
+        "reportedPopulation": 0,
+        "reportedDefense": 16
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        3090749367,
+        3811396356
+      ]
+    },
+    {
+      "input": {
+        "population": 393247,
+        "defense": 45,
+        "isPass": false,
+        "strength": 40,
+        "intelligence": 101,
+        "governorIntelligence": 25
+      },
+      "rng": [
+        292312908,
+        1257964035
+      ],
+      "output": {
+        "population": 400367,
+        "defense": 60,
+        "reportedPopulation": 7120,
+        "reportedDefense": 15
+      },
+      "annualRevenue": 5199,
+      "rngAfter": [
+        1817726225,
+        307746576
+      ]
+    },
+    {
+      "input": {
+        "population": 768056,
+        "defense": 831,
+        "isPass": false,
+        "strength": 23,
+        "intelligence": 70,
+        "governorIntelligence": 36
+      },
+      "rng": [
+        2260115764,
+        841917499
+      ],
+      "output": {
+        "population": 774749,
+        "defense": 838,
+        "reportedPopulation": 6693,
+        "reportedDefense": 7
+      },
+      "annualRevenue": 8010,
+      "rngAfter": [
+        898021153,
+        1178719367
+      ]
+    },
+    {
+      "input": {
+        "population": 59227,
+        "defense": 633,
+        "isPass": false,
+        "strength": 42,
+        "intelligence": 67,
+        "governorIntelligence": 112
+      },
+      "rng": [
+        4054276472,
+        1735701121
+      ],
+      "output": {
+        "population": 70328,
+        "defense": 665,
+        "reportedPopulation": 11101,
+        "reportedDefense": 32
+      },
+      "annualRevenue": 2694,
+      "rngAfter": [
+        2649089990,
+        1260914263
+      ]
+    },
+    {
+      "input": {
+        "population": 408635,
+        "defense": 231,
+        "isPass": true,
+        "strength": 112,
+        "intelligence": 116,
+        "governorIntelligence": 106
+      },
+      "rng": [
+        2510112461,
+        3103283393
+      ],
+      "output": {
+        "population": 408635,
+        "defense": 297,
+        "reportedPopulation": 0,
+        "reportedDefense": 66
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        725257629,
+        1661133793
+      ]
+    },
+    {
+      "input": {
+        "population": 645263,
+        "defense": 925,
+        "isPass": false,
+        "strength": 101,
+        "intelligence": 60,
+        "governorIntelligence": 38
+      },
+      "rng": [
+        3159728706,
+        3880550653
+      ],
+      "output": {
+        "population": 650128,
+        "defense": 959,
+        "reportedPopulation": 4865,
+        "reportedDefense": 34
+      },
+      "annualRevenue": 7089,
+      "rngAfter": [
+        359174511,
+        2805621767
+      ]
+    },
+    {
+      "input": {
+        "population": 106469,
+        "defense": 666,
+        "isPass": false,
+        "strength": 96,
+        "intelligence": 87,
+        "governorIntelligence": 115
+      },
+      "rng": [
+        1258527731,
+        3607954741
+      ],
+      "output": {
+        "population": 120913,
+        "defense": 725,
+        "reportedPopulation": 14444,
+        "reportedDefense": 59
+      },
+      "annualRevenue": 3048,
+      "rngAfter": [
+        3240557842,
+        4244976854
+      ]
+    },
+    {
+      "input": {
+        "population": 114928,
+        "defense": 706,
+        "isPass": false,
+        "strength": 94,
+        "intelligence": 106,
+        "governorIntelligence": 78
+      },
+      "rng": [
+        2800827286,
+        1478853721
+      ],
+      "output": {
+        "population": 126237,
+        "defense": 755,
+        "reportedPopulation": 11309,
+        "reportedDefense": 49
+      },
+      "annualRevenue": 3111,
+      "rngAfter": [
+        3999177672,
+        741069506
+      ]
+    },
+    {
+      "input": {
+        "population": 740524,
+        "defense": 901,
+        "isPass": true,
+        "strength": 44,
+        "intelligence": 47,
+        "governorIntelligence": 74
+      },
+      "rng": [
+        2901311898,
+        2782645778
+      ],
+      "output": {
+        "population": 740524,
+        "defense": 918,
+        "reportedPopulation": 0,
+        "reportedDefense": 17
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        431673064,
+        3145318964
+      ]
+    },
+    {
+      "input": {
+        "population": 582279,
+        "defense": 829,
+        "isPass": false,
+        "strength": 55,
+        "intelligence": 58,
+        "governorIntelligence": 47
+      },
+      "rng": [
+        3691546286,
+        2907494860
+      ],
+      "output": {
+        "population": 588889,
+        "defense": 853,
+        "reportedPopulation": 6610,
+        "reportedDefense": 24
+      },
+      "annualRevenue": 6617,
+      "rngAfter": [
+        3421962785,
+        1784860253
+      ]
+    },
+    {
+      "input": {
+        "population": 953282,
+        "defense": 997,
+        "isPass": false,
+        "strength": 33,
+        "intelligence": 76,
+        "governorIntelligence": 110
+      },
+      "rng": [
+        1017214118,
+        296085763
+      ],
+      "output": {
+        "population": 964295,
+        "defense": 999,
+        "reportedPopulation": 11013,
+        "reportedDefense": 17
+      },
+      "annualRevenue": 9399,
+      "rngAfter": [
+        2034461006,
+        1141935407
+      ]
+    },
+    {
+      "input": {
+        "population": 167040,
+        "defense": 69,
+        "isPass": false,
+        "strength": 46,
+        "intelligence": 13,
+        "governorIntelligence": 107
+      },
+      "rng": [
+        1006886459,
+        4192741052
+      ],
+      "output": {
+        "population": 170681,
+        "defense": 96,
+        "reportedPopulation": 3641,
+        "reportedDefense": 27
+      },
+      "annualRevenue": 3502,
+      "rngAfter": [
+        3821026787,
+        1023727485
+      ]
+    },
+    {
+      "input": {
+        "population": 392049,
+        "defense": 272,
+        "isPass": true,
+        "strength": 113,
+        "intelligence": 26,
+        "governorIntelligence": 57
+      },
+      "rng": [
+        3607284922,
+        3461915448
+      ],
+      "output": {
+        "population": 392049,
+        "defense": 323,
+        "reportedPopulation": 0,
+        "reportedDefense": 51
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        2007893401,
+        3407111929
+      ]
+    },
+    {
+      "input": {
+        "population": 662499,
+        "defense": 947,
+        "isPass": false,
+        "strength": 54,
+        "intelligence": 78,
+        "governorIntelligence": 13
+      },
+      "rng": [
+        2469265228,
+        2254590165
+      ],
+      "output": {
+        "population": 667867,
+        "defense": 966,
+        "reportedPopulation": 5368,
+        "reportedDefense": 19
+      },
+      "annualRevenue": 7218,
+      "rngAfter": [
+        1301491263,
+        2754810246
+      ]
+    },
+    {
+      "input": {
+        "population": 861856,
+        "defense": 186,
+        "isPass": false,
+        "strength": 57,
+        "intelligence": 42,
+        "governorIntelligence": 8
+      },
+      "rng": [
+        4042361337,
+        1335598635
+      ],
+      "output": {
+        "population": 865892,
+        "defense": 202,
+        "reportedPopulation": 4036,
+        "reportedDefense": 16
+      },
+      "annualRevenue": 8713,
+      "rngAfter": [
+        3573381240,
+        1419196220
+      ]
+    },
+    {
+      "input": {
+        "population": 103098,
+        "defense": 342,
+        "isPass": false,
+        "strength": 73,
+        "intelligence": 17,
+        "governorIntelligence": 10
+      },
+      "rng": [
+        1234555718,
+        2543277689
+      ],
+      "output": {
+        "population": 104544,
+        "defense": 363,
+        "reportedPopulation": 1446,
+        "reportedDefense": 21
+      },
+      "annualRevenue": 3023,
+      "rngAfter": [
+        2782086985,
+        1271638780
+      ]
+    },
+    {
+      "input": {
+        "population": 821370,
+        "defense": 675,
+        "isPass": true,
+        "strength": 55,
+        "intelligence": 42,
+        "governorIntelligence": 30
+      },
+      "rng": [
+        3084249215,
+        427741580
+      ],
+      "output": {
+        "population": 821370,
+        "defense": 697,
+        "reportedPopulation": 0,
+        "reportedDefense": 22
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        539882874,
+        855483158
+      ]
+    },
+    {
+      "input": {
+        "population": 562970,
+        "defense": 189,
+        "isPass": false,
+        "strength": 21,
+        "intelligence": 0,
+        "governorIntelligence": 59
+      },
+      "rng": [
+        3208068098,
+        430776541
+      ],
+      "output": {
+        "population": 562996,
+        "defense": 197,
+        "reportedPopulation": 26,
+        "reportedDefense": 8
+      },
+      "annualRevenue": 6472,
+      "rngAfter": [
+        926688191,
+        1100665357
+      ]
+    },
+    {
+      "input": {
+        "population": 814629,
+        "defense": 345,
+        "isPass": false,
+        "strength": 47,
+        "intelligence": 39,
+        "governorIntelligence": 25
+      },
+      "rng": [
+        949909671,
+        671935271
+      ],
+      "output": {
+        "population": 817762,
+        "defense": 364,
+        "reportedPopulation": 3133,
+        "reportedDefense": 19
+      },
+      "annualRevenue": 8359,
+      "rngAfter": [
+        3802194681,
+        1362182247
+      ]
+    },
+    {
+      "input": {
+        "population": 741556,
+        "defense": 198,
+        "isPass": false,
+        "strength": 57,
+        "intelligence": 74,
+        "governorIntelligence": 79
+      },
+      "rng": [
+        3210869476,
+        2659398234
+      ],
+      "output": {
+        "population": 749570,
+        "defense": 221,
+        "reportedPopulation": 8014,
+        "reportedDefense": 23
+      },
+      "annualRevenue": 7811,
+      "rngAfter": [
+        299314683,
+        2446128153
+      ]
+    },
+    {
+      "input": {
+        "population": 609219,
+        "defense": 235,
+        "isPass": true,
+        "strength": 89,
+        "intelligence": 93,
+        "governorIntelligence": 80
+      },
+      "rng": [
+        1930381146,
+        2589450446
+      ],
+      "output": {
+        "population": 609219,
+        "defense": 273,
+        "reportedPopulation": 0,
+        "reportedDefense": 38
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        987469946,
+        1258035635
+      ]
+    },
+    {
+      "input": {
+        "population": 973902,
+        "defense": 292,
+        "isPass": false,
+        "strength": 10,
+        "intelligence": 79,
+        "governorIntelligence": 71
+      },
+      "rng": [
+        4025996681,
+        3799237985
+      ],
+      "output": {
+        "population": 984294,
+        "defense": 299,
+        "reportedPopulation": 10392,
+        "reportedDefense": 7
+      },
+      "annualRevenue": 9554,
+      "rngAfter": [
+        4037744095,
+        2632996920
+      ]
+    },
+    {
+      "input": {
+        "population": 235780,
+        "defense": 545,
+        "isPass": false,
+        "strength": 77,
+        "intelligence": 8,
+        "governorIntelligence": 14
+      },
+      "rng": [
+        1703892549,
+        896089584
+      ],
+      "output": {
+        "population": 237837,
+        "defense": 567,
+        "reportedPopulation": 2057,
+        "reportedDefense": 22
+      },
+      "annualRevenue": 4018,
+      "rngAfter": [
+        2962017054,
+        1332464986
+      ]
+    },
+    {
+      "input": {
+        "population": 612289,
+        "defense": 198,
+        "isPass": false,
+        "strength": 3,
+        "intelligence": 26,
+        "governorIntelligence": 19
+      },
+      "rng": [
+        416585272,
+        362056605
+      ],
+      "output": {
+        "population": 614278,
+        "defense": 204,
+        "reportedPopulation": 1989,
+        "reportedDefense": 6
+      },
+      "annualRevenue": 6842,
+      "rngAfter": [
+        2763114696,
+        2628017376
+      ]
+    },
+    {
+      "input": {
+        "population": 368195,
+        "defense": 771,
+        "isPass": true,
+        "strength": 117,
+        "intelligence": 86,
+        "governorIntelligence": 120
+      },
+      "rng": [
+        1399686238,
+        1209982987
+      ],
+      "output": {
+        "population": 368195,
+        "defense": 843,
+        "reportedPopulation": 0,
+        "reportedDefense": 72
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        1173698264,
+        2419965972
+      ]
+    },
+    {
+      "input": {
+        "population": 418811,
+        "defense": 641,
+        "isPass": false,
+        "strength": 80,
+        "intelligence": 118,
+        "governorIntelligence": 81
+      },
+      "rng": [
+        1640790987,
+        2032420154
+      ],
+      "output": {
+        "population": 432921,
+        "defense": 676,
+        "reportedPopulation": 14110,
+        "reportedDefense": 35
+      },
+      "annualRevenue": 5391,
+      "rngAfter": [
+        3430665329,
+        2259103524
+      ]
+    },
+    {
+      "input": {
+        "population": 157252,
+        "defense": 389,
+        "isPass": false,
+        "strength": 92,
+        "intelligence": 37,
+        "governorIntelligence": 100
+      },
+      "rng": [
+        3407717348,
+        3745133077
+      ],
+      "output": {
+        "population": 164837,
+        "defense": 438,
+        "reportedPopulation": 7585,
+        "reportedDefense": 49
+      },
+      "annualRevenue": 3429,
+      "rngAfter": [
+        2834920135,
+        2615625278
+      ]
+    },
+    {
+      "input": {
+        "population": 504366,
+        "defense": 320,
+        "isPass": false,
+        "strength": 63,
+        "intelligence": 60,
+        "governorIntelligence": 54
+      },
+      "rng": [
+        3678985987,
+        3743328985
+      ],
+      "output": {
+        "population": 510968,
+        "defense": 346,
+        "reportedPopulation": 6602,
+        "reportedDefense": 26
+      },
+      "annualRevenue": 6032,
+      "rngAfter": [
+        2825880173,
+        2871229562
+      ]
+    },
+    {
+      "input": {
+        "population": 458999,
+        "defense": 447,
+        "isPass": true,
+        "strength": 19,
+        "intelligence": 99,
+        "governorIntelligence": 63
+      },
+      "rng": [
+        2143825860,
+        2451671418
+      ],
+      "output": {
+        "population": 458999,
+        "defense": 459,
+        "reportedPopulation": 0,
+        "reportedDefense": 12
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        1098787838,
+        3432057931
+      ]
+    },
+    {
+      "input": {
+        "population": 528823,
+        "defense": 557,
+        "isPass": false,
+        "strength": 35,
+        "intelligence": 97,
+        "governorIntelligence": 23
+      },
+      "rng": [
+        2413476075,
+        328510773
+      ],
+      "output": {
+        "population": 536847,
+        "defense": 573,
+        "reportedPopulation": 8024,
+        "reportedDefense": 16
+      },
+      "annualRevenue": 6216,
+      "rngAfter": [
+        3372329870,
+        2793566866
+      ]
+    },
+    {
+      "input": {
+        "population": 826679,
+        "defense": 935,
+        "isPass": false,
+        "strength": 17,
+        "intelligence": 109,
+        "governorIntelligence": 12
+      },
+      "rng": [
+        2053626403,
+        1681690480
+      ],
+      "output": {
+        "population": 834766,
+        "defense": 945,
+        "reportedPopulation": 8087,
+        "reportedDefense": 10
+      },
+      "annualRevenue": 8450,
+      "rngAfter": [
+        3919542417,
+        2274487276
+      ]
+    },
+    {
+      "input": {
+        "population": 308911,
+        "defense": 563,
+        "isPass": false,
+        "strength": 40,
+        "intelligence": 6,
+        "governorIntelligence": 22
+      },
+      "rng": [
+        1574742998,
+        3861902059
+      ],
+      "output": {
+        "population": 309870,
+        "defense": 574,
+        "reportedPopulation": 959,
+        "reportedDefense": 11
+      },
+      "annualRevenue": 4566,
+      "rngAfter": [
+        2931546455,
+        2140624685
+      ]
+    },
+    {
+      "input": {
+        "population": 662840,
+        "defense": 484,
+        "isPass": true,
+        "strength": 24,
+        "intelligence": 57,
+        "governorIntelligence": 12
+      },
+      "rng": [
+        2437908128,
+        1050875177
+      ],
+      "output": {
+        "population": 662840,
+        "defense": 495,
+        "reportedPopulation": 0,
+        "reportedDefense": 11
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        1780028664,
+        525437588
+      ]
+    },
+    {
+      "input": {
+        "population": 393832,
+        "defense": 987,
+        "isPass": false,
+        "strength": 59,
+        "intelligence": 40,
+        "governorIntelligence": 16
+      },
+      "rng": [
+        3062145550,
+        1066255327
+      ],
+      "output": {
+        "population": 397761,
+        "defense": 999,
+        "reportedPopulation": 3929,
+        "reportedDefense": 19
+      },
+      "annualRevenue": 5203,
+      "rngAfter": [
+        1600981316,
+        1066222558
+      ]
+    },
+    {
+      "input": {
+        "population": 912940,
+        "defense": 119,
+        "isPass": false,
+        "strength": 18,
+        "intelligence": 77,
+        "governorIntelligence": 48
+      },
+      "rng": [
+        577313027,
+        4196622063
+      ],
+      "output": {
+        "population": 921327,
+        "defense": 125,
+        "reportedPopulation": 8387,
+        "reportedDefense": 6
+      },
+      "annualRevenue": 9097,
+      "rngAfter": [
+        1757946131,
+        4098276797
+      ]
+    },
+    {
+      "input": {
+        "population": 21414,
+        "defense": 567,
+        "isPass": false,
+        "strength": 7,
+        "intelligence": 81,
+        "governorIntelligence": 71
+      },
+      "rng": [
+        1888168490,
+        1416945627
+      ],
+      "output": {
+        "population": 31947,
+        "defense": 572,
+        "reportedPopulation": 10533,
+        "reportedDefense": 5
+      },
+      "annualRevenue": 2410,
+      "rngAfter": [
+        1699311121,
+        2745614034
+      ]
+    },
+    {
+      "input": {
+        "population": 597403,
+        "defense": 211,
+        "isPass": true,
+        "strength": 11,
+        "intelligence": 51,
+        "governorIntelligence": 70
+      },
+      "rng": [
+        3142572797,
+        161338375
+      ],
+      "output": {
+        "population": 597403,
+        "defense": 217,
+        "reportedPopulation": 0,
+        "reportedDefense": 6
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        4273688538,
+        645353496
+      ]
+    },
+    {
+      "input": {
+        "population": 196977,
+        "defense": 942,
+        "isPass": false,
+        "strength": 76,
+        "intelligence": 40,
+        "governorIntelligence": 19
+      },
+      "rng": [
+        277570094,
+        4007457757
+      ],
+      "output": {
+        "population": 199843,
+        "defense": 968,
+        "reportedPopulation": 2866,
+        "reportedDefense": 26
+      },
+      "annualRevenue": 3727,
+      "rngAfter": [
+        584625092,
+        3342716653
+      ]
+    },
+    {
+      "input": {
+        "population": 253072,
+        "defense": 401,
+        "isPass": false,
+        "strength": 120,
+        "intelligence": 28,
+        "governorIntelligence": 93
+      },
+      "rng": [
+        3991240441,
+        1602735014
+      ],
+      "output": {
+        "population": 256465,
+        "defense": 459,
+        "reportedPopulation": 3393,
+        "reportedDefense": 58
+      },
+      "annualRevenue": 4148,
+      "rngAfter": [
+        1865156567,
+        3286618796
+      ]
+    },
+    {
+      "input": {
+        "population": 25867,
+        "defense": 184,
+        "isPass": false,
+        "strength": 114,
+        "intelligence": 38,
+        "governorIntelligence": 101
+      },
+      "rng": [
+        1397129994,
+        4141371
+      ],
+      "output": {
+        "population": 31091,
+        "defense": 244,
+        "reportedPopulation": 5224,
+        "reportedDefense": 60
+      },
+      "annualRevenue": 2444,
+      "rngAfter": [
+        1464238859,
+        4139322
+      ]
+    },
+    {
+      "input": {
+        "population": 990683,
+        "defense": 525,
+        "isPass": true,
+        "strength": 85,
+        "intelligence": 45,
+        "governorIntelligence": 43
+      },
+      "rng": [
+        147687729,
+        1699714655
+      ],
+      "output": {
+        "population": 990683,
+        "defense": 562,
+        "reportedPopulation": 0,
+        "reportedDefense": 37
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        1234191980,
+        3851917651
+      ]
+    },
+    {
+      "input": {
+        "population": 160137,
+        "defense": 358,
+        "isPass": false,
+        "strength": 17,
+        "intelligence": 60,
+        "governorIntelligence": 63
+      },
+      "rng": [
+        1648385240,
+        1228984230
+      ],
+      "output": {
+        "population": 166599,
+        "defense": 374,
+        "reportedPopulation": 6462,
+        "reportedDefense": 16
+      },
+      "annualRevenue": 3451,
+      "rngAfter": [
+        1208720174,
+        3483715392
+      ]
+    },
+    {
+      "input": {
+        "population": 254033,
+        "defense": 736,
+        "isPass": false,
+        "strength": 48,
+        "intelligence": 114,
+        "governorIntelligence": 109
+      },
+      "rng": [
+        2205565737,
+        2006538184
+      ],
+      "output": {
+        "population": 269955,
+        "defense": 772,
+        "reportedPopulation": 15922,
+        "reportedDefense": 36
+      },
+      "annualRevenue": 4155,
+      "rngAfter": [
+        1984637571,
+        712568563
+      ]
+    },
+    {
+      "input": {
+        "population": 119637,
+        "defense": 533,
+        "isPass": false,
+        "strength": 62,
+        "intelligence": 73,
+        "governorIntelligence": 55
+      },
+      "rng": [
+        1267653647,
+        2758649982
+      ],
+      "output": {
+        "population": 127545,
+        "defense": 555,
+        "reportedPopulation": 7908,
+        "reportedDefense": 22
+      },
+      "annualRevenue": 3147,
+      "rngAfter": [
+        1841366201,
+        1763387935
+      ]
+    },
+    {
+      "input": {
+        "population": 131926,
+        "defense": 25,
+        "isPass": true,
+        "strength": 53,
+        "intelligence": 33,
+        "governorIntelligence": 104
+      },
+      "rng": [
+        2733618515,
+        628812175
+      ],
+      "output": {
+        "population": 131926,
+        "defense": 56,
+        "reportedPopulation": 0,
+        "reportedDefense": 31
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        2857465818,
+        2929254999
+      ]
+    },
+    {
+      "input": {
+        "population": 375883,
+        "defense": 330,
+        "isPass": false,
+        "strength": 14,
+        "intelligence": 58,
+        "governorIntelligence": 105
+      },
+      "rng": [
+        838393915,
+        4036689951
+      ],
+      "output": {
+        "population": 384816,
+        "defense": 348,
+        "reportedPopulation": 8933,
+        "reportedDefense": 18
+      },
+      "annualRevenue": 5069,
+      "rngAfter": [
+        419262494,
+        1300238192
+      ]
+    },
+    {
+      "input": {
+        "population": 673036,
+        "defense": 846,
+        "isPass": false,
+        "strength": 107,
+        "intelligence": 63,
+        "governorIntelligence": 76
+      },
+      "rng": [
+        710071218,
+        4005150079
+      ],
+      "output": {
+        "population": 682200,
+        "defense": 896,
+        "reportedPopulation": 9164,
+        "reportedDefense": 50
+      },
+      "annualRevenue": 7297,
+      "rngAfter": [
+        3043805844,
+        1972235255
+      ]
+    },
+    {
+      "input": {
+        "population": 852178,
+        "defense": 957,
+        "isPass": false,
+        "strength": 11,
+        "intelligence": 52,
+        "governorIntelligence": 117
+      },
+      "rng": [
+        2365350291,
+        3138854982
+      ],
+      "output": {
+        "population": 861225,
+        "defense": 972,
+        "reportedPopulation": 9047,
+        "reportedDefense": 15
+      },
+      "annualRevenue": 8641,
+      "rngAfter": [
+        4085666355,
+        36558905
+      ]
+    },
+    {
+      "input": {
+        "population": 42263,
+        "defense": 902,
+        "isPass": true,
+        "strength": 75,
+        "intelligence": 65,
+        "governorIntelligence": 81
+      },
+      "rng": [
+        478191306,
+        3963281602
+      ],
+      "output": {
+        "population": 42263,
+        "defense": 938,
+        "reportedPopulation": 0,
+        "reportedDefense": 36
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        2982676972,
+        406685532
+      ]
+    },
+    {
+      "input": {
+        "population": 279674,
+        "defense": 786,
+        "isPass": false,
+        "strength": 99,
+        "intelligence": 15,
+        "governorIntelligence": 65
+      },
+      "rng": [
+        2939124099,
+        1501978239
+      ],
+      "output": {
+        "population": 283891,
+        "defense": 827,
+        "reportedPopulation": 4217,
+        "reportedDefense": 41
+      },
+      "annualRevenue": 4347,
+      "rngAfter": [
+        4153953042,
+        2556815077
+      ]
+    },
+    {
+      "input": {
+        "population": 313598,
+        "defense": 877,
+        "isPass": false,
+        "strength": 73,
+        "intelligence": 91,
+        "governorIntelligence": 76
+      },
+      "rng": [
+        1642889468,
+        1482283452
+      ],
+      "output": {
+        "population": 323657,
+        "defense": 908,
+        "reportedPopulation": 10059,
+        "reportedDefense": 31
+      },
+      "annualRevenue": 4601,
+      "rngAfter": [
+        2662397504,
+        2620189917
+      ]
+    },
+    {
+      "input": {
+        "population": 136944,
+        "defense": 201,
+        "isPass": false,
+        "strength": 73,
+        "intelligence": 29,
+        "governorIntelligence": 62
+      },
+      "rng": [
+        3714360805,
+        2296285564
+      ],
+      "output": {
+        "population": 141553,
+        "defense": 232,
+        "reportedPopulation": 4609,
+        "reportedDefense": 31
+      },
+      "annualRevenue": 3277,
+      "rngAfter": [
+        792144677,
+        3795296846
+      ]
+    },
+    {
+      "input": {
+        "population": 446415,
+        "defense": 873,
+        "isPass": true,
+        "strength": 84,
+        "intelligence": 26,
+        "governorIntelligence": 79
+      },
+      "rng": [
+        179767331,
+        2232330904
+      ],
+      "output": {
+        "population": 446415,
+        "defense": 914,
+        "reportedPopulation": 0,
+        "reportedDefense": 41
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        1846560789,
+        2018568873
+      ]
+    },
+    {
+      "input": {
+        "population": 826736,
+        "defense": 439,
+        "isPass": false,
+        "strength": 75,
+        "intelligence": 95,
+        "governorIntelligence": 79
+      },
+      "rng": [
+        841069400,
+        3347567801
+      ],
+      "output": {
+        "population": 839786,
+        "defense": 470,
+        "reportedPopulation": 13050,
+        "reportedDefense": 31
+      },
+      "annualRevenue": 8450,
+      "rngAfter": [
+        1699251917,
+        414251671
+      ]
+    },
+    {
+      "input": {
+        "population": 912904,
+        "defense": 773,
+        "isPass": false,
+        "strength": 94,
+        "intelligence": 2,
+        "governorIntelligence": 31
+      },
+      "rng": [
+        650149610,
+        2522285284
+      ],
+      "output": {
+        "population": 915241,
+        "defense": 802,
+        "reportedPopulation": 2337,
+        "reportedDefense": 29
+      },
+      "annualRevenue": 9096,
+      "rngAfter": [
+        3612180733,
+        3851796280
+      ]
+    },
+    {
+      "input": {
+        "population": 623957,
+        "defense": 956,
+        "isPass": false,
+        "strength": 0,
+        "intelligence": 83,
+        "governorIntelligence": 9
+      },
+      "rng": [
+        2442151464,
+        3515789957
+      ],
+      "output": {
+        "population": 630100,
+        "defense": 962,
+        "reportedPopulation": 6143,
+        "reportedDefense": 6
+      },
+      "annualRevenue": 6929,
+      "rngAfter": [
+        3368559444,
+        985797446
+      ]
+    },
+    {
+      "input": {
+        "population": 453474,
+        "defense": 363,
+        "isPass": true,
+        "strength": 77,
+        "intelligence": 74,
+        "governorIntelligence": 33
+      },
+      "rng": [
+        2655569478,
+        399325052
+      ],
+      "output": {
+        "population": 453474,
+        "defense": 392,
+        "reportedPopulation": 0,
+        "reportedDefense": 29
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        831645586,
+        4130314862
+      ]
+    },
+    {
+      "input": {
+        "population": 156950,
+        "defense": 219,
+        "isPass": false,
+        "strength": 5,
+        "intelligence": 63,
+        "governorIntelligence": 114
+      },
+      "rng": [
+        3946772866,
+        1180631412
+      ],
+      "output": {
+        "population": 167773,
+        "defense": 229,
+        "reportedPopulation": 10823,
+        "reportedDefense": 10
+      },
+      "annualRevenue": 3427,
+      "rngAfter": [
+        131499507,
+        3761072331
+      ]
+    },
+    {
+      "input": {
+        "population": 768235,
+        "defense": 632,
+        "isPass": false,
+        "strength": 90,
+        "intelligence": 6,
+        "governorIntelligence": 10
+      },
+      "rng": [
+        3614519147,
+        3499580079
+      ],
+      "output": {
+        "population": 770142,
+        "defense": 655,
+        "reportedPopulation": 1907,
+        "reportedDefense": 23
+      },
+      "annualRevenue": 8011,
+      "rngAfter": [
+        3009266909,
+        3534468133
+      ]
+    },
+    {
+      "input": {
+        "population": 116322,
+        "defense": 914,
+        "isPass": false,
+        "strength": 26,
+        "intelligence": 112,
+        "governorIntelligence": 92
+      },
+      "rng": [
+        2591577119,
+        2557012740
+      ],
+      "output": {
+        "population": 132205,
+        "defense": 931,
+        "reportedPopulation": 15883,
+        "reportedDefense": 17
+      },
+      "annualRevenue": 3122,
+      "rngAfter": [
+        1350728161,
+        174171052
+      ]
+    },
+    {
+      "input": {
+        "population": 61959,
+        "defense": 546,
+        "isPass": true,
+        "strength": 96,
+        "intelligence": 19,
+        "governorIntelligence": 72
+      },
+      "rng": [
+        1999827068,
+        1757596270
+      ],
+      "output": {
+        "population": 61959,
+        "defense": 584,
+        "reportedPopulation": 0,
+        "reportedDefense": 38
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        2542005177,
+        1175868267
+      ]
+    },
+    {
+      "input": {
+        "population": 134188,
+        "defense": 192,
+        "isPass": false,
+        "strength": 89,
+        "intelligence": 70,
+        "governorIntelligence": 9
+      },
+      "rng": [
+        391769761,
+        2381029870
+      ],
+      "output": {
+        "population": 139263,
+        "defense": 218,
+        "reportedPopulation": 5075,
+        "reportedDefense": 26
+      },
+      "annualRevenue": 3256,
+      "rngAfter": [
+        1508819479,
+        3953256845
+      ]
+    },
+    {
+      "input": {
+        "population": 910277,
+        "defense": 187,
+        "isPass": false,
+        "strength": 118,
+        "intelligence": 95,
+        "governorIntelligence": 99
+      },
+      "rng": [
+        1093142844,
+        2001215122
+      ],
+      "output": {
+        "population": 925131,
+        "defense": 245,
+        "reportedPopulation": 14854,
+        "reportedDefense": 58
+      },
+      "annualRevenue": 9077,
+      "rngAfter": [
+        1208565057,
+        581865533
+      ]
+    },
+    {
+      "input": {
+        "population": 897515,
+        "defense": 350,
+        "isPass": false,
+        "strength": 85,
+        "intelligence": 57,
+        "governorIntelligence": 94
+      },
+      "rng": [
+        965311901,
+        2569208816
+      ],
+      "output": {
+        "population": 906786,
+        "defense": 398,
+        "reportedPopulation": 9271,
+        "reportedDefense": 48
+      },
+      "annualRevenue": 8981,
+      "rngAfter": [
+        800343857,
+        3177483279
+      ]
+    },
+    {
+      "input": {
+        "population": 372439,
+        "defense": 245,
+        "isPass": true,
+        "strength": 109,
+        "intelligence": 64,
+        "governorIntelligence": 5
+      },
+      "rng": [
+        2539358281,
+        3068831784
+      ],
+      "output": {
+        "population": 372439,
+        "defense": 274,
+        "reportedPopulation": 0,
+        "reportedDefense": 29
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        1847667293,
+        166574762
+      ]
+    },
+    {
+      "input": {
+        "population": 46474,
+        "defense": 117,
+        "isPass": false,
+        "strength": 60,
+        "intelligence": 91,
+        "governorIntelligence": 55
+      },
+      "rng": [
+        1557030803,
+        4174112017
+      ],
+      "output": {
+        "population": 56054,
+        "defense": 141,
+        "reportedPopulation": 9580,
+        "reportedDefense": 24
+      },
+      "annualRevenue": 2598,
+      "rngAfter": [
+        2034617830,
+        2086531720
+      ]
+    },
+    {
+      "input": {
+        "population": 154622,
+        "defense": 77,
+        "isPass": false,
+        "strength": 54,
+        "intelligence": 13,
+        "governorIntelligence": 92
+      },
+      "rng": [
+        2422704462,
+        3078649139
+      ],
+      "output": {
+        "population": 157752,
+        "defense": 103,
+        "reportedPopulation": 3130,
+        "reportedDefense": 26
+      },
+      "annualRevenue": 3409,
+      "rngAfter": [
+        2422704463,
+        3570064895
+      ]
+    },
+    {
+      "input": {
+        "population": 109054,
+        "defense": 346,
+        "isPass": false,
+        "strength": 46,
+        "intelligence": 2,
+        "governorIntelligence": 71
+      },
+      "rng": [
+        2223606714,
+        846100302
+      ],
+      "output": {
+        "population": 110148,
+        "defense": 373,
+        "reportedPopulation": 1094,
+        "reportedDefense": 27
+      },
+      "annualRevenue": 3067,
+      "rngAfter": [
+        3319645252,
+        1400093289
+      ]
+    },
+    {
+      "input": {
+        "population": 834842,
+        "defense": 910,
+        "isPass": true,
+        "strength": 2,
+        "intelligence": 101,
+        "governorIntelligence": 71
+      },
+      "rng": [
+        2215923843,
+        2061561545
+      ],
+      "output": {
+        "population": 834842,
+        "defense": 915,
+        "reportedPopulation": 0,
+        "reportedDefense": 5
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        1158170689,
+        2276331244
+      ]
+    },
+    {
+      "input": {
+        "population": 436414,
+        "defense": 621,
+        "isPass": false,
+        "strength": 14,
+        "intelligence": 69,
+        "governorIntelligence": 42
+      },
+      "rng": [
+        4173924923,
+        145881467
+      ],
+      "output": {
+        "population": 443419,
+        "defense": 628,
+        "reportedPopulation": 7005,
+        "reportedDefense": 7
+      },
+      "annualRevenue": 5523,
+      "rngAfter": [
+        843222846,
+        2412498885
+      ]
+    },
+    {
+      "input": {
+        "population": 56863,
+        "defense": 850,
+        "isPass": false,
+        "strength": 56,
+        "intelligence": 4,
+        "governorIntelligence": 32
+      },
+      "rng": [
+        2434320831,
+        103376276
+      ],
+      "output": {
+        "population": 58788,
+        "defense": 874,
+        "reportedPopulation": 1925,
+        "reportedDefense": 24
+      },
+      "annualRevenue": 2676,
+      "rngAfter": [
+        1250714848,
+        677549657
+      ]
+    },
+    {
+      "input": {
+        "population": 929174,
+        "defense": 180,
+        "isPass": false,
+        "strength": 61,
+        "intelligence": 63,
+        "governorIntelligence": 74
+      },
+      "rng": [
+        2837464412,
+        1242175635
+      ],
+      "output": {
+        "population": 936031,
+        "defense": 205,
+        "reportedPopulation": 6857,
+        "reportedDefense": 25
+      },
+      "annualRevenue": 9218,
+      "rngAfter": [
+        1466583073,
+        1410609444
+      ]
+    },
+    {
+      "input": {
+        "population": 720375,
+        "defense": 108,
+        "isPass": true,
+        "strength": 42,
+        "intelligence": 23,
+        "governorIntelligence": 25
+      },
+      "rng": [
+        2491618904,
+        429897197
+      ],
+      "output": {
+        "population": 720375,
+        "defense": 122,
+        "reportedPopulation": 0,
+        "reportedDefense": 14
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        828741960,
+        3487233548
+      ]
+    },
+    {
+      "input": {
+        "population": 22602,
+        "defense": 66,
+        "isPass": false,
+        "strength": 26,
+        "intelligence": 53,
+        "governorIntelligence": 9
+      },
+      "rng": [
+        909451526,
+        1588515305
+      ],
+      "output": {
+        "population": 26832,
+        "defense": 77,
+        "reportedPopulation": 4230,
+        "reportedDefense": 11
+      },
+      "annualRevenue": 2419,
+      "rngAfter": [
+        2209028752,
+        794257588
+      ]
+    },
+    {
+      "input": {
+        "population": 655882,
+        "defense": 691,
+        "isPass": false,
+        "strength": 100,
+        "intelligence": 15,
+        "governorIntelligence": 49
+      },
+      "rng": [
+        2010228014,
+        2576457223
+      ],
+      "output": {
+        "population": 658251,
+        "defense": 726,
+        "reportedPopulation": 2369,
+        "reportedDefense": 35
+      },
+      "annualRevenue": 7169,
+      "rngAfter": [
+        4100541413,
+        3235066403
+      ]
+    },
+    {
+      "input": {
+        "population": 434199,
+        "defense": 66,
+        "isPass": false,
+        "strength": 29,
+        "intelligence": 30,
+        "governorIntelligence": 37
+      },
+      "rng": [
+        2857939391,
+        3977336436
+      ],
+      "output": {
+        "population": 438081,
+        "defense": 77,
+        "reportedPopulation": 3882,
+        "reportedDefense": 11
+      },
+      "annualRevenue": 5506,
+      "rngAfter": [
+        91407758,
+        2629518421
+      ]
+    },
+    {
+      "input": {
+        "population": 938055,
+        "defense": 898,
+        "isPass": true,
+        "strength": 102,
+        "intelligence": 90,
+        "governorIntelligence": 41
+      },
+      "rng": [
+        895256982,
+        2182251935
+      ],
+      "output": {
+        "population": 938055,
+        "defense": 933,
+        "reportedPopulation": 0,
+        "reportedDefense": 35
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        1439209843,
+        621493508
+      ]
+    },
+    {
+      "input": {
+        "population": 954167,
+        "defense": 150,
+        "isPass": false,
+        "strength": 17,
+        "intelligence": 107,
+        "governorIntelligence": 78
+      },
+      "rng": [
+        1165878370,
+        3602399922
+      ],
+      "output": {
+        "population": 967071,
+        "defense": 158,
+        "reportedPopulation": 12904,
+        "reportedDefense": 8
+      },
+      "annualRevenue": 9406,
+      "rngAfter": [
+        1474201140,
+        3049395534
+      ]
+    },
+    {
+      "input": {
+        "population": 218472,
+        "defense": 258,
+        "isPass": false,
+        "strength": 28,
+        "intelligence": 23,
+        "governorIntelligence": 97
+      },
+      "rng": [
+        1929319994,
+        2147493998
+      ],
+      "output": {
+        "population": 224724,
+        "defense": 278,
+        "reportedPopulation": 6252,
+        "reportedDefense": 20
+      },
+      "annualRevenue": 3888,
+      "rngAfter": [
+        93248704,
+        662366
+      ]
+    },
+    {
+      "input": {
+        "population": 997303,
+        "defense": 411,
+        "isPass": false,
+        "strength": 14,
+        "intelligence": 104,
+        "governorIntelligence": 18
+      },
+      "rng": [
+        4201913133,
+        1867064916
+      ],
+      "output": {
+        "population": 1000000,
+        "defense": 418,
+        "reportedPopulation": 7555,
+        "reportedDefense": 7
+      },
+      "annualRevenue": 9729,
+      "rngAfter": [
+        912135400,
+        3173226829
+      ]
+    },
+    {
+      "input": {
+        "population": 801610,
+        "defense": 906,
+        "isPass": true,
+        "strength": 108,
+        "intelligence": 43,
+        "governorIntelligence": 2
+      },
+      "rng": [
+        2314483244,
+        2215327450
+      ],
+      "output": {
+        "population": 801610,
+        "defense": 933,
+        "reportedPopulation": 0,
+        "reportedDefense": 27
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        1528031340,
+        3066830937
+      ]
+    },
+    {
+      "input": {
+        "population": 681553,
+        "defense": 851,
+        "isPass": false,
+        "strength": 2,
+        "intelligence": 98,
+        "governorIntelligence": 18
+      },
+      "rng": [
+        3008685361,
+        862842723
+      ],
+      "output": {
+        "population": 689020,
+        "defense": 859,
+        "reportedPopulation": 7467,
+        "reportedDefense": 8
+      },
+      "annualRevenue": 7361,
+      "rngAfter": [
+        2899654996,
+        916387363
+      ]
+    },
+    {
+      "input": {
+        "population": 993423,
+        "defense": 217,
+        "isPass": false,
+        "strength": 84,
+        "intelligence": 21,
+        "governorIntelligence": 80
+      },
+      "rng": [
+        758251725,
+        2892386253
+      ],
+      "output": {
+        "population": 998233,
+        "defense": 253,
+        "reportedPopulation": 4810,
+        "reportedDefense": 36
+      },
+      "annualRevenue": 9700,
+      "rngAfter": [
+        379125927,
+        265071718
+      ]
+    },
+    {
+      "input": {
+        "population": 695541,
+        "defense": 613,
+        "isPass": false,
+        "strength": 74,
+        "intelligence": 18,
+        "governorIntelligence": 105
+      },
+      "rng": [
+        517619005,
+        3830549203
+      ],
+      "output": {
+        "population": 698186,
+        "defense": 659,
+        "reportedPopulation": 2645,
+        "reportedDefense": 46
+      },
+      "annualRevenue": 7466,
+      "rngAfter": [
+        1202176991,
+        2354484514
+      ]
+    },
+    {
+      "input": {
+        "population": 898994,
+        "defense": 445,
+        "isPass": true,
+        "strength": 108,
+        "intelligence": 91,
+        "governorIntelligence": 94
+      },
+      "rng": [
+        4224095799,
+        3915635898
+      ],
+      "output": {
+        "population": 898994,
+        "defense": 499,
+        "reportedPopulation": 0,
+        "reportedDefense": 54
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        2368500215,
+        1675409897
+      ]
+    },
+    {
+      "input": {
+        "population": 48404,
+        "defense": 9,
+        "isPass": false,
+        "strength": 23,
+        "intelligence": 80,
+        "governorIntelligence": 117
+      },
+      "rng": [
+        2210538461,
+        2692363661
+      ],
+      "output": {
+        "population": 60069,
+        "defense": 23,
+        "reportedPopulation": 11665,
+        "reportedDefense": 14
+      },
+      "annualRevenue": 2613,
+      "rngAfter": [
+        3497544827,
+        415298667
+      ]
+    },
+    {
+      "input": {
+        "population": 656385,
+        "defense": 343,
+        "isPass": false,
+        "strength": 42,
+        "intelligence": 68,
+        "governorIntelligence": 39
+      },
+      "rng": [
+        2309603009,
+        4251766471
+      ],
+      "output": {
+        "population": 663529,
+        "defense": 359,
+        "reportedPopulation": 7144,
+        "reportedDefense": 16
+      },
+      "annualRevenue": 7172,
+      "rngAfter": [
+        1787801762,
+        3006991349
+      ]
+    },
+    {
+      "input": {
+        "population": 309204,
+        "defense": 972,
+        "isPass": false,
+        "strength": 43,
+        "intelligence": 115,
+        "governorIntelligence": 31
+      },
+      "rng": [
+        710674711,
+        599602340
+      ],
+      "output": {
+        "population": 318872,
+        "defense": 992,
+        "reportedPopulation": 9668,
+        "reportedDefense": 20
+      },
+      "annualRevenue": 4569,
+      "rngAfter": [
+        3762864722,
+        2941069512
+      ]
+    },
+    {
+      "input": {
+        "population": 525045,
+        "defense": 734,
+        "isPass": true,
+        "strength": 43,
+        "intelligence": 34,
+        "governorIntelligence": 78
+      },
+      "rng": [
+        1013082952,
+        1986564628
+      ],
+      "output": {
+        "population": 525045,
+        "defense": 752,
+        "reportedPopulation": 0,
+        "reportedDefense": 18
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        3302396536,
+        163263561
+      ]
+    },
+    {
+      "input": {
+        "population": 702697,
+        "defense": 949,
+        "isPass": false,
+        "strength": 43,
+        "intelligence": 89,
+        "governorIntelligence": 90
+      },
+      "rng": [
+        232423623,
+        3594235583
+      ],
+      "output": {
+        "population": 715018,
+        "defense": 971,
+        "reportedPopulation": 12321,
+        "reportedDefense": 22
+      },
+      "annualRevenue": 7520,
+      "rngAfter": [
+        4094050414,
+        2893503357
+      ]
+    },
+    {
+      "input": {
+        "population": 989904,
+        "defense": 911,
+        "isPass": false,
+        "strength": 83,
+        "intelligence": 80,
+        "governorIntelligence": 92
+      },
+      "rng": [
+        2395283715,
+        724427952
+      ],
+      "output": {
+        "population": 999110,
+        "defense": 954,
+        "reportedPopulation": 9206,
+        "reportedDefense": 43
+      },
+      "annualRevenue": 9674,
+      "rngAfter": [
+        172099870,
+        724427935
+      ]
+    },
+    {
+      "input": {
+        "population": 240931,
+        "defense": 982,
+        "isPass": false,
+        "strength": 63,
+        "intelligence": 86,
+        "governorIntelligence": 14
+      },
+      "rng": [
+        1932292845,
+        2519902338
+      ],
+      "output": {
+        "population": 247728,
+        "defense": 998,
+        "reportedPopulation": 6797,
+        "reportedDefense": 16
+      },
+      "annualRevenue": 4056,
+      "rngAfter": [
+        3879126830,
+        3326939186
+      ]
+    },
+    {
+      "input": {
+        "population": 107028,
+        "defense": 185,
+        "isPass": true,
+        "strength": 95,
+        "intelligence": 97,
+        "governorIntelligence": 56
+      },
+      "rng": [
+        370974059,
+        193143076
+      ],
+      "output": {
+        "population": 107028,
+        "defense": 220,
+        "reportedPopulation": 0,
+        "reportedDefense": 35
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        1974491250,
+        305182770
+      ]
+    },
+    {
+      "input": {
+        "population": 6228,
+        "defense": 259,
+        "isPass": false,
+        "strength": 65,
+        "intelligence": 71,
+        "governorIntelligence": 110
+      },
+      "rng": [
+        689486568,
+        1400028936
+      ],
+      "output": {
+        "population": 16451,
+        "defense": 305,
+        "reportedPopulation": 10223,
+        "reportedDefense": 46
+      },
+      "annualRevenue": 2296,
+      "rngAfter": [
+        2995882926,
+        1305146397
+      ]
+    },
+    {
+      "input": {
+        "population": 430369,
+        "defense": 858,
+        "isPass": false,
+        "strength": 38,
+        "intelligence": 73,
+        "governorIntelligence": 39
+      },
+      "rng": [
+        838285109,
+        2831435993
+      ],
+      "output": {
+        "population": 436373,
+        "defense": 873,
+        "reportedPopulation": 6004,
+        "reportedDefense": 15
+      },
+      "annualRevenue": 5477,
+      "rngAfter": [
+        3115954831,
+        3634922568
+      ]
+    },
+    {
+      "input": {
+        "population": 595989,
+        "defense": 257,
+        "isPass": false,
+        "strength": 40,
+        "intelligence": 72,
+        "governorIntelligence": 14
+      },
+      "rng": [
+        566868701,
+        3718755129
+      ],
+      "output": {
+        "population": 602349,
+        "defense": 271,
+        "reportedPopulation": 6360,
+        "reportedDefense": 14
+      },
+      "annualRevenue": 6719,
+      "rngAfter": [
+        652966151,
+        3006832039
+      ]
+    },
+    {
+      "input": {
+        "population": 54688,
+        "defense": 830,
+        "isPass": true,
+        "strength": 101,
+        "intelligence": 6,
+        "governorIntelligence": 16
+      },
+      "rng": [
+        1853249642,
+        3040606707
+      ],
+      "output": {
+        "population": 54688,
+        "defense": 859,
+        "reportedPopulation": 0,
+        "reportedDefense": 29
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        3074108469,
+        1045866367
+      ]
+    },
+    {
+      "input": {
+        "population": 840159,
+        "defense": 129,
+        "isPass": false,
+        "strength": 3,
+        "intelligence": 94,
+        "governorIntelligence": 48
+      },
+      "rng": [
+        237850240,
+        4294368914
+      ],
+      "output": {
+        "population": 849353,
+        "defense": 139,
+        "reportedPopulation": 9194,
+        "reportedDefense": 10
+      },
+      "annualRevenue": 8551,
+      "rngAfter": [
+        1137398688,
+        3733979126
+      ]
+    },
+    {
+      "input": {
+        "population": 961270,
+        "defense": 20,
+        "isPass": false,
+        "strength": 110,
+        "intelligence": 87,
+        "governorIntelligence": 101
+      },
+      "rng": [
+        2906711144,
+        1381016029
+      ],
+      "output": {
+        "population": 974528,
+        "defense": 79,
+        "reportedPopulation": 13258,
+        "reportedDefense": 59
+      },
+      "annualRevenue": 9459,
+      "rngAfter": [
+        886481138,
+        4145320999
+      ]
+    },
+    {
+      "input": {
+        "population": 655149,
+        "defense": 643,
+        "isPass": false,
+        "strength": 71,
+        "intelligence": 103,
+        "governorIntelligence": 96
+      },
+      "rng": [
+        2335377040,
+        2370620679
+      ],
+      "output": {
+        "population": 667975,
+        "defense": 682,
+        "reportedPopulation": 12826,
+        "reportedDefense": 39
+      },
+      "annualRevenue": 7163,
+      "rngAfter": [
+        1178389530,
+        2899339476
+      ]
+    },
+    {
+      "input": {
+        "population": 649055,
+        "defense": 398,
+        "isPass": true,
+        "strength": 75,
+        "intelligence": 79,
+        "governorIntelligence": 12
+      },
+      "rng": [
+        359337145,
+        2196355513
+      ],
+      "output": {
+        "population": 649055,
+        "defense": 419,
+        "reportedPopulation": 0,
+        "reportedDefense": 21
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        718674292,
+        3127799328
+      ]
+    },
+    {
+      "input": {
+        "population": 701243,
+        "defense": 943,
+        "isPass": false,
+        "strength": 102,
+        "intelligence": 116,
+        "governorIntelligence": 98
+      },
+      "rng": [
+        692863323,
+        703793617
+      ],
+      "output": {
+        "population": 716510,
+        "defense": 999,
+        "reportedPopulation": 15267,
+        "reportedDefense": 58
+      },
+      "annualRevenue": 7509,
+      "rngAfter": [
+        1906651397,
+        1317064600
+      ]
+    },
+    {
+      "input": {
+        "population": 854981,
+        "defense": 392,
+        "isPass": false,
+        "strength": 42,
+        "intelligence": 22,
+        "governorIntelligence": 13
+      },
+      "rng": [
+        3562776359,
+        458914186
+      ],
+      "output": {
+        "population": 857396,
+        "defense": 407,
+        "reportedPopulation": 2415,
+        "reportedDefense": 15
+      },
+      "annualRevenue": 8662,
+      "rngAfter": [
+        3553913389,
+        3035697718
+      ]
+    },
+    {
+      "input": {
+        "population": 583847,
+        "defense": 863,
+        "isPass": false,
+        "strength": 63,
+        "intelligence": 92,
+        "governorIntelligence": 101
+      },
+      "rng": [
+        638495095,
+        3342061089
+      ],
+      "output": {
+        "population": 596765,
+        "defense": 899,
+        "reportedPopulation": 12918,
+        "reportedDefense": 36
+      },
+      "annualRevenue": 6628,
+      "rngAfter": [
+        1081428929,
+        3792462652
+      ]
+    },
+    {
+      "input": {
+        "population": 843929,
+        "defense": 83,
+        "isPass": true,
+        "strength": 90,
+        "intelligence": 107,
+        "governorIntelligence": 105
+      },
+      "rng": [
+        4196946513,
+        1992493577
+      ],
+      "output": {
+        "population": 843929,
+        "defense": 132,
+        "reportedPopulation": 0,
+        "reportedDefense": 49
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        1381169704,
+        3263307184
+      ]
+    },
+    {
+      "input": {
+        "population": 306843,
+        "defense": 953,
+        "isPass": false,
+        "strength": 29,
+        "intelligence": 79,
+        "governorIntelligence": 40
+      },
+      "rng": [
+        3834323521,
+        215962340
+      ],
+      "output": {
+        "population": 313837,
+        "defense": 969,
+        "reportedPopulation": 6994,
+        "reportedDefense": 16
+      },
+      "annualRevenue": 4551,
+      "rngAfter": [
+        3369122082,
+        4167498390
+      ]
+    },
+    {
+      "input": {
+        "population": 433030,
+        "defense": 642,
+        "isPass": false,
+        "strength": 23,
+        "intelligence": 69,
+        "governorIntelligence": 52
+      },
+      "rng": [
+        221789884,
+        2277110347
+      ],
+      "output": {
+        "population": 440587,
+        "defense": 652,
+        "reportedPopulation": 7557,
+        "reportedDefense": 10
+      },
+      "annualRevenue": 5497,
+      "rngAfter": [
+        2048553117,
+        870119717
+      ]
+    },
+    {
+      "input": {
+        "population": 162232,
+        "defense": 336,
+        "isPass": false,
+        "strength": 110,
+        "intelligence": 29,
+        "governorIntelligence": 67
+      },
+      "rng": [
+        1094301239,
+        1962947121
+      ],
+      "output": {
+        "population": 165579,
+        "defense": 385,
+        "reportedPopulation": 3347,
+        "reportedDefense": 49
+      },
+      "annualRevenue": 3466,
+      "rngAfter": [
+        2383433326,
+        1684072448
+      ]
+    },
+    {
+      "input": {
+        "population": 734598,
+        "defense": 936,
+        "isPass": true,
+        "strength": 86,
+        "intelligence": 12,
+        "governorIntelligence": 54
+      },
+      "rng": [
+        468510111,
+        3773321421
+      ],
+      "output": {
+        "population": 734598,
+        "defense": 975,
+        "reportedPopulation": 0,
+        "reportedDefense": 39
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        2686184677,
+        3251675544
+      ]
+    },
+    {
+      "input": {
+        "population": 785981,
+        "defense": 872,
+        "isPass": false,
+        "strength": 76,
+        "intelligence": 66,
+        "governorIntelligence": 21
+      },
+      "rng": [
+        1707058544,
+        504423618
+      ],
+      "output": {
+        "population": 791183,
+        "defense": 899,
+        "reportedPopulation": 5202,
+        "reportedDefense": 27
+      },
+      "annualRevenue": 8144,
+      "rngAfter": [
+        1811568406,
+        499745340
+      ]
+    },
+    {
+      "input": {
+        "population": 8984,
+        "defense": 764,
+        "isPass": false,
+        "strength": 24,
+        "intelligence": 117,
+        "governorIntelligence": 54
+      },
+      "rng": [
+        2431032735,
+        3569936067
+      ],
+      "output": {
+        "population": 21185,
+        "defense": 777,
+        "reportedPopulation": 12201,
+        "reportedDefense": 13
+      },
+      "annualRevenue": 2317,
+      "rngAfter": [
+        3494933326,
+        1625973875
+      ]
+    },
+    {
+      "input": {
+        "population": 26232,
+        "defense": 721,
+        "isPass": false,
+        "strength": 13,
+        "intelligence": 76,
+        "governorIntelligence": 63
+      },
+      "rng": [
+        17448227,
+        3532506474
+      ],
+      "output": {
+        "population": 34970,
+        "defense": 731,
+        "reportedPopulation": 8738,
+        "reportedDefense": 10
+      },
+      "annualRevenue": 2446,
+      "rngAfter": [
+        4362313,
+        3696598312
+      ]
+    },
+    {
+      "input": {
+        "population": 286982,
+        "defense": 916,
+        "isPass": true,
+        "strength": 88,
+        "intelligence": 34,
+        "governorIntelligence": 21
+      },
+      "rng": [
+        857557437,
+        2815948142
+      ],
+      "output": {
+        "population": 286982,
+        "defense": 943,
+        "reportedPopulation": 0,
+        "reportedDefense": 27
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        1871497042,
+        2673857974
+      ]
+    },
+    {
+      "input": {
+        "population": 170381,
+        "defense": 529,
+        "isPass": false,
+        "strength": 4,
+        "intelligence": 75,
+        "governorIntelligence": 114
+      },
+      "rng": [
+        2739030131,
+        3371830001
+      ],
+      "output": {
+        "population": 181808,
+        "defense": 540,
+        "reportedPopulation": 11427,
+        "reportedDefense": 11
+      },
+      "annualRevenue": 3527,
+      "rngAfter": [
+        567446801,
+        2821440291
+      ]
+    },
+    {
+      "input": {
+        "population": 420914,
+        "defense": 138,
+        "isPass": false,
+        "strength": 19,
+        "intelligence": 103,
+        "governorIntelligence": 36
+      },
+      "rng": [
+        776532448,
+        612247704
+      ],
+      "output": {
+        "population": 430350,
+        "defense": 149,
+        "reportedPopulation": 9436,
+        "reportedDefense": 11
+      },
+      "annualRevenue": 5406,
+      "rngAfter": [
+        3347364259,
+        3800650311
+      ]
+    },
+    {
+      "input": {
+        "population": 131245,
+        "defense": 498,
+        "isPass": false,
+        "strength": 93,
+        "intelligence": 102,
+        "governorIntelligence": 103
+      },
+      "rng": [
+        791170712,
+        2339353545
+      ],
+      "output": {
+        "population": 146521,
+        "defense": 552,
+        "reportedPopulation": 15276,
+        "reportedDefense": 54
+      },
+      "annualRevenue": 3234,
+      "rngAfter": [
+        2790115859,
+        316630929
+      ]
+    },
+    {
+      "input": {
+        "population": 61866,
+        "defense": 246,
+        "isPass": true,
+        "strength": 113,
+        "intelligence": 92,
+        "governorIntelligence": 63
+      },
+      "rng": [
+        3816194170,
+        1963452332
+      ],
+      "output": {
+        "population": 61866,
+        "defense": 292,
+        "reportedPopulation": 0,
+        "reportedDefense": 46
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        2686384349,
+        2700932462
+      ]
+    },
+    {
+      "input": {
+        "population": 698308,
+        "defense": 147,
+        "isPass": false,
+        "strength": 72,
+        "intelligence": 35,
+        "governorIntelligence": 14
+      },
+      "rng": [
+        4087138457,
+        509651391
+      ],
+      "output": {
+        "population": 701459,
+        "defense": 168,
+        "reportedPopulation": 3151,
+        "reportedDefense": 21
+      },
+      "annualRevenue": 7487,
+      "rngAfter": [
+        2568183475,
+        177988006
+      ]
+    },
+    {
+      "input": {
+        "population": 793282,
+        "defense": 94,
+        "isPass": false,
+        "strength": 116,
+        "intelligence": 3,
+        "governorIntelligence": 93
+      },
+      "rng": [
+        2876482800,
+        3134487632
+      ],
+      "output": {
+        "population": 796893,
+        "defense": 149,
+        "reportedPopulation": 3611,
+        "reportedDefense": 55
+      },
+      "annualRevenue": 8199,
+      "rngAfter": [
+        1732895575,
+        1973745823
+      ]
+    },
+    {
+      "input": {
+        "population": 451025,
+        "defense": 814,
+        "isPass": false,
+        "strength": 90,
+        "intelligence": 20,
+        "governorIntelligence": 117
+      },
+      "rng": [
+        2947127055,
+        1101304844
+      ],
+      "output": {
+        "population": 455382,
+        "defense": 863,
+        "reportedPopulation": 4357,
+        "reportedDefense": 49
+      },
+      "annualRevenue": 5632,
+      "rngAfter": [
+        2574322682,
+        879919464
+      ]
+    },
+    {
+      "input": {
+        "population": 545386,
+        "defense": 65,
+        "isPass": true,
+        "strength": 105,
+        "intelligence": 55,
+        "governorIntelligence": 109
+      },
+      "rng": [
+        576299840,
+        2717329974
+      ],
+      "output": {
+        "population": 545386,
+        "defense": 126,
+        "reportedPopulation": 0,
+        "reportedDefense": 61
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        76113549,
+        3506148634
+      ]
+    },
+    {
+      "input": {
+        "population": 997171,
+        "defense": 886,
+        "isPass": false,
+        "strength": 6,
+        "intelligence": 71,
+        "governorIntelligence": 49
+      },
+      "rng": [
+        3030853344,
+        3272105265
+      ],
+      "output": {
+        "population": 1000000,
+        "defense": 896,
+        "reportedPopulation": 8004,
+        "reportedDefense": 10
+      },
+      "annualRevenue": 9728,
+      "rngAfter": [
+        4231435492,
+        784533597
+      ]
+    },
+    {
+      "input": {
+        "population": 253997,
+        "defense": 158,
+        "isPass": false,
+        "strength": 108,
+        "intelligence": 114,
+        "governorIntelligence": 78
+      },
+      "rng": [
+        1061540291,
+        2189153920
+      ],
+      "output": {
+        "population": 269053,
+        "defense": 209,
+        "reportedPopulation": 15056,
+        "reportedDefense": 51
+      },
+      "annualRevenue": 4154,
+      "rngAfter": [
+        2384595502,
+        4031740620
+      ]
+    },
+    {
+      "input": {
+        "population": 178558,
+        "defense": 334,
+        "isPass": false,
+        "strength": 95,
+        "intelligence": 43,
+        "governorIntelligence": 56
+      },
+      "rng": [
+        368879526,
+        615400338
+      ],
+      "output": {
+        "population": 184605,
+        "defense": 373,
+        "reportedPopulation": 6047,
+        "reportedDefense": 39
+      },
+      "annualRevenue": 3589,
+      "rngAfter": [
+        2661048306,
+        2428782891
+      ]
+    },
+    {
+      "input": {
+        "population": 761060,
+        "defense": 954,
+        "isPass": true,
+        "strength": 25,
+        "intelligence": 98,
+        "governorIntelligence": 40
+      },
+      "rng": [
+        3462839652,
+        1558901524
+      ],
+      "output": {
+        "population": 761060,
+        "defense": 970,
+        "reportedPopulation": 0,
+        "reportedDefense": 16
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        1708025533,
+        2598852504
+      ]
+    },
+    {
+      "input": {
+        "population": 12716,
+        "defense": 527,
+        "isPass": false,
+        "strength": 52,
+        "intelligence": 13,
+        "governorIntelligence": 59
+      },
+      "rng": [
+        1138017016,
+        3707690153
+      ],
+      "output": {
+        "population": 15718,
+        "defense": 549,
+        "reportedPopulation": 3002,
+        "reportedDefense": 22
+      },
+      "annualRevenue": 2345,
+      "rngAfter": [
+        3323447838,
+        3109139965
+      ]
+    },
+    {
+      "input": {
+        "population": 900619,
+        "defense": 921,
+        "isPass": false,
+        "strength": 11,
+        "intelligence": 7,
+        "governorIntelligence": 115
+      },
+      "rng": [
+        1489821719,
+        1653494476
+      ],
+      "output": {
+        "population": 903186,
+        "defense": 926,
+        "reportedPopulation": 2567,
+        "reportedDefense": 5
+      },
+      "annualRevenue": 9004,
+      "rngAfter": [
+        1650668416,
+        1670689496
+      ]
+    },
+    {
+      "input": {
+        "population": 224681,
+        "defense": 100,
+        "isPass": false,
+        "strength": 33,
+        "intelligence": 48,
+        "governorIntelligence": 36
+      },
+      "rng": [
+        1945513534,
+        350751395
+      ],
+      "output": {
+        "population": 228612,
+        "defense": 113,
+        "reportedPopulation": 3931,
+        "reportedDefense": 13
+      },
+      "annualRevenue": 3935,
+      "rngAfter": [
+        3318214782,
+        3491054377
+      ]
+    },
+    {
+      "input": {
+        "population": 585975,
+        "defense": 896,
+        "isPass": true,
+        "strength": 47,
+        "intelligence": 26,
+        "governorIntelligence": 98
+      },
+      "rng": [
+        910853342,
+        455299368
+      ],
+      "output": {
+        "population": 585975,
+        "defense": 922,
+        "reportedPopulation": 0,
+        "reportedDefense": 26
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        2704788882,
+        910598734
+      ]
+    },
+    {
+      "input": {
+        "population": 457777,
+        "defense": 154,
+        "isPass": false,
+        "strength": 42,
+        "intelligence": 97,
+        "governorIntelligence": 56
+      },
+      "rng": [
+        1298932666,
+        2869818970
+      ],
+      "output": {
+        "population": 466769,
+        "defense": 176,
+        "reportedPopulation": 8992,
+        "reportedDefense": 22
+      },
+      "annualRevenue": 5683,
+      "rngAfter": [
+        183423835,
+        2735601241
+      ]
+    },
+    {
+      "input": {
+        "population": 849418,
+        "defense": 805,
+        "isPass": false,
+        "strength": 96,
+        "intelligence": 23,
+        "governorIntelligence": 45
+      },
+      "rng": [
+        838320921,
+        163513597
+      ],
+      "output": {
+        "population": 853790,
+        "defense": 843,
+        "reportedPopulation": 4372,
+        "reportedDefense": 38
+      },
+      "annualRevenue": 8620,
+      "rngAfter": [
+        3824125492,
+        2159534239
+      ]
+    },
+    {
+      "input": {
+        "population": 413211,
+        "defense": 682,
+        "isPass": false,
+        "strength": 104,
+        "intelligence": 28,
+        "governorIntelligence": 79
+      },
+      "rng": [
+        1804817382,
+        867242707
+      ],
+      "output": {
+        "population": 418173,
+        "defense": 736,
+        "reportedPopulation": 4962,
+        "reportedDefense": 54
+      },
+      "annualRevenue": 5349,
+      "rngAfter": [
+        3461173149,
+        2291306909
+      ]
+    },
+    {
+      "input": {
+        "population": 109092,
+        "defense": 470,
+        "isPass": true,
+        "strength": 65,
+        "intelligence": 32,
+        "governorIntelligence": 101
+      },
+      "rng": [
+        2188642245,
+        1927470234
+      ],
+      "output": {
+        "population": 109092,
+        "defense": 508,
+        "reportedPopulation": 0,
+        "reportedDefense": 38
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        521800144,
+        1707838322
+      ]
+    },
+    {
+      "input": {
+        "population": 795430,
+        "defense": 69,
+        "isPass": false,
+        "strength": 87,
+        "intelligence": 90,
+        "governorIntelligence": 99
+      },
+      "rng": [
+        849758357,
+        1594013156
+      ],
+      "output": {
+        "population": 806471,
+        "defense": 111,
+        "reportedPopulation": 11041,
+        "reportedDefense": 42
+      },
+      "annualRevenue": 8215,
+      "rngAfter": [
+        424879187,
+        1589818851
+      ]
+    },
+    {
+      "input": {
+        "population": 260883,
+        "defense": 534,
+        "isPass": false,
+        "strength": 74,
+        "intelligence": 57,
+        "governorIntelligence": 101
+      },
+      "rng": [
+        2180567542,
+        2710257186
+      ],
+      "output": {
+        "population": 268483,
+        "defense": 581,
+        "reportedPopulation": 7600,
+        "reportedDefense": 47
+      },
+      "annualRevenue": 4206,
+      "rngAfter": [
+        2411532230,
+        3017939472
+      ]
+    },
+    {
+      "input": {
+        "population": 822262,
+        "defense": 870,
+        "isPass": false,
+        "strength": 48,
+        "intelligence": 19,
+        "governorIntelligence": 52
+      },
+      "rng": [
+        987938075,
+        3468479602
+      ],
+      "output": {
+        "population": 826030,
+        "defense": 891,
+        "reportedPopulation": 3768,
+        "reportedDefense": 21
+      },
+      "annualRevenue": 8416,
+      "rngAfter": [
+        1586896241,
+        835123955
+      ]
+    },
+    {
+      "input": {
+        "population": 32256,
+        "defense": 298,
+        "isPass": true,
+        "strength": 86,
+        "intelligence": 109,
+        "governorIntelligence": 20
+      },
+      "rng": [
+        2846201940,
+        467338962
+      ],
+      "output": {
+        "population": 32256,
+        "defense": 326,
+        "reportedPopulation": 0,
+        "reportedDefense": 28
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        1785292309,
+        3627452638
+      ]
+    },
+    {
+      "input": {
+        "population": 697031,
+        "defense": 937,
+        "isPass": false,
+        "strength": 101,
+        "intelligence": 18,
+        "governorIntelligence": 2
+      },
+      "rng": [
+        3030279557,
+        1561065147
+      ],
+      "output": {
+        "population": 698431,
+        "defense": 965,
+        "reportedPopulation": 1400,
+        "reportedDefense": 28
+      },
+      "annualRevenue": 7477,
+      "rngAfter": [
+        3864816457,
+        3898586066
+      ]
+    },
+    {
+      "input": {
+        "population": 94026,
+        "defense": 402,
+        "isPass": false,
+        "strength": 80,
+        "intelligence": 46,
+        "governorIntelligence": 103
+      },
+      "rng": [
+        1347323759,
+        1119772574
+      ],
+      "output": {
+        "population": 102929,
+        "defense": 448,
+        "reportedPopulation": 8903,
+        "reportedDefense": 46
+      },
+      "annualRevenue": 2955,
+      "rngAfter": [
+        1317499984,
+        4243199466
+      ]
+    },
+    {
+      "input": {
+        "population": 648757,
+        "defense": 585,
+        "isPass": false,
+        "strength": 73,
+        "intelligence": 43,
+        "governorIntelligence": 23
+      },
+      "rng": [
+        3200171053,
+        3266805826
+      ],
+      "output": {
+        "population": 651821,
+        "defense": 610,
+        "reportedPopulation": 3064,
+        "reportedDefense": 25
+      },
+      "annualRevenue": 7115,
+      "rngAfter": [
+        2936844207,
+        2916094064
+      ]
+    },
+    {
+      "input": {
+        "population": 596563,
+        "defense": 283,
+        "isPass": true,
+        "strength": 23,
+        "intelligence": 91,
+        "governorIntelligence": 112
+      },
+      "rng": [
+        594789110,
+        3748509442
+      ],
+      "output": {
+        "population": 596563,
+        "defense": 308,
+        "reportedPopulation": 0,
+        "reportedDefense": 25
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        3369922749,
+        3681420222
+      ]
+    },
+    {
+      "input": {
+        "population": 643736,
+        "defense": 128,
+        "isPass": false,
+        "strength": 75,
+        "intelligence": 102,
+        "governorIntelligence": 19
+      },
+      "rng": [
+        722540491,
+        2858855058
+      ],
+      "output": {
+        "population": 651861,
+        "defense": 156,
+        "reportedPopulation": 8125,
+        "reportedDefense": 28
+      },
+      "annualRevenue": 7078,
+      "rngAfter": [
+        363367398,
+        860702933
+      ]
+    },
+    {
+      "input": {
+        "population": 138295,
+        "defense": 403,
+        "isPass": false,
+        "strength": 80,
+        "intelligence": 22,
+        "governorIntelligence": 23
+      },
+      "rng": [
+        1450529618,
+        3543116580
+      ],
+      "output": {
+        "population": 141464,
+        "defense": 431,
+        "reportedPopulation": 3169,
+        "reportedDefense": 28
+      },
+      "annualRevenue": 3287,
+      "rngAfter": [
+        892725077,
+        1285467279
+      ]
+    },
+    {
+      "input": {
+        "population": 247993,
+        "defense": 157,
+        "isPass": false,
+        "strength": 11,
+        "intelligence": 117,
+        "governorIntelligence": 77
+      },
+      "rng": [
+        3670393450,
+        2805735354
+      ],
+      "output": {
+        "population": 261320,
+        "defense": 164,
+        "reportedPopulation": 13327,
+        "reportedDefense": 7
+      },
+      "annualRevenue": 4109,
+      "rngAfter": [
+        3317853178,
+        3999911685
+      ]
+    },
+    {
+      "input": {
+        "population": 773427,
+        "defense": 928,
+        "isPass": true,
+        "strength": 74,
+        "intelligence": 105,
+        "governorIntelligence": 12
+      },
+      "rng": [
+        313163349,
+        71056585
+      ],
+      "output": {
+        "population": 773427,
+        "defense": 950,
+        "reportedPopulation": 0,
+        "reportedDefense": 22
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        2119570090,
+        4042465296
+      ]
+    },
+    {
+      "input": {
+        "population": 144552,
+        "defense": 693,
+        "isPass": false,
+        "strength": 12,
+        "intelligence": 91,
+        "governorIntelligence": 58
+      },
+      "rng": [
+        3337660824,
+        2567740860
+      ],
+      "output": {
+        "population": 155452,
+        "defense": 701,
+        "reportedPopulation": 10900,
+        "reportedDefense": 8
+      },
+      "annualRevenue": 3334,
+      "rngAfter": [
+        1729888934,
+        3721102926
+      ]
+    },
+    {
+      "input": {
+        "population": 171304,
+        "defense": 356,
+        "isPass": false,
+        "strength": 91,
+        "intelligence": 109,
+        "governorIntelligence": 106
+      },
+      "rng": [
+        3262410935,
+        1143760902
+      ],
+      "output": {
+        "population": 184859,
+        "defense": 413,
+        "reportedPopulation": 13555,
+        "reportedDefense": 57
+      },
+      "annualRevenue": 3534,
+      "rngAfter": [
+        1317934874,
+        706306880
+      ]
+    },
+    {
+      "input": {
+        "population": 815381,
+        "defense": 354,
+        "isPass": false,
+        "strength": 9,
+        "intelligence": 10,
+        "governorIntelligence": 45
+      },
+      "rng": [
+        2098918955,
+        3916879235
+      ],
+      "output": {
+        "population": 817128,
+        "defense": 364,
+        "reportedPopulation": 1747,
+        "reportedDefense": 10
+      },
+      "annualRevenue": 8365,
+      "rngAfter": [
+        3910644067,
+        3313690998
+      ]
+    },
+    {
+      "input": {
+        "population": 101860,
+        "defense": 924,
+        "isPass": true,
+        "strength": 119,
+        "intelligence": 22,
+        "governorIntelligence": 42
+      },
+      "rng": [
+        1451043527,
+        1124753972
+      ],
+      "output": {
+        "population": 101860,
+        "defense": 968,
+        "reportedPopulation": 0,
+        "reportedDefense": 44
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        1509206817,
+        860031586
+      ]
+    },
+    {
+      "input": {
+        "population": 309334,
+        "defense": 838,
+        "isPass": false,
+        "strength": 81,
+        "intelligence": 58,
+        "governorIntelligence": 85
+      },
+      "rng": [
+        4041200890,
+        1649373925
+      ],
+      "output": {
+        "population": 317510,
+        "defense": 885,
+        "reportedPopulation": 8176,
+        "reportedDefense": 47
+      },
+      "annualRevenue": 4570,
+      "rngAfter": [
+        502964094,
+        1915561913
+      ]
+    },
+    {
+      "input": {
+        "population": 987293,
+        "defense": 533,
+        "isPass": false,
+        "strength": 82,
+        "intelligence": 111,
+        "governorIntelligence": 15
+      },
+      "rng": [
+        4125110897,
+        1848555573
+      ],
+      "output": {
+        "population": 995237,
+        "defense": 556,
+        "reportedPopulation": 7944,
+        "reportedDefense": 23
+      },
+      "annualRevenue": 9654,
+      "rngAfter": [
+        1928724530,
+        462073357
+      ]
+    },
+    {
+      "input": {
+        "population": 889576,
+        "defense": 903,
+        "isPass": false,
+        "strength": 55,
+        "intelligence": 79,
+        "governorIntelligence": 102
+      },
+      "rng": [
+        2555098172,
+        4056566723
+      ],
+      "output": {
+        "population": 901861,
+        "defense": 940,
+        "reportedPopulation": 12285,
+        "reportedDefense": 37
+      },
+      "annualRevenue": 8921,
+      "rngAfter": [
+        1270234520,
+        3393962705
+      ]
+    },
+    {
+      "input": {
+        "population": 445402,
+        "defense": 413,
+        "isPass": true,
+        "strength": 91,
+        "intelligence": 27,
+        "governorIntelligence": 14
+      },
+      "rng": [
+        4111866747,
+        2047982618
+      ],
+      "output": {
+        "population": 445402,
+        "defense": 441,
+        "reportedPopulation": 0,
+        "reportedDefense": 28
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        3195702029,
+        2702950807
+      ]
+    },
+    {
+      "input": {
+        "population": 41186,
+        "defense": 781,
+        "isPass": false,
+        "strength": 102,
+        "intelligence": 30,
+        "governorIntelligence": 118
+      },
+      "rng": [
+        2293818357,
+        16594984
+      ],
+      "output": {
+        "population": 47911,
+        "defense": 835,
+        "reportedPopulation": 6725,
+        "reportedDefense": 54
+      },
+      "annualRevenue": 2558,
+      "rngAfter": [
+        3817855650,
+        81794983
+      ]
+    },
+    {
+      "input": {
+        "population": 318178,
+        "defense": 127,
+        "isPass": false,
+        "strength": 73,
+        "intelligence": 59,
+        "governorIntelligence": 95
+      },
+      "rng": [
+        4223229551,
+        2576587763
+      ],
+      "output": {
+        "population": 326037,
+        "defense": 162,
+        "reportedPopulation": 7859,
+        "reportedDefense": 35
+      },
+      "annualRevenue": 4636,
+      "rngAfter": [
+        3999243326,
+        844332627
+      ]
+    },
+    {
+      "input": {
+        "population": 993762,
+        "defense": 961,
+        "isPass": false,
+        "strength": 7,
+        "intelligence": 51,
+        "governorIntelligence": 30
+      },
+      "rng": [
+        3456587715,
+        307500292
+      ],
+      "output": {
+        "population": 998036,
+        "defense": 970,
+        "reportedPopulation": 4274,
+        "reportedDefense": 9
+      },
+      "annualRevenue": 9703,
+      "rngAfter": [
+        2945031184,
+        1328620865
+      ]
+    },
+    {
+      "input": {
+        "population": 694965,
+        "defense": 387,
+        "isPass": true,
+        "strength": 27,
+        "intelligence": 115,
+        "governorIntelligence": 65
+      },
+      "rng": [
+        3133086097,
+        1653959066
+      ],
+      "output": {
+        "population": 694965,
+        "defense": 405,
+        "reportedPopulation": 0,
+        "reportedDefense": 18
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        1474507351,
+        1516656805
+      ]
+    },
+    {
+      "input": {
+        "population": 661559,
+        "defense": 733,
+        "isPass": false,
+        "strength": 9,
+        "intelligence": 19,
+        "governorIntelligence": 49
+      },
+      "rng": [
+        2504225500,
+        4137442400
+      ],
+      "output": {
+        "population": 664250,
+        "defense": 738,
+        "reportedPopulation": 2691,
+        "reportedDefense": 5
+      },
+      "annualRevenue": 7211,
+      "rngAfter": [
+        1412902393,
+        3321719237
+      ]
+    },
+    {
+      "input": {
+        "population": 267164,
+        "defense": 514,
+        "isPass": false,
+        "strength": 3,
+        "intelligence": 71,
+        "governorIntelligence": 60
+      },
+      "rng": [
+        4045292794,
+        2060650436
+      ],
+      "output": {
+        "population": 275163,
+        "defense": 519,
+        "reportedPopulation": 7999,
+        "reportedDefense": 5
+      },
+      "annualRevenue": 4253,
+      "rngAfter": [
+        1157361952,
+        4167981664
+      ]
+    },
+    {
+      "input": {
+        "population": 492017,
+        "defense": 204,
+        "isPass": false,
+        "strength": 48,
+        "intelligence": 46,
+        "governorIntelligence": 29
+      },
+      "rng": [
+        3222173531,
+        823853763
+      ],
+      "output": {
+        "population": 496663,
+        "defense": 220,
+        "reportedPopulation": 4646,
+        "reportedDefense": 16
+      },
+      "annualRevenue": 5940,
+      "rngAfter": [
+        3875566522,
+        1143169112
+      ]
+    },
+    {
+      "input": {
+        "population": 962092,
+        "defense": 175,
+        "isPass": true,
+        "strength": 81,
+        "intelligence": 117,
+        "governorIntelligence": 56
+      },
+      "rng": [
+        2204723767,
+        1275083324
+      ],
+      "output": {
+        "population": 962092,
+        "defense": 210,
+        "reportedPopulation": 0,
+        "reportedDefense": 35
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        2527299638,
+        3816268
+      ]
+    },
+    {
+      "input": {
+        "population": 803456,
+        "defense": 85,
+        "isPass": false,
+        "strength": 5,
+        "intelligence": 49,
+        "governorIntelligence": 50
+      },
+      "rng": [
+        2524151506,
+        585468497
+      ],
+      "output": {
+        "population": 809306,
+        "defense": 88,
+        "reportedPopulation": 5850,
+        "reportedDefense": 3
+      },
+      "annualRevenue": 8275,
+      "rngAfter": [
+        1731718713,
+        292472104
+      ]
+    },
+    {
+      "input": {
+        "population": 950535,
+        "defense": 538,
+        "isPass": false,
+        "strength": 60,
+        "intelligence": 34,
+        "governorIntelligence": 12
+      },
+      "rng": [
+        622633365,
+        1335195304
+      ],
+      "output": {
+        "population": 952897,
+        "defense": 557,
+        "reportedPopulation": 2362,
+        "reportedDefense": 19
+      },
+      "annualRevenue": 9379,
+      "rngAfter": [
+        2255000690,
+        4116146804
+      ]
+    },
+    {
+      "input": {
+        "population": 140525,
+        "defense": 660,
+        "isPass": false,
+        "strength": 112,
+        "intelligence": 96,
+        "governorIntelligence": 86
+      },
+      "rng": [
+        991156151,
+        2954474148
+      ],
+      "output": {
+        "population": 152143,
+        "defense": 712,
+        "reportedPopulation": 11618,
+        "reportedDefense": 52
+      },
+      "annualRevenue": 3303,
+      "rngAfter": [
+        2797453784,
+        708506011
+      ]
+    },
+    {
+      "input": {
+        "population": 819831,
+        "defense": 299,
+        "isPass": true,
+        "strength": 69,
+        "intelligence": 40,
+        "governorIntelligence": 16
+      },
+      "rng": [
+        1946128253,
+        3608457574
+      ],
+      "output": {
+        "population": 819831,
+        "defense": 318,
+        "reportedPopulation": 0,
+        "reportedDefense": 19
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        3208249287,
+        1548928407
+      ]
+    },
+    {
+      "input": {
+        "population": 779994,
+        "defense": 809,
+        "isPass": false,
+        "strength": 117,
+        "intelligence": 21,
+        "governorIntelligence": 29
+      },
+      "rng": [
+        1760538665,
+        2426377798
+      ],
+      "output": {
+        "population": 783417,
+        "defense": 847,
+        "reportedPopulation": 3423,
+        "reportedDefense": 38
+      },
+      "annualRevenue": 8099,
+      "rngAfter": [
+        89005558,
+        2677163408
+      ]
+    },
+    {
+      "input": {
+        "population": 283374,
+        "defense": 329,
+        "isPass": false,
+        "strength": 55,
+        "intelligence": 6,
+        "governorIntelligence": 10
+      },
+      "rng": [
+        3243529419,
+        1420337049
+      ],
+      "output": {
+        "population": 283751,
+        "defense": 347,
+        "reportedPopulation": 377,
+        "reportedDefense": 18
+      },
+      "annualRevenue": 4375,
+      "rngAfter": [
+        856117587,
+        523282769
+      ]
+    },
+    {
+      "input": {
+        "population": 726507,
+        "defense": 727,
+        "isPass": false,
+        "strength": 94,
+        "intelligence": 67,
+        "governorIntelligence": 60
+      },
+      "rng": [
+        3609804693,
+        1908335123
+      ],
+      "output": {
+        "population": 734145,
+        "defense": 763,
+        "reportedPopulation": 7638,
+        "reportedDefense": 36
+      },
+      "annualRevenue": 7698,
+      "rngAfter": [
+        4184715923,
+        556210158
+      ]
+    },
+    {
+      "input": {
+        "population": 656083,
+        "defense": 352,
+        "isPass": true,
+        "strength": 18,
+        "intelligence": 86,
+        "governorIntelligence": 60
+      },
+      "rng": [
+        2266203311,
+        1060333232
+      ],
+      "output": {
+        "population": 656083,
+        "defense": 366,
+        "reportedPopulation": 0,
+        "reportedDefense": 14
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        629422236,
+        1722761011
+      ]
+    },
+    {
+      "input": {
+        "population": 3864,
+        "defense": 3,
+        "isPass": false,
+        "strength": 20,
+        "intelligence": 31,
+        "governorIntelligence": 23
+      },
+      "rng": [
+        1915783294,
+        2151619346
+      ],
+      "output": {
+        "population": 6591,
+        "defense": 12,
+        "reportedPopulation": 2727,
+        "reportedDefense": 9
+      },
+      "annualRevenue": 2278,
+      "rngAfter": [
+        587761656,
+        132342304
+      ]
+    },
+    {
+      "input": {
+        "population": 280000,
+        "defense": 695,
+        "isPass": false,
+        "strength": 40,
+        "intelligence": 20,
+        "governorIntelligence": 117
+      },
+      "rng": [
+        3082389976,
+        3465275802
+      ],
+      "output": {
+        "population": 282702,
+        "defense": 717,
+        "reportedPopulation": 2702,
+        "reportedDefense": 22
+      },
+      "annualRevenue": 4350,
+      "rngAfter": [
+        3427716557,
+        1598869092
+      ]
+    },
+    {
+      "input": {
+        "population": 608755,
+        "defense": 771,
+        "isPass": false,
+        "strength": 24,
+        "intelligence": 44,
+        "governorIntelligence": 95
+      },
+      "rng": [
+        1756127331,
+        959119265
+      ],
+      "output": {
+        "population": 615693,
+        "defense": 783,
+        "reportedPopulation": 6938,
+        "reportedDefense": 12
+      },
+      "annualRevenue": 6815,
+      "rngAfter": [
+        2758323296,
+        1088728062
+      ]
+    },
+    {
+      "input": {
+        "population": 684134,
+        "defense": 758,
+        "isPass": true,
+        "strength": 53,
+        "intelligence": 119,
+        "governorIntelligence": 47
+      },
+      "rng": [
+        492811988,
+        754515772
+      ],
+      "output": {
+        "population": 684134,
+        "defense": 781,
+        "reportedPopulation": 0,
+        "reportedDefense": 23
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        2950392462,
+        3355040103
+      ]
+    },
+    {
+      "input": {
+        "population": 877101,
+        "defense": 436,
+        "isPass": false,
+        "strength": 24,
+        "intelligence": 7,
+        "governorIntelligence": 48
+      },
+      "rng": [
+        1074907192,
+        206920053
+      ],
+      "output": {
+        "population": 878994,
+        "defense": 452,
+        "reportedPopulation": 1893,
+        "reportedDefense": 16
+      },
+      "annualRevenue": 8828,
+      "rngAfter": [
+        2487295107,
+        1560450390
+      ]
+    },
+    {
+      "input": {
+        "population": 47105,
+        "defense": 184,
+        "isPass": false,
+        "strength": 36,
+        "intelligence": 53,
+        "governorIntelligence": 72
+      },
+      "rng": [
+        120245830,
+        3355165347
+      ],
+      "output": {
+        "population": 53704,
+        "defense": 203,
+        "reportedPopulation": 6599,
+        "reportedDefense": 19
+      },
+      "annualRevenue": 2603,
+      "rngAfter": [
+        2506564487,
+        583531458
+      ]
+    },
+    {
+      "input": {
+        "population": 849777,
+        "defense": 179,
+        "isPass": false,
+        "strength": 3,
+        "intelligence": 73,
+        "governorIntelligence": 50
+      },
+      "rng": [
+        4171317423,
+        3868071821
+      ],
+      "output": {
+        "population": 856803,
+        "defense": 180,
+        "reportedPopulation": 7026,
+        "reportedDefense": 1
+      },
+      "annualRevenue": 8623,
+      "rngAfter": [
+        4048191841,
+        1183565427
+      ]
+    },
+    {
+      "input": {
+        "population": 846158,
+        "defense": 180,
+        "isPass": true,
+        "strength": 7,
+        "intelligence": 114,
+        "governorIntelligence": 13
+      },
+      "rng": [
+        1285727021,
+        3183643681
+      ],
+      "output": {
+        "population": 846158,
+        "defense": 182,
+        "reportedPopulation": 0,
+        "reportedDefense": 2
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        2324478258,
+        813889290
+      ]
+    },
+    {
+      "input": {
+        "population": 675231,
+        "defense": 804,
+        "isPass": false,
+        "strength": 116,
+        "intelligence": 19,
+        "governorIntelligence": 68
+      },
+      "rng": [
+        1975306329,
+        2849918363
+      ],
+      "output": {
+        "population": 679821,
+        "defense": 857,
+        "reportedPopulation": 4590,
+        "reportedDefense": 53
+      },
+      "annualRevenue": 7314,
+      "rngAfter": [
+        3035363728,
+        650990319
+      ]
+    },
+    {
+      "input": {
+        "population": 588453,
+        "defense": 666,
+        "isPass": false,
+        "strength": 41,
+        "intelligence": 2,
+        "governorIntelligence": 78
+      },
+      "rng": [
+        3219421288,
+        1786024465
+      ],
+      "output": {
+        "population": 588705,
+        "defense": 682,
+        "reportedPopulation": 252,
+        "reportedDefense": 16
+      },
+      "annualRevenue": 6663,
+      "rngAfter": [
+        3548432624,
+        275412112
+      ]
+    },
+    {
+      "input": {
+        "population": 390267,
+        "defense": 23,
+        "isPass": false,
+        "strength": 103,
+        "intelligence": 6,
+        "governorIntelligence": 15
+      },
+      "rng": [
+        1741906189,
+        506422761
+      ],
+      "output": {
+        "population": 391112,
+        "defense": 55,
+        "reportedPopulation": 845,
+        "reportedDefense": 32
+      },
+      "annualRevenue": 5177,
+      "rngAfter": [
+        907110013,
+        635969071
+      ]
+    },
+    {
+      "input": {
+        "population": 611733,
+        "defense": 674,
+        "isPass": true,
+        "strength": 81,
+        "intelligence": 105,
+        "governorIntelligence": 32
+      },
+      "rng": [
+        604701038,
+        1451225338
+      ],
+      "output": {
+        "population": 611733,
+        "defense": 700,
+        "reportedPopulation": 0,
+        "reportedDefense": 26
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        2449834167,
+        3790777599
+      ]
+    },
+    {
+      "input": {
+        "population": 290728,
+        "defense": 20,
+        "isPass": false,
+        "strength": 68,
+        "intelligence": 64,
+        "governorIntelligence": 56
+      },
+      "rng": [
+        2130950246,
+        3242037347
+      ],
+      "output": {
+        "population": 299206,
+        "defense": 55,
+        "reportedPopulation": 8478,
+        "reportedDefense": 35
+      },
+      "annualRevenue": 4430,
+      "rngAfter": [
+        3765898495,
+        4131359492
+      ]
+    },
+    {
+      "input": {
+        "population": 450819,
+        "defense": 250,
+        "isPass": false,
+        "strength": 114,
+        "intelligence": 2,
+        "governorIntelligence": 27
+      },
+      "rng": [
+        1806786475,
+        1132538476
+      ],
+      "output": {
+        "population": 451121,
+        "defense": 285,
+        "reportedPopulation": 302,
+        "reportedDefense": 35
+      },
+      "annualRevenue": 5631,
+      "rngAfter": [
+        4251147660,
+        1184551136
+      ]
+    },
+    {
+      "input": {
+        "population": 394188,
+        "defense": 987,
+        "isPass": false,
+        "strength": 49,
+        "intelligence": 34,
+        "governorIntelligence": 11
+      },
+      "rng": [
+        2441732806,
+        4843248
+      ],
+      "output": {
+        "population": 396629,
+        "defense": 999,
+        "reportedPopulation": 2441,
+        "reportedDefense": 14
+      },
+      "annualRevenue": 5206,
+      "rngAfter": [
+        2024924260,
+        619919232
+      ]
+    },
+    {
+      "input": {
+        "population": 511744,
+        "defense": 748,
+        "isPass": true,
+        "strength": 80,
+        "intelligence": 15,
+        "governorIntelligence": 34
+      },
+      "rng": [
+        3636591567,
+        284093518
+      ],
+      "output": {
+        "population": 511744,
+        "defense": 777,
+        "reportedPopulation": 0,
+        "reportedDefense": 29
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        2129933872,
+        3964473582
+      ]
+    },
+    {
+      "input": {
+        "population": 423966,
+        "defense": 156,
+        "isPass": false,
+        "strength": 111,
+        "intelligence": 118,
+        "governorIntelligence": 71
+      },
+      "rng": [
+        55534477,
+        386987591
+      ],
+      "output": {
+        "population": 436024,
+        "defense": 211,
+        "reportedPopulation": 12058,
+        "reportedDefense": 55
+      },
+      "annualRevenue": 5429,
+      "rngAfter": [
+        2982613415,
+        773942412
+      ]
+    },
+    {
+      "input": {
+        "population": 540361,
+        "defense": 52,
+        "isPass": false,
+        "strength": 63,
+        "intelligence": 9,
+        "governorIntelligence": 105
+      },
+      "rng": [
+        812239132,
+        3864819265
+      ],
+      "output": {
+        "population": 542693,
+        "defense": 85,
+        "reportedPopulation": 2332,
+        "reportedDefense": 33
+      },
+      "annualRevenue": 6302,
+      "rngAfter": [
+        845793565,
+        1910047513
+      ]
+    },
+    {
+      "input": {
+        "population": 294538,
+        "defense": 726,
+        "isPass": false,
+        "strength": 98,
+        "intelligence": 118,
+        "governorIntelligence": 32
+      },
+      "rng": [
+        4252976768,
+        2314350366
+      ],
+      "output": {
+        "population": 303383,
+        "defense": 764,
+        "reportedPopulation": 8845,
+        "reportedDefense": 38
+      },
+      "annualRevenue": 4459,
+      "rngAfter": [
+        2202436093,
+        2314350362
+      ]
+    },
+    {
+      "input": {
+        "population": 511321,
+        "defense": 749,
+        "isPass": true,
+        "strength": 9,
+        "intelligence": 91,
+        "governorIntelligence": 97
+      },
+      "rng": [
+        3967573690,
+        1461242279
+      ],
+      "output": {
+        "population": 511321,
+        "defense": 756,
+        "reportedPopulation": 0,
+        "reportedDefense": 7
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        4051365809,
+        3810079946
+      ]
+    },
+    {
+      "input": {
+        "population": 563127,
+        "defense": 395,
+        "isPass": false,
+        "strength": 27,
+        "intelligence": 45,
+        "governorIntelligence": 85
+      },
+      "rng": [
+        2191748496,
+        3358595555
+      ],
+      "output": {
+        "population": 570528,
+        "defense": 418,
+        "reportedPopulation": 7401,
+        "reportedDefense": 23
+      },
+      "annualRevenue": 6473,
+      "rngAfter": [
+        810839506,
+        2421961669
+      ]
+    },
+    {
+      "input": {
+        "population": 394115,
+        "defense": 220,
+        "isPass": false,
+        "strength": 35,
+        "intelligence": 53,
+        "governorIntelligence": 82
+      },
+      "rng": [
+        1316852835,
+        4246205755
+      ],
+      "output": {
+        "population": 401168,
+        "defense": 235,
+        "reportedPopulation": 7053,
+        "reportedDefense": 15
+      },
+      "annualRevenue": 5205,
+      "rngAfter": [
+        329215257,
+        4204101259
+      ]
+    },
+    {
+      "input": {
+        "population": 497872,
+        "defense": 495,
+        "isPass": false,
+        "strength": 81,
+        "intelligence": 38,
+        "governorIntelligence": 109
+      },
+      "rng": [
+        3487219140,
+        2703222184
+      ],
+      "output": {
+        "population": 506208,
+        "defense": 536,
+        "reportedPopulation": 8336,
+        "reportedDefense": 41
+      },
+      "annualRevenue": 5984,
+      "rngAfter": [
+        3183857634,
+        3499094723
+      ]
+    },
+    {
+      "input": {
+        "population": 889354,
+        "defense": 123,
+        "isPass": true,
+        "strength": 45,
+        "intelligence": 78,
+        "governorIntelligence": 74
+      },
+      "rng": [
+        261989572,
+        877295179
+      ],
+      "output": {
+        "population": 889354,
+        "defense": 149,
+        "reportedPopulation": 0,
+        "reportedDefense": 26
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        2467577462,
+        1369592754
+      ]
+    },
+    {
+      "input": {
+        "population": 808369,
+        "defense": 804,
+        "isPass": false,
+        "strength": 34,
+        "intelligence": 16,
+        "governorIntelligence": 46
+      },
+      "rng": [
+        3373034325,
+        2705165401
+      ],
+      "output": {
+        "population": 809713,
+        "defense": 820,
+        "reportedPopulation": 1344,
+        "reportedDefense": 16
+      },
+      "annualRevenue": 8312,
+      "rngAfter": [
+        900426886,
+        337621387
+      ]
+    },
+    {
+      "input": {
+        "population": 385100,
+        "defense": 722,
+        "isPass": false,
+        "strength": 57,
+        "intelligence": 55,
+        "governorIntelligence": 68
+      },
+      "rng": [
+        3696888664,
+        3600474131
+      ],
+      "output": {
+        "population": 393397,
+        "defense": 744,
+        "reportedPopulation": 8297,
+        "reportedDefense": 22
+      },
+      "annualRevenue": 5138,
+      "rngAfter": [
+        1507621387,
+        1236140333
+      ]
+    },
+    {
+      "input": {
+        "population": 133625,
+        "defense": 849,
+        "isPass": false,
+        "strength": 38,
+        "intelligence": 87,
+        "governorIntelligence": 39
+      },
+      "rng": [
+        3587020961,
+        1268549456
+      ],
+      "output": {
+        "population": 142539,
+        "defense": 865,
+        "reportedPopulation": 8914,
+        "reportedDefense": 16
+      },
+      "annualRevenue": 3252,
+      "rngAfter": [
+        3683265884,
+        244750137
+      ]
+    },
+    {
+      "input": {
+        "population": 391076,
+        "defense": 817,
+        "isPass": true,
+        "strength": 85,
+        "intelligence": 80,
+        "governorIntelligence": 101
+      },
+      "rng": [
+        2040876173,
+        3198180181
+      ],
+      "output": {
+        "population": 391076,
+        "defense": 864,
+        "reportedPopulation": 0,
+        "reportedDefense": 47
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        4081752348,
+        1834154625
+      ]
+    },
+    {
+      "input": {
+        "population": 209156,
+        "defense": 341,
+        "isPass": false,
+        "strength": 39,
+        "intelligence": 59,
+        "governorIntelligence": 29
+      },
+      "rng": [
+        2340092558,
+        3577304809
+      ],
+      "output": {
+        "population": 215087,
+        "defense": 356,
+        "reportedPopulation": 5931,
+        "reportedDefense": 15
+      },
+      "annualRevenue": 3818,
+      "rngAfter": [
+        3014195383,
+        2803555610
+      ]
+    },
+    {
+      "input": {
+        "population": 562548,
+        "defense": 185,
+        "isPass": false,
+        "strength": 114,
+        "intelligence": 48,
+        "governorIntelligence": 93
+      },
+      "rng": [
+        3578704271,
+        3278459585
+      ],
+      "output": {
+        "population": 569517,
+        "defense": 247,
+        "reportedPopulation": 6969,
+        "reportedDefense": 62
+      },
+      "annualRevenue": 6469,
+      "rngAfter": [
+        2879218465,
+        1829394456
+      ]
+    },
+    {
+      "input": {
+        "population": 189366,
+        "defense": 580,
+        "isPass": false,
+        "strength": 96,
+        "intelligence": 23,
+        "governorIntelligence": 27
+      },
+      "rng": [
+        2091864848,
+        1927205430
+      ],
+      "output": {
+        "population": 191662,
+        "defense": 613,
+        "reportedPopulation": 2296,
+        "reportedDefense": 33
+      },
+      "annualRevenue": 3670,
+      "rngAfter": [
+        293384531,
+        448360041
+      ]
+    },
+    {
+      "input": {
+        "population": 340156,
+        "defense": 635,
+        "isPass": true,
+        "strength": 104,
+        "intelligence": 96,
+        "governorIntelligence": 65
+      },
+      "rng": [
+        627039061,
+        2440702179
+      ],
+      "output": {
+        "population": 340156,
+        "defense": 680,
+        "reportedPopulation": 0,
+        "reportedDefense": 45
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        2885380804,
+        3903031877
+      ]
+    },
+    {
+      "input": {
+        "population": 552956,
+        "defense": 331,
+        "isPass": false,
+        "strength": 92,
+        "intelligence": 19,
+        "governorIntelligence": 62
+      },
+      "rng": [
+        1251916266,
+        321274277
+      ],
+      "output": {
+        "population": 554977,
+        "defense": 368,
+        "reportedPopulation": 2021,
+        "reportedDefense": 37
+      },
+      "annualRevenue": 6397,
+      "rngAfter": [
+        2662644203,
+        2565247052
+      ]
+    },
+    {
+      "input": {
+        "population": 229353,
+        "defense": 307,
+        "isPass": false,
+        "strength": 107,
+        "intelligence": 31,
+        "governorIntelligence": 61
+      },
+      "rng": [
+        1233358732,
+        2374228216
+      ],
+      "output": {
+        "population": 234750,
+        "defense": 348,
+        "reportedPopulation": 5397,
+        "reportedDefense": 41
+      },
+      "annualRevenue": 3970,
+      "rngAfter": [
+        2764163016,
+        3699099329
+      ]
+    },
+    {
+      "input": {
+        "population": 298846,
+        "defense": 397,
+        "isPass": false,
+        "strength": 120,
+        "intelligence": 52,
+        "governorIntelligence": 59
+      },
+      "rng": [
+        813517799,
+        2903434431
+      ],
+      "output": {
+        "population": 305977,
+        "defense": 452,
+        "reportedPopulation": 7131,
+        "reportedDefense": 55
+      },
+      "annualRevenue": 4491,
+      "rngAfter": [
+        799080949,
+        1005244654
+      ]
+    },
+    {
+      "input": {
+        "population": 690901,
+        "defense": 320,
+        "isPass": true,
+        "strength": 84,
+        "intelligence": 85,
+        "governorIntelligence": 69
+      },
+      "rng": [
+        1920485420,
+        1662586138
+      ],
+      "output": {
+        "population": 690901,
+        "defense": 359,
+        "reportedPopulation": 0,
+        "reportedDefense": 39
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        2017996146,
+        1758140616
+      ]
+    },
+    {
+      "input": {
+        "population": 97663,
+        "defense": 139,
+        "isPass": false,
+        "strength": 101,
+        "intelligence": 66,
+        "governorIntelligence": 78
+      },
+      "rng": [
+        32286940,
+        3203023233
+      ],
+      "output": {
+        "population": 106929,
+        "defense": 191,
+        "reportedPopulation": 9266,
+        "reportedDefense": 52
+      },
+      "annualRevenue": 2982,
+      "rngAfter": [
+        4132728452,
+        2074674690
+      ]
+    },
+    {
+      "input": {
+        "population": 631600,
+        "defense": 637,
+        "isPass": false,
+        "strength": 57,
+        "intelligence": 104,
+        "governorIntelligence": 26
+      },
+      "rng": [
+        770103136,
+        1360173299
+      ],
+      "output": {
+        "population": 640351,
+        "defense": 654,
+        "reportedPopulation": 8751,
+        "reportedDefense": 17
+      },
+      "annualRevenue": 6987,
+      "rngAfter": [
+        918489455,
+        2565886226
+      ]
+    },
+    {
+      "input": {
+        "population": 159880,
+        "defense": 80,
+        "isPass": false,
+        "strength": 98,
+        "intelligence": 39,
+        "governorIntelligence": 38
+      },
+      "rng": [
+        2476313060,
+        388267677
+      ],
+      "output": {
+        "population": 164544,
+        "defense": 112,
+        "reportedPopulation": 4664,
+        "reportedDefense": 32
+      },
+      "annualRevenue": 3449,
+      "rngAfter": [
+        966368857,
+        1553070576
+      ]
+    },
+    {
+      "input": {
+        "population": 84831,
+        "defense": 280,
+        "isPass": true,
+        "strength": 120,
+        "intelligence": 33,
+        "governorIntelligence": 38
+      },
+      "rng": [
+        1243742734,
+        1739856924
+      ],
+      "output": {
+        "population": 84831,
+        "defense": 323,
+        "reportedPopulation": 0,
+        "reportedDefense": 43
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        570560330,
+        943116136
+      ]
+    },
+    {
+      "input": {
+        "population": 525693,
+        "defense": 191,
+        "isPass": false,
+        "strength": 40,
+        "intelligence": 83,
+        "governorIntelligence": 74
+      },
+      "rng": [
+        252440394,
+        141348015
+      ],
+      "output": {
+        "population": 534632,
+        "defense": 216,
+        "reportedPopulation": 8939,
+        "reportedDefense": 25
+      },
+      "annualRevenue": 6192,
+      "rngAfter": [
+        801057852,
+        729946929
+      ]
+    },
+    {
+      "input": {
+        "population": 63890,
+        "defense": 536,
+        "isPass": false,
+        "strength": 32,
+        "intelligence": 44,
+        "governorIntelligence": 119
+      },
+      "rng": [
+        1554050553,
+        2110534037
+      ],
+      "output": {
+        "population": 72959,
+        "defense": 554,
+        "reportedPopulation": 9069,
+        "reportedDefense": 18
+      },
+      "annualRevenue": 2729,
+      "rngAfter": [
+        4233928941,
+        3425801337
+      ]
+    },
+    {
+      "input": {
+        "population": 604949,
+        "defense": 250,
+        "isPass": false,
+        "strength": 62,
+        "intelligence": 71,
+        "governorIntelligence": 43
+      },
+      "rng": [
+        196101909,
+        1852661833
+      ],
+      "output": {
+        "population": 612758,
+        "defense": 278,
+        "reportedPopulation": 7809,
+        "reportedDefense": 28
+      },
+      "annualRevenue": 6787,
+      "rngAfter": [
+        2958918204,
+        1131506434
+      ]
+    },
+    {
+      "input": {
+        "population": 991907,
+        "defense": 672,
+        "isPass": true,
+        "strength": 46,
+        "intelligence": 41,
+        "governorIntelligence": 86
+      },
+      "rng": [
+        2718309495,
+        1484073449
+      ],
+      "output": {
+        "population": 991907,
+        "defense": 700,
+        "reportedPopulation": 0,
+        "reportedDefense": 28
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        2023884316,
+        1965680728
+      ]
+    },
+    {
+      "input": {
+        "population": 289598,
+        "defense": 203,
+        "isPass": false,
+        "strength": 102,
+        "intelligence": 38,
+        "governorIntelligence": 63
+      },
+      "rng": [
+        1604230493,
+        627061546
+      ],
+      "output": {
+        "population": 294473,
+        "defense": 250,
+        "reportedPopulation": 4875,
+        "reportedDefense": 47
+      },
+      "annualRevenue": 4421,
+      "rngAfter": [
+        1469835175,
+        2388001586
+      ]
+    },
+    {
+      "input": {
+        "population": 724082,
+        "defense": 672,
+        "isPass": false,
+        "strength": 53,
+        "intelligence": 47,
+        "governorIntelligence": 72
+      },
+      "rng": [
+        499645186,
+        1296876126
+      ],
+      "output": {
+        "population": 730710,
+        "defense": 700,
+        "reportedPopulation": 6628,
+        "reportedDefense": 28
+      },
+      "annualRevenue": 7680,
+      "rngAfter": [
+        3346661056,
+        815092563
+      ]
+    },
+    {
+      "input": {
+        "population": 525269,
+        "defense": 556,
+        "isPass": false,
+        "strength": 100,
+        "intelligence": 66,
+        "governorIntelligence": 4
+      },
+      "rng": [
+        1109585518,
+        3638523688
+      ],
+      "output": {
+        "population": 530539,
+        "defense": 579,
+        "reportedPopulation": 5270,
+        "reportedDefense": 23
+      },
+      "annualRevenue": 6189,
+      "rngAfter": [
+        874655463,
+        3841661918
+      ]
+    },
+    {
+      "input": {
+        "population": 859605,
+        "defense": 138,
+        "isPass": true,
+        "strength": 86,
+        "intelligence": 105,
+        "governorIntelligence": 117
+      },
+      "rng": [
+        899638436,
+        4237776904
+      ],
+      "output": {
+        "population": 859605,
+        "defense": 190,
+        "reportedPopulation": 0,
+        "reportedDefense": 52
+      },
+      "annualRevenue": 0,
+      "rngAfter": [
+        1799276874,
+        1071954624
+      ]
+    },
+    {
+      "input": {
+        "population": 391481,
+        "defense": 443,
+        "isPass": false,
+        "strength": 36,
+        "intelligence": 57,
+        "governorIntelligence": 31
+      },
+      "rng": [
+        2008694601,
+        3928363066
+      ],
+      "output": {
+        "population": 395838,
+        "defense": 454,
+        "reportedPopulation": 4357,
+        "reportedDefense": 11
+      },
+      "annualRevenue": 5186,
+      "rngAfter": [
+        1206472951,
+        2198764169
+      ]
+    },
+    {
+      "input": {
+        "population": 115352,
+        "defense": 846,
+        "isPass": false,
+        "strength": 55,
+        "intelligence": 87,
+        "governorIntelligence": 107
+      },
+      "rng": [
+        1536718080,
+        1714343324
+      ],
+      "output": {
+        "population": 127713,
+        "defense": 874,
+        "reportedPopulation": 12361,
+        "reportedDefense": 28
+      },
+      "annualRevenue": 3115,
+      "rngAfter": [
+        1458052416,
+        1986841393
+      ]
+    },
+    {
+      "input": {
+        "population": 945974,
+        "defense": 187,
+        "isPass": false,
+        "strength": 14,
+        "intelligence": 112,
+        "governorIntelligence": 54
+      },
+      "rng": [
+        552708871,
+        1426024639
+      ],
+      "output": {
+        "population": 958610,
+        "defense": 195,
+        "reportedPopulation": 12636,
+        "reportedDefense": 8
+      },
+      "annualRevenue": 9344,
+      "rngAfter": [
+        1091538264,
+        3744104371
+      ]
+    }
+  ]
+}

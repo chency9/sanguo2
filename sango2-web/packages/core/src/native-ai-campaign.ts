@@ -5,6 +5,7 @@ import type {ScenarioDefinition} from '@sango2/content';
 import type {Session,Command} from './index';
 import {allocateBattleTroops,nativeTroopCapacity} from './native-troops';
 import {initialOfficerCondition,initialConditionTimers,nativeRecoverCondition,type NativeConditionTimers} from './native-officer-condition';
+import {policyGovernorId} from './native-policy';
 import {nativeStrategyDecision,nativeOfficerReady,nativeCanDispatch,nativeShuffle,nativeBelow,nativeNextDecisionCountdown,
   type NativeRandomState,type NativeOfficerReadiness,type NativeStrategySnapshot,type NativeCandidate} from './native-strategic-ai';
 
@@ -66,7 +67,7 @@ export function nativeMarchPlan(s:Session,scene:ScenarioDefinition,owner:string,
   nativeShuffle(eligible,state.rng);
   // Web safety boundary for a joint plan invalidated by its first dispatched army.
   if(count>eligible.length)return null;
-  const selected=eligible.slice(0,count),governor=scene.cities.find(c=>c.id===from)!.governorId;
+  const selected=eligible.slice(0,count),governor=s.policy?policyGovernorId(s,scene,from):scene.cities.find(c=>c.id===from)!.governorId;
   const gov=selected.indexOf(governor??'');
   if(gov>=0)[selected[0],selected[gov]]=[selected[gov],selected[0]];
   else if(![3,9].includes(kind))for(let i=1;i<selected.length;i++) {

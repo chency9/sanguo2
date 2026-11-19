@@ -2,7 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {nativeRecoverCondition,nativeBattleFatigue,initialConditionTimers,initialOfficerCondition,type NativeOfficerCondition,type NativeConditionTimers} from './native-officer-condition';
 import {createBattle,commandBattle,tickBattle,battleGeneral,validateBattle,NATIVE_STRATEGIES} from './battle';
-import {createSession,dispatch,readSession,validateSession} from './index';
+import {createSession as createNativeSession,dispatch,readSession,validateSession} from './index';
 import {runNativeStrategicCallback} from './native-ai-campaign';
 import type {GameContent} from '@sango2/content';
 
@@ -105,3 +105,7 @@ describe('campaign condition persistence',()=>{
     expect(s.generals.p).toMatchObject({fatigue,morale:85,loyalty:77});expect(readSession(s,c)).toEqual(s);
   });
 });
+
+function createSession(...args:Parameters<typeof createNativeSession>) {
+  return dispatch(createNativeSession(...args),{type:"policy-finish"},args[0]);
+}
