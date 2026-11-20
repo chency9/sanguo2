@@ -173,6 +173,15 @@ export function strategicArmyPosition(scene: ScenarioDefinition, army: Army): [n
   return points.at(-1)??null;
 }
 
+/** The native type-0 strategic encounter queries the midpoint of the two
+ * object coordinates before looking up the seasonal map mask. Keep this
+ * calculation separate from collision policy because the executable's pair
+ * insertion threshold is still being reconstructed. */
+export function strategicEncounterPosition(scene: ScenarioDefinition, first: Army, second: Army): [number, number] | null {
+  const a=strategicArmyPosition(scene,first),b=strategicArmyPosition(scene,second);
+  return a&&b?[(a[0]+b[0])/2,(a[1]+b[1])/2]:null;
+}
+
 function ownCity(s: Session, id: string, actor=s.factionId) {
   const c = s.cities[id];
   if (!c || c.ownerId !== actor) throw new Error('只能在我方城池执行此命令。');
