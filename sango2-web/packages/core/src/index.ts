@@ -153,6 +153,26 @@ export function roadMidpointTerrainForDay(scene: ScenarioDefinition, roadId: str
   return terrain===undefined?null:terrain;
 }
 
+/** Project an in-transit army onto the original polyline. Strategic rules and
+ * the map renderer use the same distance fraction, so a later object-pair
+ * query cannot disagree with the position shown to the player. */
+export function strategicArmyPosition(scene: ScenarioDefinition, army: Army): [number, number] | null {
+  const road=scene.roads.find(r=>r.id===army.roadId);
+  if(!road||road.points.length<2||army.totalDays<=0)return null;
+  const points=road.from===army.from?road.points:[...road.points].reverse();
+  const lengths=points.slice(1).map((p,i)=>Math.hypot(p[0]-points[i][0],p[1]-points[i][1]));
+  let distance=lengths.reduce((a,b)=>a+b,0)*Math.max(0,Math.min(1,1-army.remainingDays/army.totalDays));
+  for(let i=0;i<lengths.length;i++) {
+    const length=lengths[i];
+    if(distance<=length||i===lengths.length-1) {
+      const ratio=length?Math.max(0,Math.min(1,distance/length)):1;
+      return [points[i][0]+(points[i+1][0]-points[i][0])*ratio,points[i][1]+(points[i+1][1]-points[i][1])*ratio];
+    }
+    distance-=length;
+  }
+  return points.at(-1)??null;
+}
+
 function ownCity(s: Session, id: string, actor=s.factionId) {
   const c = s.cities[id];
   if (!c || c.ownerId !== actor) throw new Error('只能在我方城池执行此命令。');

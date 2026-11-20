@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { GameContent } from '@sango2/content';
-import { createSession, dispatch, validateSession, readSession, battleSceneryForCity, roadMidpointTerrainForDay } from './index';
+import { createSession, dispatch, validateSession, readSession, battleSceneryForCity, roadMidpointTerrainForDay, strategicArmyPosition } from './index';
 
 // Small independent fixture: owned origin, friendly outpost, neutral city, enemy city.
 const content: GameContent = {
@@ -97,6 +97,12 @@ describe('strategic preview rules', () => {
     expect(roadMidpointTerrainForDay(scene, scene.roads[0].id, 90)).toBe(3);
     expect(roadMidpointTerrainForDay(scene, scene.roads[0].id, 360)).toBe(2);
     expect(roadMidpointTerrainForDay(scene, 'missing', 0)).toBeNull();
+  });
+  it('projects marching armies on the same polyline used by the map', () => {
+    const s=dispatch(fresh(),march(),content),army=s.armies[0];
+    expect(strategicArmyPosition(content.scenarios[0],army)).toEqual([0,100]);
+    const halfway=dispatch(s,{type:'advance',days:1},content),moved=halfway.armies[0];
+    expect(strategicArmyPosition(content.scenarios[0],moved)?.[0]).toBeCloseTo(33.333333,5);
   });
   it('returns surviving attackers after a loss', () => {
     const initial = fresh(); initial.cities.enemy.troops = 1000;

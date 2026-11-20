@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Application, Assets, Container, Graphics, Sprite, type Texture } from 'pixi.js';
 import type { ScenarioDefinition } from '@sango2/content';
-import type { Session } from '@sango2/core';
+import { strategicArmyPosition, type Session } from '@sango2/core';
 import { cityOwnership } from './city-ownership';
 import './map-ownership.css';
 
@@ -134,16 +134,8 @@ export function WorldMap(props: Props) {
         features.addChild(mark);
       }
       for (const army of session.armies) {
-        const road = scene.roads.find(r => r.id === army.roadId)!;
-        const points = road.from === army.from ? road.points : [...road.points].reverse();
-        const lengths = points.slice(1).map((p, i) => Math.hypot(p[0] - points[i][0], p[1] - points[i][1]));
-        let distance = lengths.reduce((a,b) => a+b, 0) * (1 - army.remainingDays / army.totalDays);
-        let x = points[0][0], y = points[0][1];
-        for (let i = 0; i < lengths.length; i++) {
-          const t = lengths[i] ? Math.min(1, distance / lengths[i]) : 1;
-          x = points[i][0] + (points[i+1][0]-points[i][0])*t; y = points[i][1] + (points[i+1][1]-points[i][1])*t;
-          if (distance <= lengths[i]) break; distance -= lengths[i];
-        }
+        const position=strategicArmyPosition(scene,army);if(!position)continue;
+        const [x,y]=position;
         const flag = new Graphics().moveTo(x, y+9).lineTo(x,y-16).stroke({ color: '#fff3c7', width: 3 }).poly([x,y-16,x+18,y-10,x,y-4]).fill(scene.factions.find(f=>f.id===army.ownerId)?.color??'#bd5546');
         features.addChild(flag);
         if(armyTexture){const sprite=new Sprite(armyTexture);sprite.anchor.set(.5,1);sprite.position.set(x,y+10);sprite.scale.set(.65);features.addChild(sprite);}
