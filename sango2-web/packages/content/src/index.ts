@@ -10,9 +10,13 @@ export interface CityDefinition {
   battleScenery?:{terrainId:number;variant:'a'|'b'};
   /** One source-backed scenery sample for each three-month season. */
   battleSceneryBySeason?:{terrainId:number;variant:'a'|'b'}[];
+  /** Native -MAPMODE override; default game behavior is random A/B selection. */
+  battleSceneryMode?:'random'|'a'|'b';
 }
 export interface RoadDefinition {
   id: string; from: string; to: string; length: number; points: [number, number][]; restricted: boolean;
+  /** Terrain sampled at the geometric midpoint for each native season mask. */
+  midpointTerrainBySeason?:number[];
 }
 export interface AttackTiming { hitTick: number; ticks: number }
 export interface SkillLearning { level:number; sequence:number }
@@ -75,9 +79,10 @@ export function validateContent(value: unknown): asserts value is GameContent {
     if(s.cities.some(c=>c.searchCategory!==undefined&&(!Number.isInteger(c.searchCategory)||c.searchCategory<1||c.searchCategory>5)))throw new Error('城池搜索类别无效。');
     if(s.cities.some(c=>c.battleScenery!==undefined&&(!Number.isInteger(c.battleScenery.terrainId)||c.battleScenery.terrainId<0||c.battleScenery.terrainId>11||!['a','b'].includes(c.battleScenery.variant))))throw new Error('城池战场景色资料无效。');
     if(s.cities.some(c=>c.battleSceneryBySeason!==undefined&&(!Array.isArray(c.battleSceneryBySeason)||c.battleSceneryBySeason.length!==4||c.battleSceneryBySeason.some(v=>!v||!Number.isInteger(v.terrainId)||v.terrainId<0||v.terrainId>11||!['a','b'].includes(v.variant)))))throw new Error('城池季节战场景色资料无效。');
+    if(s.cities.some(c=>c.battleSceneryMode!==undefined&&!['random','a','b'].includes(c.battleSceneryMode)))throw new Error('城池战场景色模式无效。');
     if(s.generals.some(g=>g.loyalFactionId!==undefined&&g.loyalFactionId!==null&&!s.factions.some(f=>f.id===g.loyalFactionId)))throw new Error('武将情义势力资料无效。');
     if(s.generals.some(g=>g.speed!==undefined&&(!Number.isInteger(g.speed)||g.speed < -32768||g.speed>32767)))throw new Error('武将速度资料无效。');
     if(s.generals.some(g=>g.forceMask!==undefined&&(!Number.isInteger(g.forceMask)||g.forceMask<0||g.forceMask>8191)))throw new Error('武将兵种资料无效。');
-    if (s.roads.some(r => !cities.has(r.from) || !cities.has(r.to) || !Number.isFinite(r.length) || r.points.length < 2)) throw new Error('道路资料无效。');
+    if (s.roads.some(r => !cities.has(r.from) || !cities.has(r.to) || !Number.isFinite(r.length) || r.points.length < 2 || (r.midpointTerrainBySeason!==undefined&&(!Array.isArray(r.midpointTerrainBySeason)||r.midpointTerrainBySeason.length!==4||r.midpointTerrainBySeason.some(t=>!Number.isInteger(t)||t<0||t>11))))) throw new Error('道路资料无效。');
   }
 }

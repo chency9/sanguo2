@@ -282,7 +282,7 @@ def main():
                 'governorId':general_id.get(c.get('MAJOR','')),'position':list(map(int,c['POS'].split())),
                 'money':number(c['MONEY']),'population':number(c['POPULATION']),'defense':number(c['DEFENSE']),
                 'nativeFlags':number(c.get('FLAGS','0')),'searchCategory':number(c.get('RATE'),3) if 1<=number(c.get('RATE'),3)<=5 else 3,
-                'battleScenery':battle_scenery,'battleSceneryBySeason':seasonal_scenery})
+                'battleScenery':battle_scenery,'battleSceneryBySeason':seasonal_scenery,'battleSceneryMode':'random'})
         for g in generals:
             city=next((c for c in cities if c['NAME']==g.get('CITY')),None)
             fields=general_entries[g['_line']]
@@ -304,10 +304,32 @@ def main():
                 'skillLearnset':learning_entries(fields,'SKILL'),'strategyLearnset':learning_entries(fields,'WISESKILL'),
                 'rawSkill':'\n'.join(v for k,v in fields if k=='SKILL'),
                 'rawStrategy':'\n'.join(v for k,v in fields if k=='WISESKILL'),'sourceLine':g['_line']})
+        def midpoint(points):
+            segments=[];total=0.0
+            for start,end in zip(points,points[1:]):
+                dx,dy=end[0]-start[0],end[1]-start[1];length=(dx*dx+dy*dy)**.5
+                segments.append((start,end,length));total+=length
+            if not total:return points[0]
+            remaining=total/2
+            for start,end,length in segments:
+                if remaining<=length:
+                    ratio=remaining/length if length else 0
+                    return (round(start[0]+(end[0]-start[0])*ratio),round(start[1]+(end[1]-start[1])*ratio))
+                remaining-=length
+            return points[-1]
+        def terrain_at(mask,x,y):
+            px,py=x//2,y//2
+            if not (0<=px<640 and 0<=py<480):raise ValueError('Road midpoint is outside the native terrain mask')
+            value=mask.getpixel((px,py))
+            return 5 if value==255 else int(value)
         for r in rows(records,'PATH'):
+            points=[list(map(int,p.split(','))) for p in r['POINT'].split()]
+            middle=midpoint(points)
+            midpoint_terrain=[terrain_at(mask,*middle) for mask in map_masks]
+            if any(t>11 for t in midpoint_terrain):raise ValueError(f'Road {r["_section"]} has an invalid terrain mask value')
             scene['roads'].append({'id':'r-'+r['_section'][4:],'from':city_id[r['START']],'to':city_id[r['END']],
-                'length':number(r['LENGTH']),'points':[list(map(int,p.split(','))) for p in r['POINT'].split()],
-                'restricted':number(r['LENGTH'])>=10000})
+                'length':number(r['LENGTH']),'points':points,'restricted':number(r['LENGTH'])>=10000,
+                'midpointTerrainBySeason':midpoint_terrain})
         assert len(scene['generals'])==401 and len(scene['cities'])==60 and len(scene['roads'])==116
         scenarios.append(scene)
     content={'version':1,'id':'sg2-105plus-20210916-pack-v1','sourceHash':digest,

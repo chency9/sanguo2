@@ -5,6 +5,7 @@ export * from './native-projection';
 export * from './battle-scene';
 export {battleScriptCameraLocked} from './battle-native-magic';
 import {type StrategicAction} from './strategic-ai';
+import {nativeBelow,type NativeRandomState} from './native-strategic-ai';
 import {createNativeCampaignAI,runNativeStrategicCallback,type NativeCampaignAI} from './native-ai-campaign';
 import {initialOfficerCondition,initialConditionTimers,type NativeOfficerCondition} from './native-officer-condition';
 import {nativeTroopCapacity,type TroopSlots} from './native-troops';
@@ -130,12 +131,26 @@ export function adjacentRoads(scene: ScenarioDefinition, cityId: string) {
  * season; locations without a recovered mapping intentionally keep the
  * historical castle fallback.
  */
-export function battleSceneryForCity(scene: ScenarioDefinition, cityId: string, day = 0): NonNullable<BattleState['scenery']> {
+export function battleSceneryForCity(scene: ScenarioDefinition, cityId: string, day = 0, rng?: NativeRandomState): NonNullable<BattleState['scenery']> {
   const city = scene.cities.find(c => c.id === cityId);
   const season = Math.floor((Math.max(0, day) % 360) / 90);
   const scenery = city?.battleSceneryBySeason?.[season] ?? city?.battleScenery;
-  if (scenery) return {terrainId: scenery.terrainId, variant: scenery.variant};
+  if (scenery) {
+    const mode=city?.battleSceneryMode;
+    const variant=mode==='a'?'a':mode==='b'?'b':mode==='random'&&rng?(nativeBelow(rng,2)===0?'a':'b'):scenery.variant;
+    return {terrainId: scenery.terrainId, variant};
+  }
   return {terrainId: 0, variant: 'a'};
+}
+
+/** Native map terrain at the middle of a road, retained for in-transit
+ * encounters and route rendering. The original queries the moving object's
+ * current coordinates; this helper exposes the verified midpoint sample until
+ * the strategic object pair loop is wired into the Web campaign. */
+export function roadMidpointTerrainForDay(scene: ScenarioDefinition, roadId: string, day = 0): number | null {
+  const road=scene.roads.find(r=>r.id===roadId),season=Math.floor((Math.max(0,day)%360)/90);
+  const terrain=road?.midpointTerrainBySeason?.[season];
+  return terrain===undefined?null:terrain;
 }
 
 function ownCity(s: Session, id: string, actor=s.factionId) {
@@ -186,13 +201,14 @@ function resolveRivalEncounter(s:Session,army:Army,scene:ScenarioDefinition):Enc
     defender=[{commander,troops:defending,withdrawn:false}];
   }
   const a=attacker.find(m=>!m.withdrawn)??attacker[0];
+  const scenery=battleSceneryForCity(scene,army.to,s.day,s.nativeAI?.rng);
   // Keep the two native RNG words in the session stream. `nativeAI` is always
   // present in new saves, while old preview saves are restored below.
   const rng:[number,number]=s.nativeAI?[...s.nativeAI.rng]:[s.rng,0x87654321];
   const d=chooseOpponentCommander(defender,rng)??defender[0];
   let b=createBattle({id:`auto-${army.id}`,armyId:army.id,cityId:army.to,attacker:a.commander,defender:d.commander,
     attackingTroops:a.troops,defendingTroops:d.troops,seed:s.rng,aiRng:rng,rosters:{attacker,defender},
-    scenery:battleSceneryForCity(scene,army.to,s.day)});
+    scenery});
   b.invasionSide='attacker';
   b.fortifications={attacker:0,defender:s.cities[army.to].defense};
   const advance=()=>{
@@ -293,9 +309,10 @@ function encounter(s:Session,army:Army,scene:ScenarioDefinition,items:readonly R
   // Tactical left/attacker slot is always the player. invasionSide records the strategic attacker.
   const defendingPlayer=army.ownerId!==s.factionId;
   const left=defendingPlayer?defenders:attackers,right=defendingPlayer?attackers:defenders;
+  const scenery=battleSceneryForCity(scene,army.to,s.day,s.nativeAI?.rng);
   const aiRng:[number,number]=s.nativeAI?[...s.nativeAI.rng]:[s.rng,0x87654321];
   const a=left.find(m=>!m.withdrawn)??left[0],d=chooseOpponentCommander(right,aiRng)??right[0];
-  s.battle=createBattle({id:`battle-${s.nextId++}`,armyId:army.id,cityId:army.to,attacker:a.commander,defender:d.commander,attackingTroops:a.troops,defendingTroops:d.troops,seed:s.rng,aiRng,rosters:{attacker:left,defender:right},scenery:battleSceneryForCity(scene,army.to,s.day)});
+  s.battle=createBattle({id:`battle-${s.nextId++}`,armyId:army.id,cityId:army.to,attacker:a.commander,defender:d.commander,attackingTroops:a.troops,defendingTroops:d.troops,seed:s.rng,aiRng,rosters:{attacker:left,defender:right},scenery});
   s.battle.invasionSide=defendingPlayer?'defender':'attacker';
   s.battle.fortifications={attacker:defendingPlayer?s.cities[army.to].defense:0,defender:defendingPlayer?0:s.cities[army.to].defense};
   note(s,`${defendingPlayer?'敌军来袭！':''}${scene.cities.find(c=>c.id===army.to)!.name}双方列阵，我军由${a.commander.name}出战。`,'march');

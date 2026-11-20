@@ -13,8 +13,10 @@ it('exports every terrain instance and repeated A/B layer from the source catalo
   expect(cities.find(c=>c.name==='洛陽')?.battleScenery).toEqual({terrainId:1,variant:'a'});
   expect(cities.find(c=>c.name==='易京')?.battleScenery).toEqual({terrainId:10,variant:'a'});
   expect(cities.every(c=>c.battleSceneryBySeason?.length===4)).toBe(true);
+  expect(cities.every(c=>c.battleSceneryMode==='random')).toBe(true);
   expect(cities.find(c=>c.name==='襄平')?.battleSceneryBySeason?.[0]).toEqual({terrainId:2,variant:'a'});
   expect(data.scenarios.every(s=>s.cities.every((c,i)=>c.battleScenery?.terrainId===data.scenarios[0].cities[i].battleScenery?.terrainId))).toBe(true);
+  expect(data.scenarios.every(s=>s.roads.every(r=>r.midpointTerrainBySeason?.length===4&&r.midpointTerrainBySeason.every(t=>t>=0&&t<12)))).toBe(true);
   for(const t of data.terrains) {
     for(const asset of [t.floor,...t.variants.flatMap(v=>[v.background,v.midground,v.foreground])]) {
       const bytes=readFileSync(resolve(root,asset));expect(bytes.subarray(1,4).toString()).toBe('PNG');

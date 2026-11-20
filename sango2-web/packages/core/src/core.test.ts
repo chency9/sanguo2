@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { GameContent } from '@sango2/content';
-import { createSession, dispatch, validateSession, readSession, battleSceneryForCity } from './index';
+import { createSession, dispatch, validateSession, readSession, battleSceneryForCity, roadMidpointTerrainForDay } from './index';
 
 // Small independent fixture: owned origin, friendly outpost, neutral city, enemy city.
 const content: GameContent = {
@@ -83,6 +83,20 @@ describe('strategic preview rules', () => {
     expect(battleSceneryForCity(scene, 'home', 90)).toEqual({terrainId: 2, variant: 'b'});
     expect(battleSceneryForCity(scene, 'home', 270)).toEqual({terrainId: 4, variant: 'b'});
     expect(battleSceneryForCity(scene, 'home', 360)).toEqual({terrainId: 1, variant: 'a'});
+    scene.cities[0].battleSceneryMode='random';
+    const rng:[number,number]=[184,0x87654321],before=[...rng];
+    expect(['a','b']).toContain(battleSceneryForCity(scene, 'home', 0, rng).variant);
+    expect(rng).not.toEqual(before);
+    scene.cities[0].battleSceneryMode='b';
+    expect(battleSceneryForCity(scene, 'home', 0, rng).variant).toBe('b');
+  });
+  it('exposes source-backed seasonal terrain at a road midpoint', () => {
+    const scene = structuredClone(content.scenarios[0]);
+    scene.roads[0].midpointTerrainBySeason = [2, 3, 4, 5];
+    expect(roadMidpointTerrainForDay(scene, scene.roads[0].id, 0)).toBe(2);
+    expect(roadMidpointTerrainForDay(scene, scene.roads[0].id, 90)).toBe(3);
+    expect(roadMidpointTerrainForDay(scene, scene.roads[0].id, 360)).toBe(2);
+    expect(roadMidpointTerrainForDay(scene, 'missing', 0)).toBeNull();
   });
   it('returns surviving attackers after a loss', () => {
     const initial = fresh(); initial.cities.enemy.troops = 1000;
