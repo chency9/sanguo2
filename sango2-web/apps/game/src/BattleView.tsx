@@ -202,7 +202,7 @@ export function BattleView(props:Props) {
       node.dataset.cssScale=String(scale/ratio);
       node.dataset.projection=nativeScene?'native-perspective-v1':'legacy';node.dataset.cameraX=String(viewCamera.x);node.dataset.cameraY=String(viewCamera.y);node.dataset.cameraZoom=String(camera.current.zoom);
       node.dataset.cameraOwner=battleScriptCameraLocked(b)?'script':'normal';
-      node.dataset.scriptCamera=b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'||b.activeScript?.kind==='native-reinforce'?JSON.stringify(b.activeScript.runtime.camera??null):'null';
+      node.dataset.scriptCamera=b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'||b.activeScript?.kind==='native-reinforce'||b.activeScript?.kind==='native-explode'?JSON.stringify(b.activeScript.runtime.camera??null):'null';
       const general=b.units.find(u=>u.side==='attacker'&&u.general)!,gp=unitPosition(general);
       node.dataset.generalScreen=JSON.stringify({x:(sceneX+gp.x*sceneScale)/ratio,y:(sceneY+gp.y*sceneScale)/ratio});
       node.dataset.scenery=sceneryKey;
@@ -225,10 +225,10 @@ export function BattleView(props:Props) {
       // IncreaseHP VM loop is exposed as one continuous `heal` phase while
       // `magicScriptAge` advances from the number of completed HP writes.
       node.dataset.magicScriptKind=b.activeScript?.kind??'idle';
-      node.dataset.magicScriptPhase=b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'||b.activeScript?.kind==='native-reinforce'?b.activeScript.runtime.phase:b.activeScript?.kind==='heal'?'heal':
+      node.dataset.magicScriptPhase=b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'||b.activeScript?.kind==='native-reinforce'||b.activeScript?.kind==='native-explode'?b.activeScript.runtime.phase:b.activeScript?.kind==='heal'?'heal':
         b.activeScript?.kind==='magic-projectile'||b.activeScript?.kind==='magic-area'||
         b.activeScript?.kind==='magic-reinforce'||b.activeScript?.kind==='magic-status'?b.activeScript.phase:'idle';
-      node.dataset.magicScriptAge=String(b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'||b.activeScript?.kind==='native-reinforce'?b.activeScript.runtime.age:b.activeScript?.kind==='heal'?Math.max(0,b.activeScript.nextPoint-1):
+      node.dataset.magicScriptAge=String(b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'||b.activeScript?.kind==='native-reinforce'||b.activeScript?.kind==='native-explode'?b.activeScript.runtime.age:b.activeScript?.kind==='heal'?Math.max(0,b.activeScript.nextPoint-1):
         b.activeScript?.kind==='magic-projectile'||b.activeScript?.kind==='magic-area'||
         b.activeScript?.kind==='magic-reinforce'||b.activeScript?.kind==='magic-status'?b.activeScript.age:0);
       node.dataset.specialAttacks=String(b.units.filter(u=>u.hp>0&&u.action==='attack'&&u.movement?.clock?.special).length);
@@ -238,7 +238,9 @@ export function BattleView(props:Props) {
       node.dataset.reinforceUnits=String(b.units.filter(u=>u.reinforceHandle!==undefined&&u.hp>0).length);
       node.dataset.reinforceFading=String(b.units.filter(u=>u.reinforceHandle!==undefined&&u.hp>0&&(u.reinforceAlpha??16)<16).length);
       const sourceScript=b.activeScript;
-      const shade=sourceScript?.kind==='native-shoot'||sourceScript?.kind==='native-heal'||sourceScript?.kind==='native-reinforce'?sourceScript.runtime:undefined;
+      const shade=sourceScript?.kind==='native-shoot'||sourceScript?.kind==='native-heal'||sourceScript?.kind==='native-reinforce'||sourceScript?.kind==='native-explode'?sourceScript.runtime:undefined;
+      node.dataset.explodeObjects=sourceScript?.kind==='native-explode'?JSON.stringify(sourceScript.runtime.objects.filter(o=>o.alive).map(o=>({id:o.handle,object:o.object,x:o.x,y:o.y,z:o.z,frame:o.frame,fade:o.fade,scaleX:o.scaleX,scaleY:o.scaleY}))):'[]';
+      node.dataset.explodeHitDivisor=String(sourceScript?.kind==='native-explode'?sourceScript.runtime.hitDivisor:0);
       node.dataset.sceneBrightness=String(shade?.brightness??16);node.dataset.scenePalette=String(shade?.palette??16);
       // Ordered by foot position so rear ranks never paint over the front incorrectly.
       ctx.save();if(nativeScene){ctx.beginPath();ctx.rect(left,sceneBounds.top,right-left,sceneBounds.bottom-sceneBounds.top);ctx.clip();}
@@ -369,7 +371,7 @@ export function BattleView(props:Props) {
         else {const r=7*to.scale;ctx.moveTo(to.x-r,to.y-r);ctx.lineTo(to.x+r,to.y+r);ctx.moveTo(to.x+r,to.y-r);ctx.lineTo(to.x-r,to.y+r);}
         ctx.stroke();
       }
-      if(magic?.kind==='native-shoot'||magic?.kind==='native-heal'||magic?.kind==='native-reinforce') {
+      if(magic?.kind==='native-shoot'||magic?.kind==='native-heal'||magic?.kind==='native-reinforce'||magic?.kind==='native-explode') {
         const s=magic.runtime;
         // The source script exposes both screen brightness and palette shade.
         // Canvas composes their scene shade here; OF_WHITELIGHT child artwork
@@ -383,6 +385,15 @@ export function BattleView(props:Props) {
           ctx.save();ctx.translate(p.x,p.y);ctx.scale(nativeSpriteFacing(o.facing*65536)*scale*o.scaleX/65536,scale*o.scaleY/65536);
           ctx.globalAlpha=Math.trunc(o.fade)/16;ctx.globalCompositeOperation='screen';
           drawSourceFrame(animation.frames[o.frame%animation.frames.length].key);ctx.restore();
+        }
+        if(magic.kind==='native-explode')for(const o of [...magic.runtime.objects].filter(o=>o.alive).sort((a,c)=>nativeDepth(a.y)-nativeDepth(c.y)||a.handle-c.handle)) {
+          if(o.fade<1||!o.scaleX||!o.scaleY)continue;
+          const p=project(o),scale=spriteScale(o.object,p),source=atlas.objects[o.object];
+          if(!source?.actions.wait)continue;
+          ctx.save();ctx.translate(p.x,p.y);ctx.scale(nativeSpriteFacing(o.facing*65536)*scale*o.scaleX/65536,scale*o.scaleY/65536);
+          ctx.globalAlpha=Math.max(0,Math.min(16,o.fade))/16;
+          if(source.whiteLight)ctx.globalCompositeOperation='screen';
+          frame(o.object,'wait',o.frame);ctx.restore();
         }
         const w=magic.kind==='native-shoot'?magic.runtime.weapon:undefined;
         if(w?.alive&&magic.kind==='native-shoot') {
@@ -428,7 +439,10 @@ export function BattleView(props:Props) {
         // All four ShootObject wrappers share these small source resources.
         // Decode them before combat so a cast never advances while art loads.
         const magicObjects=[...(latest.current.battle.magicRules?[13001,13002,13003,13004,13005,13006,13007]:[]),
-          ...(latest.current.battle.healRules?[26001,26002,26004,26005]:[])];
+          ...(latest.current.battle.healRules?[26001,26002,26004,26005]:[]),
+          // Preload every original ExplodeRound resource before the first
+          // source update, including the on-hit burning soldier animation.
+          ...(latest.current.battle.movementRules==='native-grid-v3'?[18002,18003,18004,10016]:[])];
         for(const id of magicObjects) {
           const object=atlas.objects[id];if(!object)throw new Error(`缺少武将技动画 ${id}`);
           for(const animation of Object.values(object.actions))for(const f of animation.frames)pages.add(atlas.frames[f.key].page);

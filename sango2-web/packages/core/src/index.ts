@@ -19,6 +19,7 @@ export {domesticSearchMessage} from './native-policy-actions';
 export {previewPlayerItem} from './native-player-items';
 export {allocateBattleTroops,nativeTransferTroops,nativeAutofillTroops,nativeReserveCapacity} from './native-troops';
 export {nativeReinforceDefinition,nativeCreateMagicReinforce,nativeAdvanceMagicReinforce} from './native-magic-reinforce';
+export {nativeExplodeDefinition,nativeCreateMagicExplode,nativeAdvanceMagicExplode} from './native-magic-explode';
 export type {AutonomyMode} from './native-policy-search';
 
 // Explicit prototype rules. These numbers are not a reconstruction of the 1.05+ executable.

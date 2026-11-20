@@ -6,19 +6,26 @@ import {nativeCreateLockCamera,nativeAdvanceMagicCamera} from './native-magic-ca
 import {nativeAdvanceMagicHeal,validateNativeMagicHeal} from './native-magic-heal';
 import {nativeReinforceDefinition,validateNativeMagicReinforce} from './native-magic-reinforce';
 import {advanceBattleReinforce} from './battle-reinforce';
+import {advanceBattleExplode} from './battle-explode';
+import {nativeExplodeDefinition,validateNativeMagicExplode} from './native-magic-explode';
 
 /** 0x43BA59/0x441E61: normal camera management yields to spell scripts. */
 export function battleScriptCameraLocked(b:BattleState):boolean {
-  return b.cameraRules==='native-script-v1'&&(b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'||b.activeScript?.kind==='native-reinforce');
+  const script=b.activeScript;
+  return b.cameraRules==='native-script-v1'&&(script?.kind==='native-shoot'||script?.kind==='native-heal'||script?.kind==='native-reinforce'||script?.kind==='native-explode'&&(script.runtime.cameraReleased!==true));
 }
 
 export function battleMagicLocked(b:BattleState,u:BattleUnit):boolean {
   const s=b.activeScript;
-  return (s?.kind==='native-shoot'||s?.kind==='native-heal'||s?.kind==='native-reinforce')&&s.casterId===u.id&&s.runtime.casterLocked;
+  return (s?.kind==='native-shoot'||s?.kind==='native-heal'||s?.kind==='native-reinforce'||s?.kind==='native-explode')&&s.casterId===u.id&&s.runtime.casterLocked;
 }
 /** One source update, next to the unit clock. The original mixed object list,
  * child visual coroutines and their RNG interleaving are still separate work. */
 export function advanceBattleNativeMagic(b:BattleState,death:(target:BattleUnit,caster:BattleUnit)=>void):void {
+  if(b.activeScript?.kind==='native-explode') {
+    advanceBattleExplode(b,death,unit=>battleMagicLocked(b,unit));
+    return;
+  }
   if(b.activeScript?.kind==='native-reinforce') {
     advanceBattleReinforce(b);
     return;
@@ -77,6 +84,12 @@ export function validateBattleNativeMagic(b:BattleState,fail:()=>never):void {
   if(b.cameraRules!==undefined&&(b.cameraRules!=='native-script-v1'||b.movementRules!=='native-grid-v3'))fail();
   if(b.healRules!==undefined&&(b.healRules!=='native-heal-v1'||b.movementRules!=='native-grid-v3'))fail();
   if(b.reinforceRules!==undefined&&(b.reinforceRules!=='native-reinforce-v1'||b.movementRules!=='native-grid-v3'))fail();
+  if(b.explodeRules!==undefined&&(b.explodeRules!=='native-explode-v1'||b.movementRules!=='native-grid-v3'))fail();
+  if(b.activeScript?.kind==='native-explode') {
+    const script=b.activeScript,definition=nativeExplodeDefinition(script.magic),caster=b.units.find(u=>u.id===script.casterId);
+    if(!b.explodeRules||!definition||!caster?.general||caster.side!==script.side||script.runtime.script!==definition.script||script.runtime.sequence!==script.magic||script.runtime.sideFlag!==(script.side==='attacker'?1:0)||script.damage!==nativeMagicDefinition(script.magic)?.attack||script.runtime.age>b.tick*3)fail();
+    validateNativeMagicExplode(script.runtime,fail);return;
+  }
   if(b.activeScript?.kind==='native-reinforce') {
     const script=b.activeScript,definition=nativeReinforceDefinition(script.magic),caster=b.units.find(u=>u.id===script.casterId);
     if(!b.reinforceRules||!definition||script.magic!==definition.sequence||!['attacker','defender'].includes(script.side)||!caster?.general||caster.side!==script.side||script.runtime.sideFlag!==(script.side==='attacker'?1:0)||script.runtime.script!==definition.script||script.runtime.sequence!==script.magic||script.runtime.age>b.tick*3)fail();

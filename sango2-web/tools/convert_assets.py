@@ -152,26 +152,29 @@ def main():
     # Keep source animation frame order, # durations and OM_ATTACK timing for later calibration.
     objects=rows(ini('THINGS.INI'),'OBJECT')
     animations={}; frame_images={}; actions=['WAIT','WALK','ATTACK','DEATH','SPELL1'];attack_rules={}
-    ids=[10]+list(range(26001,26007))+list(range(13001,13012))+list(range(500,504))+list(range(180,186))+list(range(190,196))+list(range(100,113))+list(range(120,133))+list(range(140,153))+list(range(160,173))+list(range(600,660))+list(range(800,860))+list(range(700,768))+list(range(900,908))
+    ids=[10,10016,18002,18003,18004]+list(range(26001,26007))+list(range(13001,13012))+list(range(500,504))+list(range(180,186))+list(range(190,196))+list(range(100,113))+list(range(120,133))+list(range(140,153))+list(range(160,173))+list(range(600,660))+list(range(800,860))+list(range(700,768))+list(range(900,908))
     for obj in objects:
         if number(obj.get('SEQUENCE')) not in ids:continue
         anim={}
         for action in actions:
-            frames=[]; duration=6; elapsed=0; hit=None
+            frames=[]; duration=6; elapsed=0; hit=None; remove=None
             for token in obj.get(action,'').split(','):
                 token=token.strip().upper()
                 if token.startswith('#'):
                     duration=number(token[1:],6)
-                    if not (13001<=number(obj['SEQUENCE'])<=13011 or 26001<=number(obj['SEQUENCE'])<=26006):duration=min(128,duration)
+                    if not (13001<=number(obj['SEQUENCE'])<=13011 or 26001<=number(obj['SEQUENCE'])<=26006 or number(obj['SEQUENCE']) in [10016,18002,18003,18004]):duration=min(128,duration)
                     continue
                 if token=='@%OM_ATTACK':hit=elapsed;continue
+                if token=='@%OM_REMOVE':remove=elapsed;continue
                 if not re.fullmatch(r'[A-Z][A-Z0-9]{5,}',token) or token in ['SCROVER','NULSHAPE']:continue
                 name='SHAPE'+obj['DIRECTORY'].rstrip('\\')+'\\'+token+'.SHP'
                 name=name.upper()
                 if name not in entries:raise ValueError(f'Animation frame missing: {name}')
                 if name not in frame_images:frame_images[name]=shp_image(read(name))
                 frames.append({'key':name,'ticks':duration});elapsed+=duration
-            if frames:anim[action.lower()]={'frames':frames,'ticks':elapsed,'hitTick':hit}
+            if frames:
+                anim[action.lower()]={'frames':frames,'ticks':elapsed,'hitTick':hit}
+                if remove is not None:anim[action.lower()]['removeTick']=remove
         for source_action,key in [('ATTACK','sourceAttack')]+([('WIN','specialAttack')] if 100<=number(obj['SEQUENCE'])<180 else []):
             frames=attack_frames(obj.get(source_action,''),obj['DIRECTORY'])
             if not frames:continue

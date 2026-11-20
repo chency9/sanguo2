@@ -48,6 +48,14 @@
 </details>
 
 <details>
+<summary><b>查看虎咆系点碰撞效果</b></summary>
+<br>
+<p>虎咆、虎咆震、虎咆陽炎已接入原 ExplodeRound 主协程与回调 VM：逐对象占格碰撞、递减伤害、主将锁、士兵死亡事件和火焰附着都保留原边界。</p>
+
+[查看虎咆系原码证据与剩余差距](sango2-web/docs/NATIVE-EXPLODE-PARITY-2026-11-20.md)
+</details>
+
+<details>
 <summary><b>查看伏兵组阵的实时补兵效果</b></summary>
 <br>
 <img src="sango2-web/docs/screenshots/native-reinforce-1440.png" alt="伏兵组阵：原版脚本镜头锁定、补兵对象逐步显现与全屏战场 HUD" width="100%">
@@ -169,11 +177,11 @@ pnpm dev
 | 年度内政 | 独立议政、开发/搜索、归附成长、四种自治、物品库、太守、预备池双向配兵、点击逐兵补满、切将与关闭收尾、报告、年度税收与存档；电脑年度经营/经验处理/换装；玩家道具、换装、卸随身物品、兵阵学习和主动兵种选择 | 战后累计经验输入、特殊坐骑、原兵种/物品窗口布局与开放时机、原补兵更新频率与全部窗口连续流程、历史事件、原系统对白与菜单逐像素对照 |
 | 战略与战术 AI | 原版候选、权重、性格、双字 RNG、冷却、出阵、阵形、战术与选技函数 | 完整状态与调用顺序、连续战役回放；电脑双方交战仍有暂定自动结算 |
 | 实时战斗 | 13 兵种、九阵、五分队军令、移动占格、普攻伤害、攻击命中帧、普通远程弹道、死亡与轮战；逐源集气/恢复、撤退扣气与坐骑速度 | 原混合对象链的完整调度、部分主将状态及非攻击动作；完整装备与成长 |
-| 武将技与军师技 | 学习表、集气、部分军师效果；4 个飞射技能接原主流程及镜头；命疗术、回天术接 Heal 全部子协程、等待、回血和脚本 RNG；7 个增兵技对照原脚本全事件、兵员槽位/死亡复用/战后截断；暗场、镜头与显现状态可保存恢复 | 97 个技能仍走暂定执行器；已接原脚本的 13 个仍有全局对象顺序、视觉或音效缺口 |
+| 武将技与军师技 | 学习表、集气、部分军师效果；4 个飞射技能接原主流程及镜头；命疗术、回天术接 Heal 全部子协程；7 个增兵技对照原脚本全事件、兵员槽位/死亡复用/战后截断；3 个虎咆系技能接 ExplodeRound 主协程、点碰撞、回调 VM 与伤害边界 | 94 个技能仍走暂定执行器；已接原脚本的 16 个仍有全局对象顺序、视觉或音效缺口 |
 | 画面与操作 | 原素材面板、人物与坐骑；12 地形、24 组景色；原透视表、全屏、镜头与移动端适配 | DirectDraw 调色板逐像素对照、全部菜单与布局、战役地形自动匹配 |
 | 存档 | 三槽位、JSON、战中状态、旧 Web 存档迁移与规则版本兼容 | 原版 SAV、自动保存、云存档与离线安装 |
 
-最新补齐[七个增兵技能的原脚本、兵员槽位与战后结算](sango2-web/docs/NATIVE-REINFORCE-PARITY-2026-11-20.md)，此前补入[点击逐兵补满及切将/关闭收尾](sango2-web/docs/TROOP-AUTOFILL-2026-11-19.md)，此前补入[双向调兵、目标人数与补满，328组原机器码样本](sango2-web/docs/TROOP-TRANSFER-2026-11-19.md)，此前恢复[原兵种选择事件与配兵入口，208组原机器码样本](sango2-web/docs/TROOP-SELECTION-2026-11-19.md)；前序补入[电脑年度内政、普通升级与装备属性](sango2-web/docs/NATIVE-POLICY-ANNUAL-PARITY-2026-11-19.md)，前序恢复[搜索、登用成长、库存与四种自治](sango2-web/docs/NATIVE-POLICY-SEARCH-PARITY-2026-11-19.md)，前序恢复[年度内政基础流程](sango2-web/docs/NATIVE-POLICY-PARITY-2026-11-19.md)，并建立[全系统漏项总账](sango2-web/docs/FULL-PARITY-BACKLOG.md)及[原内容逐项清单](sango2-web/docs/PARITY-CONTENT-INVENTORY.md)。前序补齐命疗术、回天术的原 Heal 与全部后代协程：30 个环绕光球、80 个随机光球、追踪光柱、逐点回血、施法等待和镜头。详见 [治疗规则与证据](sango2-web/docs/NATIVE-HEAL-PARITY-2026-11-19.md)。前序还原包括 [主将源更新、装备速度与飞行技能镜头](sango2-web/docs/NATIVE-GENERAL-CAMERA-PARITY-2026-11-19.md)；[当前完整差距表](sango2-web/docs/PARITY-STATUS-2026-11-19.md) 和 [110 技能逐项清单](sango2-web/docs/MAGIC-COVERAGE-2026-11-19.md) 按实际执行路径记录进度。
+最新补齐[虎咆系 ExplodeRound、点碰撞与回调 VM](sango2-web/docs/NATIVE-EXPLODE-PARITY-2026-11-20.md)和[七个增兵技能的原脚本、兵员槽位与战后结算](sango2-web/docs/NATIVE-REINFORCE-PARITY-2026-11-20.md)，此前补入[点击逐兵补满及切将/关闭收尾](sango2-web/docs/TROOP-AUTOFILL-2026-11-19.md)，此前补入[双向调兵、目标人数与补满，328组原机器码样本](sango2-web/docs/TROOP-TRANSFER-2026-11-19.md)，此前恢复[原兵种选择事件与配兵入口，208组原机器码样本](sango2-web/docs/TROOP-SELECTION-2026-11-19.md)；前序补入[电脑年度内政、普通升级与装备属性](sango2-web/docs/NATIVE-POLICY-ANNUAL-PARITY-2026-11-19.md)，前序恢复[搜索、登用成长、库存与四种自治](sango2-web/docs/NATIVE-POLICY-SEARCH-PARITY-2026-11-19.md)，前序恢复[年度内政基础流程](sango2-web/docs/NATIVE-POLICY-PARITY-2026-11-19.md)，并建立[全系统漏项总账](sango2-web/docs/FULL-PARITY-BACKLOG.md)及[原内容逐项清单](sango2-web/docs/PARITY-CONTENT-INVENTORY.md)。前序补齐命疗术、回天术的原 Heal 与全部后代协程：30 个环绕光球、80 个随机光球、追踪光柱、逐点回血、施法等待和镜头。详见 [治疗规则与证据](sango2-web/docs/NATIVE-HEAL-PARITY-2026-11-19.md)。前序还原包括 [主将源更新、装备速度与飞行技能镜头](sango2-web/docs/NATIVE-GENERAL-CAMERA-PARITY-2026-11-19.md)；[当前完整差距表](sango2-web/docs/PARITY-STATUS-2026-11-19.md) 和 [110 技能逐项清单](sango2-web/docs/MAGIC-COVERAGE-2026-11-19.md) 按实际执行路径记录进度。
 
 ## 技术实现
 
@@ -216,7 +224,7 @@ pnpm build
 pnpm preview
 ```
 
-2026-11-20 本地验证结果：**49 个核心测试文件、16,249 项测试通过；72 个 Chromium 场景通过；6 项 Python 测试通过；类型检查与生产构建通过。**
+2026-11-20 本地验证结果：**52 个核心测试文件、16,770 项测试通过；76 个 Chromium 场景通过；6 项 Python 测试通过；类型检查与生产构建通过。**
 
 增兵技本轮完成168组原脚本全事件对照，并新增632组分配、2组死亡复用、56组结算的机器码对照，690组宿主样本均与真实Web战场接线比较。浏览器验证满兵施法、真实出征补兵、暗场与镜头、淡入中保存/刷新/读取及最后完全显现；连续补兵和尸体保留时不再重算初始阵形，避免战场崩溃。[增兵原码证据和实际边界](sango2-web/docs/NATIVE-REINFORCE-PARITY-2026-11-20.md)。
 
@@ -234,6 +242,7 @@ pnpm preview
 | 战斗规则 | [普攻与强化](sango2-web/docs/NATIVE-COMBAT-PARITY-2026-11-17.md) · [单位时钟](sango2-web/docs/NATIVE-UNIT-CLOCK-PARITY-2026-11-17.md) · [分队与军令](sango2-web/docs/NATIVE-COMMAND-PARITY-2026-11-18.md) |
 | 战场呈现 | [原透视与镜头](sango2-web/docs/NATIVE-PROJECTION-CAMERA-PARITY-2026-11-18.md) · [渲染审查](sango2-web/docs/BATTLE-RENDER-AUDIT-2026-11-19.md) |
 | 增兵脚本与兵槽 | [伏兵、后伏、死亡复用及战后结算](sango2-web/docs/NATIVE-REINFORCE-PARITY-2026-11-20.md) |
+| 虎咆系武将技 | [ExplodeRound、点碰撞、回调与伤害边界](sango2-web/docs/NATIVE-EXPLODE-PARITY-2026-11-20.md) |
 | 最新源更新与镜头 | [主将、装备速度与技能镜头](sango2-web/docs/NATIVE-GENERAL-CAMERA-PARITY-2026-11-19.md) · [飞行技能主脚本与碰撞](sango2-web/docs/NATIVE-MAGIC-SHOOT-PARITY-2026-11-19.md) |
 | 完整差距核查 | [2026-11-20 复核报告](sango2-web/docs/PARITY-AUDIT-2026-11-20.md) · [110 个技能逐项覆盖](sango2-web/docs/MAGIC-COVERAGE-2026-11-19.md) |
 

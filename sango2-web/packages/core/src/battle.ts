@@ -23,6 +23,7 @@ import type {NativeWorldPoint} from './native-projection';
 import {nativeCreateMagicShoot,nativeShootDefinition,type NativeMagicShoot} from './native-magic-shoot';
 import {nativeCreateMagicHeal,type NativeMagicHeal} from './native-magic-heal';
 import {nativeCreateMagicReinforce,nativeReinforceDefinition,type NativeMagicReinforce} from './native-magic-reinforce';
+import {nativeCreateMagicExplode,nativeExplodeDefinition,type NativeMagicExplode} from './native-magic-explode';
 import {advanceBattleNativeMagic,battleMagicLocked,validateBattleNativeMagic} from './battle-native-magic';
 import {advanceBattleGeneral} from './battle-general-tick';
 export {NATIVE_COMMAND_LABELS} from './native-commands';
@@ -102,6 +103,7 @@ export interface BattleState {
   activeScript?:
     | {kind:'native-heal';side:BattleSide;casterId:number;magic:number;runtime:NativeMagicHeal}
     | {kind:'native-reinforce';side:BattleSide;casterId:number;magic:number;runtime:NativeMagicReinforce}
+    | {kind:'native-explode';side:BattleSide;casterId:number;magic:number;damage:number;runtime:NativeMagicExplode}
     | {kind:'native-shoot';side:BattleSide;casterId:number;targetId:number;magic:number;script:number;damage:number;runtime:NativeMagicShoot}
     | {kind:'heal'; side:BattleSide; targetId:number; initialHp:number; nextPoint:number; amount:number; wait:number; magic:NativeMagic['sequence']}
     | {kind:'magic-projectile'; side:BattleSide; casterId:number; targetId:number; magic:NativeMagic['sequence']; script:number; damage:number; phase:'windup'|'flight'|'impact'; phaseAge:number; duration:number; fromX:number; fromY:number; toX:number; toY:number; x:number; y:number; z:number; age:number; hit:boolean}
@@ -129,6 +131,8 @@ export interface BattleState {
   healRules?:'native-heal-v1';
   /** New battles use the original MoreSoldier/BackSoldier coroutine boundary. */
   reinforceRules?:'native-reinforce-v1';
+  /** Source ExplodeRound objects replace the earlier generic area pulse. */
+  explodeRules?:'native-explode-v1';
   cameraRules?:'native-script-v1';
   /** Existing saves retain grouped growth and their old retreat gauge. */
   generalRules?:'native-source-v1';
@@ -227,6 +231,12 @@ function castSkill(b:BattleState,sequence:number,side:BattleSide) {
     b.activeScript={kind:'magic-projectile',side,casterId:target.id,targetId:enemy.id,magic:magic.sequence,script:magic.script,damage:magic.attack,
       phase:'windup',phaseAge:0,duration:12,fromX,fromY,toX,toY,x:fromX,y:fromY,z:0,age:0,hit:false};
     b.log.unshift(`${caster.name}施展${magic.name}，金色箭光锁定敌方主将。`);
+  } else if(b.movementRules==='native-grid-v3'&&nativeExplodeDefinition(magic.script)) {
+    prepareBattleMovement(b);const m=target.movement!;
+    b.explodeRules='native-explode-v1';
+    b.activeScript={kind:'native-explode',side,casterId:target.id,magic:sequence,damage:magic.attack,
+      runtime:nativeCreateMagicExplode(magic.script,{x:m.px,y:m.py,z:0},side==='attacker'?1:0)};
+    b.log.unshift(`${caster.name}施展${magic.name}！`);
   } else if(magic.effectType==='reinforce'&&b.movementRules==='native-grid-v3'&&nativeReinforceDefinition(magic.script)) {
     // Keep the feature flag absent on old snapshots. It is promoted only when
     // the first native MoreSoldier/BackSoldier coroutine is actually cast.
@@ -552,7 +562,7 @@ function finish(b:BattleState,winner:BattleSide,reason:string) {
 function advanceNativeScript(b:BattleState,nativeSteps:number) {
   for(let i=0;i<nativeSteps&&b.activeScript;i++) {
     const script=b.activeScript;
-    if(script.kind==='native-shoot'||script.kind==='native-heal'||script.kind==='native-reinforce')break; // Runs on the source unit clock.
+    if(script.kind==='native-shoot'||script.kind==='native-heal'||script.kind==='native-reinforce'||script.kind==='native-explode')break; // Runs on the source unit clock.
     if(script.kind==='magic-projectile') {
       script.age++;script.phaseAge++;
       const target=b.units.find(u=>u.id===script.targetId&&u.general&&u.side===opposite(script.side));
@@ -907,7 +917,7 @@ export function validateBattle(value:unknown):asserts value is BattleState {
   validateBattleNativeMagic(b,fail);
   if(b.activeScript!==undefined) {
     const x=b.activeScript;
-    if(x.kind==='native-shoot'||x.kind==='native-heal'||x.kind==='native-reinforce') {
+    if(x.kind==='native-shoot'||x.kind==='native-heal'||x.kind==='native-reinforce'||x.kind==='native-explode') {
       // Full native coroutine/weapon validation lives with its adapter.
     } else if(x.kind==='heal') {
       if(!['attacker','defender'].includes(x.side)||!integer(x.targetId,b.nextId-1)||!integer(x.initialHp,10000)||!integer(x.nextPoint,10000)||!integer(x.amount,10000)||!integer(x.wait,100)||!integer(x.magic,100))return fail();
