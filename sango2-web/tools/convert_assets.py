@@ -153,7 +153,8 @@ def main():
     # The native map selector samples the four seasonal CHINAMAP*.MSK masks
     # with the strategic coordinate divided by two (0x44FD1B).  Keep the
     # decoded masks in the conversion step so each city receives its actual
-    # TERRAIN sequence instead of a name/flag heuristic.
+    # TERRAIN sequence instead of a name/flag heuristic.  Runtime maps
+    # months 1-3, 4-6, 7-9 and 10-12 to these four entries respectively.
     map_masks=[]
     for map_index in range(1,5):
         mask=Image.open(io.BytesIO(read(f'SHAPE\\MAP\\CHINAMAP{map_index}.MSK')))
@@ -270,14 +271,18 @@ def main():
                 'aiType':number(f.get('TYPE','2')),'flagNumber':number(f.get('FLAGNUM','0'))})
         for c in cities:
             px,py=(number(v)//2 for v in c['POS'].split())
-            terrain_id=map_masks[0].getpixel((px,py)) if 0<=px<640 and 0<=py<480 else 255
-            if terrain_id>11:raise ValueError(f'City {c["NAME"]} is outside the native terrain mask')
-            battle_scenery={'terrainId':int(terrain_id),'variant':'a'}
+            if not (0<=px<640 and 0<=py<480):raise ValueError(f'City {c["NAME"]} is outside the native terrain mask')
+            seasonal_scenery=[]
+            for mask in map_masks:
+                terrain_id=mask.getpixel((px,py))
+                if terrain_id>11:raise ValueError(f'City {c["NAME"]} is outside the native terrain mask')
+                seasonal_scenery.append({'terrainId':int(terrain_id),'variant':'a'})
+            battle_scenery=seasonal_scenery[0]
             scene['cities'].append({'id':city_id[c['NAME']],'name':c['NAME'],'ownerId':faction(c.get('KING','')),
                 'governorId':general_id.get(c.get('MAJOR','')),'position':list(map(int,c['POS'].split())),
                 'money':number(c['MONEY']),'population':number(c['POPULATION']),'defense':number(c['DEFENSE']),
                 'nativeFlags':number(c.get('FLAGS','0')),'searchCategory':number(c.get('RATE'),3) if 1<=number(c.get('RATE'),3)<=5 else 3,
-                **({'battleScenery':battle_scenery} if battle_scenery else {})})
+                'battleScenery':battle_scenery,'battleSceneryBySeason':seasonal_scenery})
         for g in generals:
             city=next((c for c in cities if c['NAME']==g.get('CITY')),None)
             fields=general_entries[g['_line']]

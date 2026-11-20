@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { GameContent } from '@sango2/content';
-import { createSession, dispatch, validateSession, readSession } from './index';
+import { createSession, dispatch, validateSession, readSession, battleSceneryForCity } from './index';
 
 // Small independent fixture: owned origin, friendly outpost, neutral city, enemy city.
 const content: GameContent = {
@@ -71,6 +71,18 @@ describe('strategic preview rules', () => {
     expect(s.battle?.scenery).toEqual({terrainId: 10, variant: 'a'});
     expect(s.battle?.cityId).toBe('enemy');
     expect(() => validateSession(s, pack)).not.toThrow();
+  });
+  it('selects the native three-month scenery mask by campaign day', () => {
+    const scene = structuredClone(content.scenarios[0]);
+    scene.cities[0].battleSceneryBySeason = [
+      {terrainId: 1, variant: 'a'}, {terrainId: 2, variant: 'b'},
+      {terrainId: 3, variant: 'a'}, {terrainId: 4, variant: 'b'},
+    ];
+    expect(battleSceneryForCity(scene, 'home', 0)).toEqual({terrainId: 1, variant: 'a'});
+    expect(battleSceneryForCity(scene, 'home', 89)).toEqual({terrainId: 1, variant: 'a'});
+    expect(battleSceneryForCity(scene, 'home', 90)).toEqual({terrainId: 2, variant: 'b'});
+    expect(battleSceneryForCity(scene, 'home', 270)).toEqual({terrainId: 4, variant: 'b'});
+    expect(battleSceneryForCity(scene, 'home', 360)).toEqual({terrainId: 1, variant: 'a'});
   });
   it('returns surviving attackers after a loss', () => {
     const initial = fresh(); initial.cities.enemy.troops = 1000;
