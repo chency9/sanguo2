@@ -4,7 +4,8 @@ import {nativeAdvanceMagicShoot,nativeAdvanceMagicWeapon,nativeMagicCollision,na
 import {nativeMagicDefinition} from './native-magic-manifest';
 import {nativeCreateLockCamera,nativeAdvanceMagicCamera} from './native-magic-camera';
 import {nativeAdvanceMagicHeal,validateNativeMagicHeal} from './native-magic-heal';
-import {nativeAdvanceMagicReinforce,nativeReinforceDefinition,validateNativeMagicReinforce} from './native-magic-reinforce';
+import {nativeReinforceDefinition,validateNativeMagicReinforce} from './native-magic-reinforce';
+import {advanceBattleReinforce} from './battle-reinforce';
 
 /** 0x43BA59/0x441E61: normal camera management yields to spell scripts. */
 export function battleScriptCameraLocked(b:BattleState):boolean {
@@ -19,23 +20,7 @@ export function battleMagicLocked(b:BattleState,u:BattleUnit):boolean {
  * child visual coroutines and their RNG interleaving are still separate work. */
 export function advanceBattleNativeMagic(b:BattleState,death:(target:BattleUnit,caster:BattleUnit)=>void):void {
   if(b.activeScript?.kind==='native-reinforce') {
-    const script=b.activeScript,r=script.runtime,caster=b.units.find(u=>u.id===script.casterId);
-    if(!caster){b.activeScript=undefined;return;}
-    const side=r.sideFlag===1?'attacker':'defender';
-    let spawnSeed=100000+b.nextId;
-    const previousSpawns=r.spawns.length;
-    nativeAdvanceMagicReinforce(r,b.opponentAI!.rng,{level:b.commanders[side].level??40,living:b.units.filter(u=>u.side===side&&!u.general&&u.hp>0&&!u.escaped).length+b.reserves[side],occupant:(x,y)=>b.units.some(u=>u.hp>0&&!u.escaped&&u.movement?.x===x&&u.movement?.y===y),spawn:()=>spawnSeed++});
-    for(const spawn of r.spawns.slice(r.materialized)) {
-      const index=b.units.filter(u=>u.side===side&&!u.general).length;
-      const division=index<4?'front':'rear',nativeDivision=division==='front'?1:2,command=b.nativeCommands?.[side].orders[nativeDivision]??1;
-      b.units.push({id:b.nextId++,side,general:false,division,x:spawn.x/70*1200,y:150+spawn.y/13*360,hp:1,maxHp:1,ranged:false,nativeDivision,order:command===0?'hold':command===8?'retreat':'advance',action:'wait',actionTick:0,target:null,hit:false,escaped:false,nativeReserve:false,reinforceHandle:spawn.handle,reinforceAlpha:0,movement:{x:spawn.x,y:spawn.y,previousX:spawn.x,previousY:spawn.y,px:(spawn.x*96+48)*65536,py:(spawn.y*72+36)*65536,vx:0,vy:0,remaining:0,facing:side==='attacker'?0:0x800000,exiting:false,clock:{decision:1,attack:0,deferred:0,actionAge:0,special:false}}});
-    }
-    r.materialized=r.spawns.length;
-    for(const unit of b.units)if(unit.reinforceHandle!==undefined)unit.reinforceAlpha=r.visuals.find(v=>v.id===unit.reinforceHandle)?.alpha??unit.reinforceAlpha??0;
-    if (r.spawns.length>previousSpawns&&b.troopDeployment) {
-      b.troopDeployment[side].active+=r.spawns.length-previousSpawns;
-    }
-    if(r.phase==='done')b.activeScript=undefined;
+    advanceBattleReinforce(b);
     return;
   }
   if(b.activeScript?.kind==='native-heal') {
@@ -94,7 +79,7 @@ export function validateBattleNativeMagic(b:BattleState,fail:()=>never):void {
   if(b.reinforceRules!==undefined&&(b.reinforceRules!=='native-reinforce-v1'||b.movementRules!=='native-grid-v3'))fail();
   if(b.activeScript?.kind==='native-reinforce') {
     const script=b.activeScript,definition=nativeReinforceDefinition(script.magic),caster=b.units.find(u=>u.id===script.casterId);
-    if(!b.reinforceRules||!definition||script.magic!==definition.sequence||!['attacker','defender'].includes(script.side)||!caster?.general||caster.side!==script.side||script.runtime.sideFlag!==(script.side==='attacker'?1:0))fail();
+    if(!b.reinforceRules||!definition||script.magic!==definition.sequence||!['attacker','defender'].includes(script.side)||!caster?.general||caster.side!==script.side||script.runtime.sideFlag!==(script.side==='attacker'?1:0)||script.runtime.script!==definition.script||script.runtime.sequence!==script.magic||script.runtime.age>b.tick*3)fail();
     validateNativeMagicReinforce(b.activeScript.runtime,fail);return;
   }
   if(b.activeScript?.kind==='native-heal') {

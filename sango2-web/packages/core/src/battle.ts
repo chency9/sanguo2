@@ -63,6 +63,8 @@ export interface BattleUnit {
   casualty?:{flight:NativeFlight;facing:number;origin:{x:number;y:number};born:number};
   /** Temporary native-style control effect. Missing on legacy saves. */
   status?:{kind:'stunned'|'silenced'|'weakened';until:number;magic:number};
+  /** Original per-side soldier object record, at most 200 entries. */
+  nativeSoldierSlot?:number;
   /** MoreSoldier/BackSoldier child fade state. */
   reinforceHandle?:number;reinforceAlpha?:number;
 }
@@ -187,12 +189,9 @@ export function battleSkillUnavailable(b:BattleState,sequence:number,side:Battle
     const enemy=battleGeneral(b,opposite(side));
     if(enemy.hp<=0||enemy.escaped||enemy.order==='retreat')return '敌方主将无法成为目标';
   }
-  if(magic.effectType==='reinforce') {
-    const capacity=b.reinforceRules
-      ? nativeTroopCapacity(caster.level??20).active+nativeTroopCapacity(caster.level??20).reserve
-      : b.initial[side];
-    if(battleSurvivors(b,side)>=capacity)return '没有可补充的士兵';
-  }
+  // 0x43B887 / 0x43BA23 / 0x445B1C do not reject a full army. The native
+  // script itself takes its short no-room branch and still spends MP/charge.
+  if(magic.effectType==='reinforce'&&!(b.movementRules==='native-grid-v3'&&nativeReinforceDefinition(magic.script))&&battleSurvivors(b,side)>=b.initial[side])return '没有可补充的士兵';
   if(magic.effectType==='area'||magic.effectType==='status') {
     if(!magicTargets(b,side,magic).length)return '没有有效目标';
   }
@@ -228,7 +227,7 @@ function castSkill(b:BattleState,sequence:number,side:BattleSide) {
     b.activeScript={kind:'magic-projectile',side,casterId:target.id,targetId:enemy.id,magic:magic.sequence,script:magic.script,damage:magic.attack,
       phase:'windup',phaseAge:0,duration:12,fromX,fromY,toX,toY,x:fromX,y:fromY,z:0,age:0,hit:false};
     b.log.unshift(`${caster.name}施展${magic.name}，金色箭光锁定敌方主将。`);
-  } else if(magic.effectType==='reinforce'&&nativeReinforceDefinition(magic.script)) {
+  } else if(magic.effectType==='reinforce'&&b.movementRules==='native-grid-v3'&&nativeReinforceDefinition(magic.script)) {
     // Keep the feature flag absent on old snapshots. It is promoted only when
     // the first native MoreSoldier/BackSoldier coroutine is actually cast.
     b.reinforceRules='native-reinforce-v1';
@@ -426,7 +425,12 @@ export function createBattle(input: {id:string; armyId?:string; cityId?:string; 
 function validateScenery(s:NonNullable<BattleState['scenery']>) {
   if(!s||!Number.isInteger(s.terrainId)||s.terrainId<0||s.terrainId>11||!['a','b'].includes(s.variant))throw new Error('战场地形无效。');
 }
-export function battleSurvivors(b:BattleState,side:BattleSide) { return b.reserves[side]+b.units.filter(u=>u.side===side&&!u.general&&u.hp>0).length; }
+export function battleSurvivors(b:BattleState,side:BattleSide) {
+  // Once 0x443D29 has recounted the native slots, over-capacity field objects
+  // no longer become soldiers in the next round or in the campaign save.
+  if(b.reinforceRules&&(b.phase==='intermission'||b.phase==='finished'))return b.rosters[side].find(m=>m.commander.id===b.commanders[side].id)!.troops;
+  return b.reserves[side]+b.units.filter(u=>u.side===side&&!u.general&&u.hp>0).length;
+}
 export function battleFieldTroops(b:BattleState,side:BattleSide) {return b.units.filter(u=>u.side===side&&!u.general&&u.hp>0&&!u.escaped).length;}
 export function battleGeneral(b:BattleState,side:BattleSide) { return b.units.find(u=>u.side===side&&u.general)!; }
 export function battleTeamSurvivors(b:BattleState,side:BattleSide) {
@@ -440,7 +444,15 @@ function recordRound(b:BattleState) {
     c.fatigue=nativeBattleFatigue(c.fatigue??0,Math.trunc(b.tick*SOURCE_TICKS_PER_STEP/120),((effect?.settlementFlags??0)&4096)?effect?.fatigueModifier??0:0);
     const m=b.rosters[side].find(m=>m.commander.id===b.commanders[side].id)!;
     m.commander.hp=battleGeneral(b,side).hp;m.commander.mp=b.commanders[side].mp;m.troops=battleSurvivors(b,side);
-    if(b.troopDeployment)m.troopSlots={active:b.units.filter(u=>u.side===side&&!u.general&&u.hp>0&&!u.nativeReserve).length,reserve:b.units.filter(u=>u.side===side&&!u.general&&u.hp>0&&u.nativeReserve).length};
+    if(b.troopDeployment) {
+      const cap=nativeTroopCapacity(c.level??20);
+      m.troopSlots={active:b.units.filter(u=>u.side===side&&!u.general&&u.hp>0&&!u.nativeReserve).length,reserve:b.units.filter(u=>u.side===side&&!u.general&&u.hp>0&&u.nativeReserve).length};
+      if(b.reinforceRules) {
+        m.troopSlots.active=Math.min(m.troopSlots.active,Math.max(0,cap.active));
+        m.troopSlots.reserve=Math.min(m.troopSlots.reserve,cap.reserve);
+        m.troops=b.reserves[side]+m.troopSlots.active+m.troopSlots.reserve;
+      }
+    }
     for(const key of ['morale','fatigue','loyalty'] as const)if(c[key]!==undefined)m.commander[key]=c[key];
   }
 }
@@ -460,6 +472,7 @@ export function commandBattle(previous:BattleState,command:BattleCommand):Battle
     const next=createBattle({id:b.id,armyId:b.armyId??undefined,cityId:b.cityId??undefined,attacker:a.commander,defender:d.commander,attackingTroops:a.troops,defendingTroops:d.troops,seed:b.rng,aiRng,rosters:b.rosters});
     next.timing=b.timing;
     next.invasionSide=b.invasionSide;
+    next.reinforceRules=b.reinforceRules;
     next.fortifications=b.fortifications?{...b.fortifications}:undefined;
     if(command.type==='select-commander'&&b.opponentAI){
       next.opponentAI=structuredClone(b.opponentAI);
@@ -851,6 +864,7 @@ export function validateBattle(value:unknown):asserts value is BattleState {
     if(!u||!integer(u.id,b.nextId-1)||ids.has(u.id)||!['attacker','defender'].includes(u.side)||typeof u.general!=='boolean'||typeof u.escaped!=='boolean'||typeof u.ranged!=='boolean'||typeof u.hit!=='boolean'||!['front','rear','general'].includes(u.division)||!['advance','hold','retreat'].includes(u.order)||!['wait','walk','attack','death'].includes(u.action)||!integer(u.actionTick)||!Number.isFinite(u.x)||u.x < -100||u.x>1300||!Number.isFinite(u.y)||u.y<0||u.y>600||!Number.isFinite(u.hp)||u.hp<0||u.hp>u.maxHp||!integer(u.maxHp,10000)||(u.target!==null&&!integer(u.target,b.nextId-1)))return fail();
     ids.add(u.id);
     if(u.nativeReserve!==undefined&&(typeof u.nativeReserve!=='boolean'||u.general&&u.nativeReserve))return fail();
+    if(u.nativeSoldierSlot!==undefined&&(!b.reinforceRules||u.general||!integer(u.nativeSoldierSlot,199)))return fail();
     if(u.reinforceHandle!==undefined&&(!integer(u.reinforceHandle,1000000)||!Number.isFinite(u.reinforceAlpha)||u.reinforceAlpha!<0||u.reinforceAlpha!>16))return fail();
     if(u.status!==undefined&&(!u.status||!['stunned','silenced','weakened'].includes(u.status.kind)||!integer(u.status.until,1000000)||!integer(u.status.magic,110)))return fail();
   }
@@ -861,6 +875,8 @@ export function validateBattle(value:unknown):asserts value is BattleState {
   if(b.attackRules!==undefined&&(b.attackRules!=='native-actions-v1'||b.movementRules!=='native-grid-v3'))fail();
   for(const side of ['attacker','defender'] as const) {
     const c=b.commanders?.[side];
+    const liveSlots=b.units.filter(u=>u.side===side&&!u.general&&u.hp>0&&u.nativeSoldierSlot!==undefined).map(u=>u.nativeSoldierSlot);
+    if(new Set(liveSlots).size!==liveSlots.length||b.reinforceRules&&b.units.filter(u=>u.side===side&&!u.general&&u.hp>0).length>200)return fail();
     if(!c||typeof c.id!=='string'||typeof c.name!=='string'||c.name.length>100||typeof c.portrait!=='string'||typeof c.unit!=='string'||![c.strength,c.intelligence,c.hp,c.mp].every(n=>integer(n,10000))||!integer(b.initial?.[side])||!integer(b.reserves?.[side])||(!b.reinforceRules&&battleSurvivors(b,side)>b.initial[side])||(b.reinforceRules&&battleSurvivors(b,side)>b.initial[side]+200)||b.units.filter(u=>u.general&&u.side===side).length!==1)return fail();
     if(b.troopDeployment!==undefined) {
       const d=b.troopDeployment?.[side],cap=nativeTroopCapacity(c.level??20);
@@ -869,7 +885,12 @@ export function validateBattle(value:unknown):asserts value is BattleState {
       if(b.units.some(u=>u.side===side&&!u.general&&typeof u.nativeReserve!=='boolean'))return fail();
     }
     const members=b.rosters?.[side];
-    if(!Array.isArray(members)||!members.length||members.length>401||new Set(members.map(m=>m.commander?.id)).size!==members.length||!members.some(m=>m.commander.id===c.id)||!integer(b.totalInitial?.[side])||(!b.reinforceRules&&battleTeamSurvivors(b,side)>b.totalInitial[side])||(b.reinforceRules&&battleTeamSurvivors(b,side)>b.totalInitial[side]+200))return fail();
+    if(!Array.isArray(members)||!members.length||members.length>401||new Set(members.map(m=>m.commander?.id)).size!==members.length||!members.some(m=>m.commander.id===c.id)||!integer(b.totalInitial?.[side]))return fail();
+    // Each commander can retain added active soldiers after their own round.
+    // A single 200-soldier allowance for the whole roster rejects legal saves
+    // after several commanders replenish their independently capped slots.
+    const reinforceBudget=b.reinforceRules?members.reduce((n,m)=>n+Math.max(0,nativeTroopCapacity(m.commander.level??20).active),0):0;
+    if(battleTeamSurvivors(b,side)>b.totalInitial[side]+Math.max(reinforceBudget,b.reinforceRules?200:0))return fail();
     for(const m of members) {
       const mc=m.commander;
       if(!mc||typeof mc.id!=='string'||typeof mc.name!=='string'||typeof mc.portrait!=='string'||typeof mc.unit!=='string'||![mc.hp,mc.mp,mc.strength,mc.intelligence].every(n=>integer(n,10000))||!integer(m.troops)||typeof m.withdrawn!=='boolean')return fail();

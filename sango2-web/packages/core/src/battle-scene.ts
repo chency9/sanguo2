@@ -6,9 +6,12 @@ import {nativeProject,nativeClampCamera,type NativeCamera,type NativeWorldPoint}
  * during rendering: changing formation, generals or strategist effects must
  * still work before the simulation initializes. */
 export function battleScenePoints(b:BattleState):Map<number,NativeWorldPoint> {
-  const deployment=battleDeploymentCells(b);
+  // Formation tables describe the initial deployment. Once every actor has
+  // a saved physical origin, rebuilding those tables can index past the
+  // original soldiers after reinforcement or reuse a retained corpse slot.
+  const deployment=b.units.some(u=>!u.movement&&!u.casualty)?battleDeploymentCells(b):undefined;
   return new Map(b.units.map(u=>{
-    const cell=deployment.get(u.id),m=u.movement;
+    const cell=deployment?.get(u.id),m=u.movement;
     const point=u.casualty?{x:u.casualty.flight.x,y:u.casualty.flight.y,z:u.casualty.flight.z}:
       m?{x:m.px,y:m.py,z:0}:cell?{x:(cell.x*96+48)*65536,y:(cell.y*72+36)*65536,z:0}:
       {x:Math.trunc(u.x/1200*71*96*65536),y:Math.trunc((36+(u.y-150)/360*13*72)*65536),z:0};

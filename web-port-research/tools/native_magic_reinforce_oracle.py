@@ -4,9 +4,10 @@ Integer script instructions, branching, waits and coroutine iteration execute
 the original PE code. Context/string allocation uses the same substitutions as
 the existing Heal oracle. World hosts expose a synthetic stationary occupancy
 snapshot, level and living count; graphics/audio are observed, not rendered.
-The separate host vectors execute original level/count/grid/creation functions,
-substituting only the world object's allocation/initialization boundary.
-These are isolated script and host traces, not a complete native battle replay.
+Level, count, occupancy and allocation are synthetic hosts: allocationCases
+force host 281 to return 0 at a configured live-object count. They prove the
+original caller and child behavior after rejection, not native allocator logic.
+These are isolated script traces, not a complete native battle replay.
 """
 import hashlib
 import json
@@ -119,11 +120,21 @@ def main():
                             side=side,x=1488 if side else 5328,level=level,live=live,occupied=occupied,rng=[0x12345678,0x87654321])
                 native = ReinforceOracle(spec).run()
                 cases.append(dict(input=spec,native=native))
-    out = dict(exeSha256=SHA,scriptSha256=hashlib.sha256(CODE).hexdigest(),boundary=__doc__,cases=cases)
+    allocation_cases = []
+    for sequence,name,amount,family in CONFIGS:
+        for side in [0,1]:
+            for slots in [175,176]:
+                spec = dict(name=name,sequence=sequence,amount=amount,family=family,
+                            label=f'allocation-limit-{slots}',slots=slots,side=side,
+                            x=1488 if side else 5328,level=40,live=175,occupied=[],
+                            rng=[0x12345678,0x87654321])
+                allocation_cases.append(dict(input=spec,native=ReinforceOracle(spec).run()))
+    out = dict(exeSha256=SHA,scriptSha256=hashlib.sha256(CODE).hexdigest(),boundary=__doc__,
+               cases=cases,allocationCases=allocation_cases)
     path = ROOT/'evidence/ai/native-magic-reinforce-vectors.json'
     path.write_text(json.dumps(out,ensure_ascii=False,separators=(',',':')),encoding='utf8')
     shutil.copyfile(path,ROOT.parent/'sango2-web/packages/core/fixtures'/path.name)
-    print(json.dumps(dict(cases=len(cases),ticks=sum(c['native']['ticks'] for c in cases),
+    print(json.dumps(dict(cases=len(cases),allocationCases=len(allocation_cases),ticks=sum(c['native']['ticks'] for c in cases),
                          firstTicks=cases[0]['native']['ticks'],firstSpawns=cases[0]['native']['spawned']),ensure_ascii=True))
 
 

@@ -202,7 +202,7 @@ export function BattleView(props:Props) {
       node.dataset.cssScale=String(scale/ratio);
       node.dataset.projection=nativeScene?'native-perspective-v1':'legacy';node.dataset.cameraX=String(viewCamera.x);node.dataset.cameraY=String(viewCamera.y);node.dataset.cameraZoom=String(camera.current.zoom);
       node.dataset.cameraOwner=battleScriptCameraLocked(b)?'script':'normal';
-      node.dataset.scriptCamera=b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'?JSON.stringify(b.activeScript.runtime.camera??null):'null';
+      node.dataset.scriptCamera=b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'||b.activeScript?.kind==='native-reinforce'?JSON.stringify(b.activeScript.runtime.camera??null):'null';
       const general=b.units.find(u=>u.side==='attacker'&&u.general)!,gp=unitPosition(general);
       node.dataset.generalScreen=JSON.stringify({x:(sceneX+gp.x*sceneScale)/ratio,y:(sceneY+gp.y*sceneScale)/ratio});
       node.dataset.scenery=sceneryKey;
@@ -236,6 +236,10 @@ export function BattleView(props:Props) {
       node.dataset.casualties=String(b.units.filter(u=>u.casualty).length);
       node.dataset.fieldTroops=String(battleFieldTroops(b,'attacker')+battleFieldTroops(b,'defender'));
       node.dataset.reinforceUnits=String(b.units.filter(u=>u.reinforceHandle!==undefined&&u.hp>0).length);
+      node.dataset.reinforceFading=String(b.units.filter(u=>u.reinforceHandle!==undefined&&u.hp>0&&(u.reinforceAlpha??16)<16).length);
+      const sourceScript=b.activeScript;
+      const shade=sourceScript?.kind==='native-shoot'||sourceScript?.kind==='native-heal'||sourceScript?.kind==='native-reinforce'?sourceScript.runtime:undefined;
+      node.dataset.sceneBrightness=String(shade?.brightness??16);node.dataset.scenePalette=String(shade?.palette??16);
       // Ordered by foot position so rear ranks never paint over the front incorrectly.
       ctx.save();if(nativeScene){ctx.beginPath();ctx.rect(left,sceneBounds.top,right-left,sceneBounds.bottom-sceneBounds.top);ctx.clip();}
       const actors=[...b.units.map(u=>({id:u.id,y:nativeScene?nativeDepth(points.get(u.id)!.y):battleCasualtyPosition(u).y,draw:()=>drawUnit(u,b)})),...(b.detached??[]).map(d=>({id:d.id,y:nativeScene?nativeDepth(d.y):battleDetachedPosition(d).y,draw:()=>{
@@ -365,7 +369,7 @@ export function BattleView(props:Props) {
         else {const r=7*to.scale;ctx.moveTo(to.x-r,to.y-r);ctx.lineTo(to.x+r,to.y+r);ctx.moveTo(to.x+r,to.y-r);ctx.lineTo(to.x-r,to.y+r);}
         ctx.stroke();
       }
-      if(magic?.kind==='native-shoot'||magic?.kind==='native-heal') {
+      if(magic?.kind==='native-shoot'||magic?.kind==='native-heal'||magic?.kind==='native-reinforce') {
         const s=magic.runtime;
         // The source script exposes both screen brightness and palette shade.
         // Canvas composes their scene shade here; OF_WHITELIGHT child artwork

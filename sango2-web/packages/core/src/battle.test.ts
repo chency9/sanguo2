@@ -66,12 +66,12 @@ describe('real-time battle',()=>{
     expect(b.activeScript).toBeUndefined();expect(battleSurvivors(b,'attacker')).toBeGreaterThan(before);expect(()=>validateBattle(b)).not.toThrow();
   });
   it('round-trips a native reinforce coroutine while soldiers fade in',()=>{
-    let b=chargedSkillBattle(5,12,12);
+    let b=chargedSkillBattle(5,3,12);
     b.units.filter(u=>u.side==='attacker'&&!u.general).slice(0,2).forEach(u=>{u.hp=0;u.action='death';});
     b=commandBattle(b,{type:'skill',sequence:5});
-    tickBattle(b,20);
+    tickBattle(b,32);
     expect(b.activeScript?.kind).toBe('native-reinforce');
-    expect(b.units.some(u=>u.reinforceHandle!==undefined&&u.reinforceAlpha===0)).toBe(false);
+    expect(b.units.some(u=>u.reinforceHandle!==undefined&&u.reinforceAlpha!>0&&u.reinforceAlpha!<16)).toBe(true);
     const restored=JSON.parse(JSON.stringify(b)) as BattleState;
     validateBattle(restored);expect(restored).toEqual(b);
     for(let i=0;i<120&&b.activeScript;i++){tickBattle(b);tickBattle(restored);}

@@ -5,7 +5,7 @@ import manifest from '../packages/core/src/native-magic-manifest.json' with {typ
 class NativeMagicScreen {
   constructor(readonly page:Page) {}
   get canvas(){return this.page.getByRole('img',{name:'实时战场画面'});}
-  async open(sequence:number, levels?:{attacker:number;defender:number}) {
+  async open(sequence:number, levels?:{attacker:number;defender:number;chargeIntelligence?:number;meleeDefender?:boolean}) {
     const page=this.page;
     await page.route('**/assets/content.json',async route=>{
       const response=await route.fetch(),content=await response.json();
@@ -14,7 +14,8 @@ class NativeMagicScreen {
       caster.skillLearnset=[{level:1,sequence}];caster.rawSkill=`1, ${sequence}`;caster.mp=150;caster.maxMp=150;
       const defender=generals.find((g:{name:string})=>g.name==='張角');
       defender.skillLearnset=[];
-      if(levels){caster.level=levels.attacker;defender.level=levels.defender;}
+      if(levels){caster.level=levels.attacker;defender.level=levels.defender;if(levels.chargeIntelligence)caster.intelligence=levels.chargeIntelligence;}
+      if(levels?.meleeDefender)for(const general of generals)if(general.unit==='弓'&&general.appearance)general.appearance.soldier=100;
       await route.fulfill({response,json:content});
     });
     const response=await page.request.get('/assets/battle/animations.json'),atlas=await response.json();
@@ -60,25 +61,92 @@ class NativeMagicScreen {
     await expect.poll(async()=>Number(await this.canvas.getAttribute('data-magic-script-age'))).toBeGreaterThanOrEqual(170);
     await page.getByRole('button',{name:'暂停战斗',exact:true}).click();
   }
+  async openReinforceCampaign() {
+    const page=this.page;
+    await page.route('**/assets/content.json',async route=>{
+      const response=await route.fetch(),content=await response.json();
+      for(const scenario of content.scenarios) {
+        for(const faction of scenario.factions)faction.flagNumber=999;
+        for(const general of scenario.generals) {
+          general.level=20;
+          general.skillLearnset=general.ownerId==='f-01'?[{level:1,sequence:5}]:[];
+          general.rawSkill=general.ownerId==='f-01'?'1, 5':'';
+          general.mp=150;general.maxMp=150;
+        }
+      }
+      await route.fulfill({response,json:content});
+    });
+    await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();await finishInitialPolicy(page);
+    await page.getByRole('button',{name:'调兵出征'}).click();
+    const destination=page.getByLabel('行军目标');
+    await destination.selectOption({label:(await destination.getByRole('option').filter({hasText:'壺關'}).textContent())!});
+    await page.getByLabel(/出征兵力/).fill('60');await page.getByRole('button',{name:'下令出征'}).click();
+    for(let i=0;i<3;i++)await page.getByRole('button',{name:'下一天',exact:true}).click();
+    await expect(page.getByRole('heading',{name:'壺關之战'})).toBeVisible();
+    await expect(page.getByRole('button',{name:'擂鼓开战'})).toBeEnabled();
+  }
 }
 
-test('native reinforce creates readable soldiers and locks the source camera',async({page})=>{
+test('full troops preserve the native no-room spell and release its camera without creating soldiers',async({page})=>{
   await page.setViewportSize({width:1440,height:900});
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
-  const scene=new NativeMagicScreen(page);await scene.open(5,{attacker:2,defender:20});
+  // Accelerate charging in this isolated input so no battle casualty can
+  // change the full-army precondition before the native no-room branch.
+  const scene=new NativeMagicScreen(page);await scene.open(5,{attacker:20,defender:1,chargeIntelligence:10000,meleeDefender:true});
   const canvas=scene.canvas,skill=page.getByRole('button',{name:/伏兵組陣/});
   await page.getByLabel('战场速度').selectOption('4');await page.getByRole('button',{name:'擂鼓开战'}).click();
   await expect.poll(async()=>skill.getAttribute('data-skill-state'),{timeout:20000}).toBe('available');
-  await page.getByRole('button',{name:'暂停战斗',exact:true}).click();await skill.click();
+  await page.getByRole('button',{name:'暂停战斗',exact:true}).click();
+  await expect(page.getByTestId('battle-attacker-troops')).toHaveText('100');
+  await skill.click();
   await expect(canvas).toHaveAttribute('data-magic-script-kind','native-reinforce');
   await expect(canvas).toHaveAttribute('data-magic-script-phase','darken');
   await expect(canvas).toHaveAttribute('data-camera-owner','script');
+  await expect(page.getByRole('meter',{name:'曹操技力'})).toHaveAttribute('aria-valuenow',String(150-manifest.find(m=>m.sequence===5)!.mp));
   await page.getByRole('button',{name:'继续战斗',exact:true}).click();
-  await expect.poll(async()=>Number(await canvas.getAttribute('data-reinforce-units')),{timeout:20000}).toBeGreaterThan(0);
-  await expect.poll(async()=>Number(await canvas.getAttribute('data-field-troops')),{timeout:20000}).toBeGreaterThan(100);
+  await expect(canvas).toHaveAttribute('data-magic-script-kind','idle',{timeout:10000});
+  await expect(canvas).toHaveAttribute('data-reinforce-units','0');
+  await expect(canvas).toHaveAttribute('data-camera-owner','normal');
+  await expect(canvas).toHaveAttribute('data-scene-brightness','16');await expect(canvas).toHaveAttribute('data-scene-palette','16');
   await page.getByRole('button',{name:'暂停战斗',exact:true}).click();
-  await page.screenshot({path:'docs/screenshots/native-reinforce-1440.png'});
   expect(errors).toEqual([]);
+});
+
+test('reinforce camera, shade and fading soldiers survive a campaign save and finish fully visible',async({page},testInfo)=>{
+  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
+  const screen=new NativeMagicScreen(page);await screen.openReinforceCampaign();
+  const canvas=screen.canvas,skill=page.getByRole('button',{name:/伏兵組陣/});
+  await page.getByLabel('战场速度').selectOption('4');await page.getByRole('button',{name:'擂鼓开战'}).click();
+  await expect(skill).toBeEnabled({timeout:15000});await page.getByRole('button',{name:'暂停战斗',exact:true}).click();
+  await skill.click();await expect(canvas).toHaveAttribute('data-magic-script-kind','native-reinforce');
+  await page.getByLabel('战场速度').selectOption('1');await page.getByRole('button',{name:'继续战斗',exact:true}).click();
+  await expect.poll(async()=>Number(await canvas.getAttribute('data-reinforce-fading'))).toBeGreaterThan(0);
+  await page.getByRole('button',{name:'暂停战斗',exact:true}).click();
+  await expect(canvas).toHaveAttribute('data-scene-palette','8');
+  await page.screenshot({path:'docs/screenshots/native-reinforce-1440.png'});
+  await expect(page.getByRole('button',{name:'敌军主将',exact:true})).toBeDisabled();
+  const snapshot=await canvas.evaluate(node=>({tick:node.dataset.simulationTick,age:node.dataset.magicScriptAge,camera:node.dataset.scriptCamera,brightness:node.dataset.sceneBrightness,palette:node.dataset.scenePalette,fading:node.dataset.reinforceFading,count:node.dataset.reinforceUnits}));
+  const projected=await canvas.evaluate(node=>({x:Number(node.dataset.cameraX),y:Number(node.dataset.cameraY)}));
+  expect(projected).toEqual(JSON.parse(snapshot.camera!));
+  await page.getByRole('button',{name:'战中存档'}).click();
+  // The first of the three independent slots is the one explicitly saved here.
+  await page.getByRole('dialog').getByRole('button',{name:'保存',exact:true}).first().click();
+  await expect(page.getByRole('dialog').getByRole('status')).toContainText('已保存');
+  const saved=await page.evaluate(()=>new Promise<unknown>((resolve,reject)=>{
+    const request=indexedDB.open('sango2-web',1);request.onerror=()=>reject(request.error);
+    request.onsuccess=()=>{const db=request.result,transaction=db.transaction('saves','readonly'),slot=transaction.objectStore('saves').get(1);transaction.oncomplete=()=>{db.close();resolve(slot.result);};transaction.onerror=()=>{db.close();reject(transaction.error);};};
+  }));
+  await testInfo.attach('native-reinforce-save.json',{body:Buffer.from(JSON.stringify(saved)),contentType:'application/json'});
+  await page.reload();
+  await page.getByRole('button',{name:'关闭对话框'}).click();await page.getByRole('button',{name:'存读档',exact:true}).click();
+  await page.getByRole('dialog').getByRole('button',{name:'读取',exact:true}).first().click();
+  await expect(page.getByRole('button',{name:'继续战斗',exact:true})).toBeEnabled();
+  expect(await canvas.evaluate(node=>({tick:node.dataset.simulationTick,age:node.dataset.magicScriptAge,camera:node.dataset.scriptCamera,brightness:node.dataset.sceneBrightness,palette:node.dataset.scenePalette,fading:node.dataset.reinforceFading,count:node.dataset.reinforceUnits}))).toEqual(snapshot);
+  await page.getByLabel('战场速度').selectOption('4');await page.getByRole('button',{name:'继续战斗',exact:true}).click();
+  await expect(canvas).toHaveAttribute('data-magic-script-kind','idle',{timeout:15000});
+  await expect(canvas).toHaveAttribute('data-reinforce-fading','0');
+  await expect(canvas).toHaveAttribute('data-scene-brightness','16');await expect(canvas).toHaveAttribute('data-scene-palette','16');
+  await expect(canvas).toHaveAttribute('data-camera-owner','normal');expect(errors).toEqual([]);
 });
 
 for(const [sequence,light,ball,width] of [[1,26001,26004,1440],[60,26002,26005,390]]) {
