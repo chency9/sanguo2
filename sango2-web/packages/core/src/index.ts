@@ -11,7 +11,7 @@ import {nativeTroopCapacity,type TroopSlots} from './native-troops';
 import {officerLevel,officerMaxHp,officerMaxMp,type OfficerProgress} from './native-progression';
 import {initializeOfficerEquipment,officerDefinition,officerForceMask,nativeForceNames,type OfficerEquipment} from './native-officer-runtime';
 import {ensureDomesticAnnual} from './native-policy-annual';
-import {createDomesticState,executeDomestic,beginDomesticYear,refreshPolicyGovernors,type DomesticState,type DomesticCommand} from './native-policy';
+import {createDomesticState,executeDomestic,beginDomesticYear,policyGovernorId,refreshPolicyGovernors,type DomesticState,type DomesticCommand} from './native-policy';
 export {policyGovernorId,nativeDevelop,nativeAnnualRevenue} from './native-policy';
 export * from './native-progression';
 export {officerDefinition,officerStrength,officerIntelligence,officerSpeed,officerForceMask,officerFormations,officerUnit,nativeForceNames,nativeForceLabels} from './native-officer-runtime';
@@ -204,8 +204,13 @@ function encounter(s:Session,army:Army,scene:ScenarioDefinition,items:readonly R
   // Reverse source insertion is our existing city-list adapter; full native
   // linked-list mutation history is still a separate parity gap.
   const defenderIds=[...stationed].reverse();
-  const governor=defenderIds.indexOf(scene.cities.find(c=>c.id===army.to)!.governorId??'');
-  if(governor>0)[defenderIds[0],defenderIds[governor]]=[defenderIds[governor],defenderIds[0]];
+  const governorId = s.policy
+    ? policyGovernorId(s, scene, army.to)
+    : scene.cities.find(city => city.id === army.to)?.governorId;
+  const governorIndex = governorId ? defenderIds.indexOf(governorId) : -1;
+  if (governorIndex > 0) {
+    [defenderIds[0], defenderIds[governorIndex]] = [defenderIds[governorIndex], defenderIds[0]];
+  }
   // Preserve per-officer soldiers, including zero-HP officers. Redistributing
   // here changes native commander weights before its very first decision.
   reconcileCityTroops(s,army.to);

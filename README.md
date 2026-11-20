@@ -223,7 +223,7 @@ pnpm preview
 | 战斗规则 | [普攻与强化](sango2-web/docs/NATIVE-COMBAT-PARITY-2026-11-17.md) · [单位时钟](sango2-web/docs/NATIVE-UNIT-CLOCK-PARITY-2026-11-17.md) · [分队与军令](sango2-web/docs/NATIVE-COMMAND-PARITY-2026-11-18.md) |
 | 战场呈现 | [原透视与镜头](sango2-web/docs/NATIVE-PROJECTION-CAMERA-PARITY-2026-11-18.md) · [渲染审查](sango2-web/docs/BATTLE-RENDER-AUDIT-2026-11-19.md) |
 | 最新源更新与镜头 | [主将、装备速度与技能镜头](sango2-web/docs/NATIVE-GENERAL-CAMERA-PARITY-2026-11-19.md) · [飞行技能主脚本与碰撞](sango2-web/docs/NATIVE-MAGIC-SHOOT-PARITY-2026-11-19.md) |
-| 完整差距核查 | [全范围当前状态](sango2-web/docs/PARITY-STATUS-2026-11-19.md) · [110 个技能逐项覆盖](sango2-web/docs/MAGIC-COVERAGE-2026-11-19.md) |
+| 完整差距核查 | [2026-11-20 复核报告](sango2-web/docs/PARITY-AUDIT-2026-11-20.md) · [110 个技能逐项覆盖](sango2-web/docs/MAGIC-COVERAGE-2026-11-19.md) |
 
 研究文档中指向 `data/`、`previews/`、原始二进制证据的路径属于本地分析产物，不在公开仓库中；Web 内核的差分样本和测试源码随仓库提供。
 

@@ -56,6 +56,31 @@ describe('rival strategy and player defense',()=>{
     expect(s.battle!.fortifications).toEqual({attacker:0,defender:749});
     expect(readSession(s,c)).toEqual(s);
   });
+  it('uses the appointed governor to lead a defensive encounter after loading the campaign', () => {
+    const content = fixture();
+    const scene = content.scenarios[0];
+    scene.cities.find(city => city.id === 'enemy')!.governorId = 'e2';
+
+    let campaign = createNativeSession(content, 'era', 'e');
+    campaign = dispatch(campaign, { type: 'policy-governor', cityId: 'enemy', generalId: 'e1' }, content);
+    campaign = dispatch(campaign, { type: 'policy-finish' }, content);
+    campaign.factionId = 'p';
+    campaign = dispatch(campaign, { type: 'march', from: 'home', to: 'enemy', generalIds: ['p1'], troops: 80 }, content);
+    campaign.factionId = 'e';
+    campaign.nativeAI!.countdowns.p = 900;
+    campaign.nativeAI!.countdowns.r = 900;
+
+    const restored = readSession(JSON.parse(JSON.stringify(campaign)), content);
+    const legacy = structuredClone(restored);
+    delete legacy.policy;
+    const defending = advance(restored, 2, content).battle!;
+    const legacyDefending = advance(legacy, 2, content).battle!;
+
+    expect(defending.invasionSide).toBe('defender');
+    expect(defending.rosters.attacker.map(member => member.commander.id)).toEqual(['e1', 'e2', 'e3']);
+    expect(defending.commanders.attacker.id).toBe('e1');
+    expect(legacyDefending.commanders.attacker.id).toBe('e2');
+  });
   it('keeps officer allocations when reinforcements enter a friendly city',()=>{
     const c=fixture();let s=createSession(c,'era','e');
     s.nativeAI!.countdowns.p=900;s.nativeAI!.countdowns.r=900;
