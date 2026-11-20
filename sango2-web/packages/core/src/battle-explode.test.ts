@@ -1,5 +1,5 @@
 import {describe,it,expect,vi} from 'vitest';
-import {createBattle,commandBattle,validateBattle,battleGeneral,battleFieldTroops,CHARGE_LIMIT,type BattleState,type BattleUnit} from './battle';
+import {createBattle,commandBattle,tickBattle,validateBattle,battleGeneral,battleFieldTroops,CHARGE_LIMIT,type BattleState,type BattleUnit} from './battle';
 import {prepareBattleMovement} from './battle-movement';
 import {advanceBattleNativeMagic,battleScriptCameraLocked} from './battle-native-magic';
 import {NATIVE_MAGIC} from './native-battle-rules';
@@ -62,6 +62,13 @@ describe('native ExplodeRound in real battle snapshots',()=>{
     b.troopDeployment!.attacker.active=1;b.initial.attacker=1;b.totalInitial.attacker=1;
     position(unit,Math.trunc((blast.x>>16)/96),Math.trunc((blast.y>>16)/72));
     step(b,50);expect(unit.hp).toBe(1);validateBattle(b);
+  });
+  it('clears pending child objects when a commander ends the round mid-cast',()=>{
+    const b=commandBattle(ready(7,1),{type:'skill',sequence:7});firstBlast(b);
+    battleGeneral(b,'defender').hp=0;tickBattle(b);
+    expect(['intermission','finished']).toContain(b.phase);expect(b.activeScript).toBeUndefined();
+    expect(battleScriptCameraLocked(b)).toBe(false);validateBattle(b);
+    const copy=JSON.parse(JSON.stringify(b)) as BattleState;validateBattle(copy);expect(copy.activeScript).toBeUndefined();
   });
   it.each([1,42,81,109,170])('replays source objects, RNG and camera after a save at update %s',at=>{
     const b=commandBattle(ready(23),{type:'skill',sequence:23});step(b,at);validateBattle(b);

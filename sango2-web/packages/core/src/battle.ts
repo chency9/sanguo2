@@ -550,6 +550,10 @@ export function commandBattle(previous:BattleState,command:BattleCommand):Battle
   return b;
 }
 function finish(b:BattleState,winner:BattleSide,reason:string) {
+  // Source coroutines belong to one round. A round-ending commander defeat
+  // must not leave child objects in an intermission snapshot whose source
+  // clock will never advance them again.
+  b.activeScript=undefined;
   recordRound(b);
   b.rosters[opposite(winner)].find(m=>m.commander.id===b.commanders[opposite(winner)].id)!.withdrawn=true;
   b.history.push({round:b.round,attackerId:b.commanders.attacker.id,defenderId:b.commanders.defender.id,winner,reason});
