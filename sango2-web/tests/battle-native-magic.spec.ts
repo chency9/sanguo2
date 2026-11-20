@@ -5,14 +5,16 @@ import manifest from '../packages/core/src/native-magic-manifest.json' with {typ
 class NativeMagicScreen {
   constructor(readonly page:Page) {}
   get canvas(){return this.page.getByRole('img',{name:'实时战场画面'});}
-  async open(sequence:number) {
+  async open(sequence:number, levels?:{attacker:number;defender:number}) {
     const page=this.page;
     await page.route('**/assets/content.json',async route=>{
       const response=await route.fetch(),content=await response.json();
       const generals=content.scenarios[0].generals;
       const caster=generals.find((g:{name:string})=>g.name==='曹操');
       caster.skillLearnset=[{level:1,sequence}];caster.rawSkill=`1, ${sequence}`;caster.mp=150;caster.maxMp=150;
-      generals.find((g:{name:string})=>g.name==='張角').skillLearnset=[];
+      const defender=generals.find((g:{name:string})=>g.name==='張角');
+      defender.skillLearnset=[];
+      if(levels){caster.level=levels.attacker;defender.level=levels.defender;}
       await route.fulfill({response,json:content});
     });
     const response=await page.request.get('/assets/battle/animations.json'),atlas=await response.json();
@@ -59,6 +61,25 @@ class NativeMagicScreen {
     await page.getByRole('button',{name:'暂停战斗',exact:true}).click();
   }
 }
+
+test('native reinforce creates readable soldiers and locks the source camera',async({page})=>{
+  await page.setViewportSize({width:1440,height:900});
+  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+  const scene=new NativeMagicScreen(page);await scene.open(5,{attacker:2,defender:20});
+  const canvas=scene.canvas,skill=page.getByRole('button',{name:/伏兵組陣/});
+  await page.getByLabel('战场速度').selectOption('4');await page.getByRole('button',{name:'擂鼓开战'}).click();
+  await expect.poll(async()=>skill.getAttribute('data-skill-state'),{timeout:20000}).toBe('available');
+  await page.getByRole('button',{name:'暂停战斗',exact:true}).click();await skill.click();
+  await expect(canvas).toHaveAttribute('data-magic-script-kind','native-reinforce');
+  await expect(canvas).toHaveAttribute('data-magic-script-phase','darken');
+  await expect(canvas).toHaveAttribute('data-camera-owner','script');
+  await page.getByRole('button',{name:'继续战斗',exact:true}).click();
+  await expect.poll(async()=>Number(await canvas.getAttribute('data-reinforce-units')),{timeout:20000}).toBeGreaterThan(0);
+  await expect.poll(async()=>Number(await canvas.getAttribute('data-field-troops')),{timeout:20000}).toBeGreaterThan(100);
+  await page.getByRole('button',{name:'暂停战斗',exact:true}).click();
+  await page.screenshot({path:'docs/screenshots/native-reinforce-1440.png'});
+  expect(errors).toEqual([]);
+});
 
 for(const [sequence,light,ball,width] of [[1,26001,26004,1440],[60,26002,26005,390]]) {
   test(`native heal ${sequence} draws original holy objects and preserves its paused script at ${width}px`,async({page})=>{

@@ -24,6 +24,9 @@ def main():
     groups = defaultdict(list)
     table = []
     shoot = {502,514,552,558}
+    # Seven wrappers now execute the reconstructed MoreSoldier /
+    # BackSoldier VM boundary; visuals and global object order remain open.
+    reinforce = {509,523,565,584,524,533,541}
     for item in manifest:
         ip = by_name[item['scriptSymbol']]['offset']
         end = min(offset for offset in by_offset if offset > ip)
@@ -39,18 +42,21 @@ def main():
         groups[family].append(item['sequence'])
         status = ('原主流程、弹道、伤害、镜头已接；完整视觉/声音/全局顺序未齐' if item['script'] in shoot else
                   'Heal 与全部子协程、等待、回血和脚本 RNG 已接；原光效素材已显示，完整对象顺序/调色板/音效未齐' if item['effectType']=='heal' else
+                  '原 VM 脚本已接入；视觉和全局对象顺序仍待验收' if item['script'] in reinforce else
                   '暂定通用执行器；原脚本效果与时序未移植')
         table.append(f"| {item['sequence']} | {item['name']} | {item['script']} / {item['scriptSymbol']} | {family} | {status} |")
     lines = [
         '# 110 个武将技逐项差距清单', '',
-        '核查日期：2026-11-19。按当前 `castSkill` 的实际分派核查，不按 manifest 的 `verified` 标签计算完整度。', '',
-        '**4 个技能已接原 ShootObject 主流程；2 个治疗技能已接 Heal 与全部后代协程。其余 104 个仍走暂定通用执行器。6 个已接原脚本的技能仍有完整对象顺序、视觉或音效缺口，没有一个在这里被宣称已完成整场逐帧、逐像素验收。**', '',
+        '核查日期：2026-11-20。按当前 `castSkill` 的实际分派核查，不按 manifest 的 `verified` 标签计算完整度。', '',
+        '**4 个技能已接原 ShootObject 主流程；2 个治疗技能已接 Heal 与全部后代协程；7 个补兵技能已接 MoreSoldier/BackSoldier 原 VM 边界。其余 97 个仍走暂定通用执行器。13 个已接原脚本的技能仍有完整对象顺序、视觉或音效缺口，没有一个在这里被宣称已完成整场逐帧、逐像素验收。**', '',
         f"源 `SCRIPT_MAGIC.SO` SHA-256：`{hashlib.sha256(code).hexdigest()}`。", '',
         '原 110 个包装器共调用 44 组共用入口。下表只定位包装器的直接调用；共用入口的存在不证明它已实现，更不证明所有后代子脚本已执行。', '',
         '## 共用入口与覆盖范围', '', '| 原入口 | 技能 sequence | 当前状态 |', '| --- | --- | --- |',
     ]
     for family, sequences in groups.items():
-        status = '部分原码接入' if family in ['Heal','ShootObject'] else '待移植原脚本'
+        status = ('部分原码接入' if family in ['Heal','ShootObject'] else
+                  '原 VM 脚本已接入，视觉和全局对象顺序仍待验收' if family in ['MoreSoldier','BackSoldier'] else
+                  '待移植原脚本')
         lines.append(f"| {family} | {', '.join(map(str,sequences))} | {status} |")
     lines += ['', '## 逐项记录', '', '| sequence | 技能 | SCRIPT / 符号 | 直接调用 | 当前差距 |', '| --- | --- | --- | --- | --- |', *table, '',
         '## 复核方式', '',
@@ -60,7 +66,7 @@ def main():
     ]
     output = ROOT.parent/'sango2-web/docs/MAGIC-COVERAGE-2026-11-19.md'
     output.write_text('\n'.join(lines),encoding='utf8')
-    print(json.dumps(dict(skills=len(table),families=len(groups),shootMain=4,healTree=2,generic=104,fullParity=0)))
+    print(json.dumps(dict(skills=len(table),families=len(groups),shootMain=4,healTree=2,reinforceVm=7,generic=97,fullParity=0)))
 
 
 if __name__ == '__main__':

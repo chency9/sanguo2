@@ -46,6 +46,6 @@
 1. 本次脚本差分没有执行真实原游戏的混合对象链。宿主调用轨迹相同不能证明实际战斗中的其他单位 RNG 和脚本 RNG 在全局上交错一致。
 2. 光效绘制接入原素材和宿主参数，但对象生成/更新的全局先后、精确尺度衰减、DirectDraw 调色板和逐像素图像仍缺原客户端截图/录制基线。
 3. 原治疗声音请求尚未实际播放；完整武将施法、受伤和死亡动作与战斗结束的交互仍需核验。
-4. 其余 104 个技能仍使用暂定通用执行器。完整列表见 [110 技能清单](MAGIC-COVERAGE-2026-11-19.md)，全范围差距见 [当前复刻状态](PARITY-STATUS-2026-11-19.md)。
+4. 其余 97 个技能仍使用暂定通用执行器；另有 7 个 MoreSoldier/BackSoldier 增兵技能已接入局部原 VM 边界，但尚未完成全局对象顺序、视觉和音效验收。完整列表见 [110 技能清单](MAGIC-COVERAGE-2026-11-19.md)，全范围差距见 [当前复刻状态](PARITY-STATUS-2026-11-19.md)。
 
 复现：在 `web-port-research` 运行 `.venv-ai/Scripts/python.exe tools/native_magic_heal_oracle.py`，再在 `sango2-web` 运行 `pnpm exec vitest run packages/core/src/native-magic-heal.test.ts packages/core/src/battle-native-heal.test.ts`。全量验证日志保存在 [commands](evidence/commands/)。

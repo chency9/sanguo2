@@ -61,9 +61,21 @@ describe('real-time battle',()=>{
     let b=chargedSkillBattle(5,8,30);
     b.units.filter(u=>u.side==='attacker'&&!u.general).slice(0,4).forEach(u=>{u.hp=0;u.action='death';});
     const before=battleSurvivors(b,'attacker');
-    b=commandBattle(b,{type:'skill',sequence:5});expect(b.activeScript?.kind).toBe('magic-reinforce');
-    tickBattle(b,8);
+    b=commandBattle(b,{type:'skill',sequence:5});expect(b.activeScript?.kind).toBe('native-reinforce');
+    for(let i=0;i<120&&b.activeScript;i++)tickBattle(b);
     expect(b.activeScript).toBeUndefined();expect(battleSurvivors(b,'attacker')).toBeGreaterThan(before);expect(()=>validateBattle(b)).not.toThrow();
+  });
+  it('round-trips a native reinforce coroutine while soldiers fade in',()=>{
+    let b=chargedSkillBattle(5,12,12);
+    b.units.filter(u=>u.side==='attacker'&&!u.general).slice(0,2).forEach(u=>{u.hp=0;u.action='death';});
+    b=commandBattle(b,{type:'skill',sequence:5});
+    tickBattle(b,20);
+    expect(b.activeScript?.kind).toBe('native-reinforce');
+    expect(b.units.some(u=>u.reinforceHandle!==undefined&&u.reinforceAlpha===0)).toBe(false);
+    const restored=JSON.parse(JSON.stringify(b)) as BattleState;
+    validateBattle(restored);expect(restored).toEqual(b);
+    for(let i=0;i<120&&b.activeScript;i++){tickBattle(b);tickBattle(restored);}
+    expect(restored).toEqual(b);expect(()=>validateBattle(restored)).not.toThrow();
   });
   it('executes inferred status magic and blocks the affected general until expiry',()=>{
     let b=chargedSkillBattle(104,0,0);let target=battleGeneral(b,'defender');issueNativeCommand(b,'defender',0,1);target.action='attack';target.actionTick=7;

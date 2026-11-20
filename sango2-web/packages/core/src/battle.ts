@@ -22,6 +22,7 @@ import {nativeCanAdvance,NATIVE_COMMAND_LABELS} from './native-commands';
 import type {NativeWorldPoint} from './native-projection';
 import {nativeCreateMagicShoot,nativeShootDefinition,type NativeMagicShoot} from './native-magic-shoot';
 import {nativeCreateMagicHeal,type NativeMagicHeal} from './native-magic-heal';
+import {nativeCreateMagicReinforce,nativeReinforceDefinition,type NativeMagicReinforce} from './native-magic-reinforce';
 import {advanceBattleNativeMagic,battleMagicLocked,validateBattleNativeMagic} from './battle-native-magic';
 import {advanceBattleGeneral} from './battle-general-tick';
 export {NATIVE_COMMAND_LABELS} from './native-commands';
@@ -62,6 +63,8 @@ export interface BattleUnit {
   casualty?:{flight:NativeFlight;facing:number;origin:{x:number;y:number};born:number};
   /** Temporary native-style control effect. Missing on legacy saves. */
   status?:{kind:'stunned'|'silenced'|'weakened';until:number;magic:number};
+  /** MoreSoldier/BackSoldier child fade state. */
+  reinforceHandle?:number;reinforceAlpha?:number;
 }
 export interface BattleDetached extends NativeDetached {id:number;side:BattleSide;x:number;y:number;vx:number;vy:number;age:number;displayOffset?:{x:number;y:number}}
 /** A transient draw event. The coordinates keep legacy saves readable, while
@@ -96,6 +99,7 @@ export interface BattleState {
   log: string[];
   activeScript?:
     | {kind:'native-heal';side:BattleSide;casterId:number;magic:number;runtime:NativeMagicHeal}
+    | {kind:'native-reinforce';side:BattleSide;casterId:number;magic:number;runtime:NativeMagicReinforce}
     | {kind:'native-shoot';side:BattleSide;casterId:number;targetId:number;magic:number;script:number;damage:number;runtime:NativeMagicShoot}
     | {kind:'heal'; side:BattleSide; targetId:number; initialHp:number; nextPoint:number; amount:number; wait:number; magic:NativeMagic['sequence']}
     | {kind:'magic-projectile'; side:BattleSide; casterId:number; targetId:number; magic:NativeMagic['sequence']; script:number; damage:number; phase:'windup'|'flight'|'impact'; phaseAge:number; duration:number; fromX:number; fromY:number; toX:number; toY:number; x:number; y:number; z:number; age:number; hit:boolean}
@@ -121,6 +125,8 @@ export interface BattleState {
   magicRules?:'native-shoot-v1';
   /** Existing saved battles retain their previous immediate IncreaseHP loop. */
   healRules?:'native-heal-v1';
+  /** New battles use the original MoreSoldier/BackSoldier coroutine boundary. */
+  reinforceRules?:'native-reinforce-v1';
   cameraRules?:'native-script-v1';
   /** Existing saves retain grouped growth and their old retreat gauge. */
   generalRules?:'native-source-v1';
@@ -181,7 +187,12 @@ export function battleSkillUnavailable(b:BattleState,sequence:number,side:Battle
     const enemy=battleGeneral(b,opposite(side));
     if(enemy.hp<=0||enemy.escaped||enemy.order==='retreat')return '敌方主将无法成为目标';
   }
-  if(magic.effectType==='reinforce'&&battleSurvivors(b,side)>=b.initial[side])return '没有可补充的士兵';
+  if(magic.effectType==='reinforce') {
+    const capacity=b.reinforceRules
+      ? nativeTroopCapacity(caster.level??20).active+nativeTroopCapacity(caster.level??20).reserve
+      : b.initial[side];
+    if(battleSurvivors(b,side)>=capacity)return '没有可补充的士兵';
+  }
   if(magic.effectType==='area'||magic.effectType==='status') {
     if(!magicTargets(b,side,magic).length)return '没有有效目标';
   }
@@ -217,6 +228,15 @@ function castSkill(b:BattleState,sequence:number,side:BattleSide) {
     b.activeScript={kind:'magic-projectile',side,casterId:target.id,targetId:enemy.id,magic:magic.sequence,script:magic.script,damage:magic.attack,
       phase:'windup',phaseAge:0,duration:12,fromX,fromY,toX,toY,x:fromX,y:fromY,z:0,age:0,hit:false};
     b.log.unshift(`${caster.name}施展${magic.name}，金色箭光锁定敌方主将。`);
+  } else if(magic.effectType==='reinforce'&&nativeReinforceDefinition(magic.script)) {
+    // Keep the feature flag absent on old snapshots. It is promoted only when
+    // the first native MoreSoldier/BackSoldier coroutine is actually cast.
+    b.reinforceRules='native-reinforce-v1';
+    prepareBattleMovement(b);const m=target.movement!;
+    const living=b.units.filter(u=>u.side===side&&!u.general&&u.hp>0&&!u.escaped).length+(b.reserves[side]??0);
+    b.activeScript={kind:'native-reinforce',side,casterId:target.id,magic:magic.sequence,
+      runtime:nativeCreateMagicReinforce(magic.script,{x:m.px,y:m.py,z:0},side==='attacker'?1:0,caster.level??20,living)};
+    b.log.unshift(`${caster.name}施展${magic.name}，援军正在列阵。`);
   } else if(magic.effectType==='reinforce') {
     const room=Math.max(0,b.initial[side]-battleSurvivors(b,side));
     const amount=Math.min(room,Math.max(1,Math.min(24,magic.attack||10)));
@@ -519,7 +539,7 @@ function finish(b:BattleState,winner:BattleSide,reason:string) {
 function advanceNativeScript(b:BattleState,nativeSteps:number) {
   for(let i=0;i<nativeSteps&&b.activeScript;i++) {
     const script=b.activeScript;
-    if(script.kind==='native-shoot'||script.kind==='native-heal')break; // Runs on the source unit clock.
+    if(script.kind==='native-shoot'||script.kind==='native-heal'||script.kind==='native-reinforce')break; // Runs on the source unit clock.
     if(script.kind==='magic-projectile') {
       script.age++;script.phaseAge++;
       const target=b.units.find(u=>u.id===script.targetId&&u.general&&u.side===opposite(script.side));
@@ -831,6 +851,7 @@ export function validateBattle(value:unknown):asserts value is BattleState {
     if(!u||!integer(u.id,b.nextId-1)||ids.has(u.id)||!['attacker','defender'].includes(u.side)||typeof u.general!=='boolean'||typeof u.escaped!=='boolean'||typeof u.ranged!=='boolean'||typeof u.hit!=='boolean'||!['front','rear','general'].includes(u.division)||!['advance','hold','retreat'].includes(u.order)||!['wait','walk','attack','death'].includes(u.action)||!integer(u.actionTick)||!Number.isFinite(u.x)||u.x < -100||u.x>1300||!Number.isFinite(u.y)||u.y<0||u.y>600||!Number.isFinite(u.hp)||u.hp<0||u.hp>u.maxHp||!integer(u.maxHp,10000)||(u.target!==null&&!integer(u.target,b.nextId-1)))return fail();
     ids.add(u.id);
     if(u.nativeReserve!==undefined&&(typeof u.nativeReserve!=='boolean'||u.general&&u.nativeReserve))return fail();
+    if(u.reinforceHandle!==undefined&&(!integer(u.reinforceHandle,1000000)||!Number.isFinite(u.reinforceAlpha)||u.reinforceAlpha!<0||u.reinforceAlpha!>16))return fail();
     if(u.status!==undefined&&(!u.status||!['stunned','silenced','weakened'].includes(u.status.kind)||!integer(u.status.until,1000000)||!integer(u.status.magic,110)))return fail();
   }
   validateBattleCasualties(b,fail);
@@ -840,15 +861,15 @@ export function validateBattle(value:unknown):asserts value is BattleState {
   if(b.attackRules!==undefined&&(b.attackRules!=='native-actions-v1'||b.movementRules!=='native-grid-v3'))fail();
   for(const side of ['attacker','defender'] as const) {
     const c=b.commanders?.[side];
-    if(!c||typeof c.id!=='string'||typeof c.name!=='string'||c.name.length>100||typeof c.portrait!=='string'||typeof c.unit!=='string'||![c.strength,c.intelligence,c.hp,c.mp].every(n=>integer(n,10000))||!integer(b.initial?.[side])||!integer(b.reserves?.[side])||battleSurvivors(b,side)>b.initial[side]||b.units.filter(u=>u.general&&u.side===side).length!==1)return fail();
+    if(!c||typeof c.id!=='string'||typeof c.name!=='string'||c.name.length>100||typeof c.portrait!=='string'||typeof c.unit!=='string'||![c.strength,c.intelligence,c.hp,c.mp].every(n=>integer(n,10000))||!integer(b.initial?.[side])||!integer(b.reserves?.[side])||(!b.reinforceRules&&battleSurvivors(b,side)>b.initial[side])||(b.reinforceRules&&battleSurvivors(b,side)>b.initial[side]+200)||b.units.filter(u=>u.general&&u.side===side).length!==1)return fail();
     if(b.troopDeployment!==undefined) {
       const d=b.troopDeployment?.[side],cap=nativeTroopCapacity(c.level??20);
-      if(!d||!integer(d.active,Math.max(0,cap.active))||!integer(d.reserve,cap.reserve)||d.active+d.reserve+b.reserves[side]>b.initial[side])return fail();
-      for(const reserve of [false,true])if(b.units.filter(u=>u.side===side&&!u.general&&u.hp>0&&u.nativeReserve===reserve).length>(reserve?d.reserve:d.active))return fail();
+      if(!d||!integer(d.active,Math.max(0,cap.active)+(b.reinforceRules?200:0))||!integer(d.reserve,cap.reserve)||(!b.reinforceRules&&d.active+d.reserve+b.reserves[side]>b.initial[side]))return fail();
+      for(const reserve of [false,true])if(b.units.filter(u=>u.side===side&&!u.general&&u.hp>0&&u.nativeReserve===reserve).length>(reserve?d.reserve:d.active)+(b.reinforceRules&&!reserve?200:0))return fail();
       if(b.units.some(u=>u.side===side&&!u.general&&typeof u.nativeReserve!=='boolean'))return fail();
     }
     const members=b.rosters?.[side];
-    if(!Array.isArray(members)||!members.length||members.length>401||new Set(members.map(m=>m.commander?.id)).size!==members.length||!members.some(m=>m.commander.id===c.id)||!integer(b.totalInitial?.[side])||battleTeamSurvivors(b,side)>b.totalInitial[side])return fail();
+    if(!Array.isArray(members)||!members.length||members.length>401||new Set(members.map(m=>m.commander?.id)).size!==members.length||!members.some(m=>m.commander.id===c.id)||!integer(b.totalInitial?.[side])||(!b.reinforceRules&&battleTeamSurvivors(b,side)>b.totalInitial[side])||(b.reinforceRules&&battleTeamSurvivors(b,side)>b.totalInitial[side]+200))return fail();
     for(const m of members) {
       const mc=m.commander;
       if(!mc||typeof mc.id!=='string'||typeof mc.name!=='string'||typeof mc.portrait!=='string'||typeof mc.unit!=='string'||![mc.hp,mc.mp,mc.strength,mc.intelligence].every(n=>integer(n,10000))||!integer(m.troops)||typeof m.withdrawn!=='boolean')return fail();
@@ -865,7 +886,7 @@ export function validateBattle(value:unknown):asserts value is BattleState {
   validateBattleNativeMagic(b,fail);
   if(b.activeScript!==undefined) {
     const x=b.activeScript;
-    if(x.kind==='native-shoot'||x.kind==='native-heal') {
+    if(x.kind==='native-shoot'||x.kind==='native-heal'||x.kind==='native-reinforce') {
       // Full native coroutine/weapon validation lives with its adapter.
     } else if(x.kind==='heal') {
       if(!['attacker','defender'].includes(x.side)||!integer(x.targetId,b.nextId-1)||!integer(x.initialHp,10000)||!integer(x.nextPoint,10000)||!integer(x.amount,10000)||!integer(x.wait,100)||!integer(x.magic,100))return fail();

@@ -111,7 +111,7 @@ export function BattleView(props:Props) {
       const position=unitPosition(u);
       if(nativeScene&&(position.x < sceneBounds.left-160||position.x>sceneBounds.right+160||position.y < sceneBounds.top-160||position.y>sceneBounds.bottom+160))return;
       ctx.save();ctx.translate(position.x,position.y);
-      ctx.globalAlpha=u.hp<=0?Math.max(.15,1-u.actionTick/65):1;
+      ctx.globalAlpha=(u.hp<=0?Math.max(.15,1-u.actionTick/65):1)*(u.reinforceAlpha===undefined?1:Math.max(0,Math.min(1,u.reinforceAlpha/16)));
       if(u.hp>0) {ctx.fillStyle='#100f0f44';ctx.beginPath();ctx.ellipse(0,2,u.general?25:13,4,0,0,Math.PI*2);ctx.fill();}
       // Source sprites face left. Mirror our left-side army to face the enemy.
       const appearance=commander.appearance;
@@ -225,16 +225,17 @@ export function BattleView(props:Props) {
       // IncreaseHP VM loop is exposed as one continuous `heal` phase while
       // `magicScriptAge` advances from the number of completed HP writes.
       node.dataset.magicScriptKind=b.activeScript?.kind??'idle';
-      node.dataset.magicScriptPhase=b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'?b.activeScript.runtime.phase:b.activeScript?.kind==='heal'?'heal':
+      node.dataset.magicScriptPhase=b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'||b.activeScript?.kind==='native-reinforce'?b.activeScript.runtime.phase:b.activeScript?.kind==='heal'?'heal':
         b.activeScript?.kind==='magic-projectile'||b.activeScript?.kind==='magic-area'||
         b.activeScript?.kind==='magic-reinforce'||b.activeScript?.kind==='magic-status'?b.activeScript.phase:'idle';
-      node.dataset.magicScriptAge=String(b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'?b.activeScript.runtime.age:b.activeScript?.kind==='heal'?Math.max(0,b.activeScript.nextPoint-1):
+      node.dataset.magicScriptAge=String(b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'||b.activeScript?.kind==='native-reinforce'?b.activeScript.runtime.age:b.activeScript?.kind==='heal'?Math.max(0,b.activeScript.nextPoint-1):
         b.activeScript?.kind==='magic-projectile'||b.activeScript?.kind==='magic-area'||
         b.activeScript?.kind==='magic-reinforce'||b.activeScript?.kind==='magic-status'?b.activeScript.age:0);
       node.dataset.specialAttacks=String(b.units.filter(u=>u.hp>0&&u.action==='attack'&&u.movement?.clock?.special).length);
       node.dataset.movingUnits=String(b.units.filter(u=>u.hp>0&&!u.escaped&&(u.movement?.remaining??0)>0).length);
       node.dataset.casualties=String(b.units.filter(u=>u.casualty).length);
       node.dataset.fieldTroops=String(battleFieldTroops(b,'attacker')+battleFieldTroops(b,'defender'));
+      node.dataset.reinforceUnits=String(b.units.filter(u=>u.reinforceHandle!==undefined&&u.hp>0).length);
       // Ordered by foot position so rear ranks never paint over the front incorrectly.
       ctx.save();if(nativeScene){ctx.beginPath();ctx.rect(left,sceneBounds.top,right-left,sceneBounds.bottom-sceneBounds.top);ctx.clip();}
       const actors=[...b.units.map(u=>({id:u.id,y:nativeScene?nativeDepth(points.get(u.id)!.y):battleCasualtyPosition(u).y,draw:()=>drawUnit(u,b)})),...(b.detached??[]).map(d=>({id:d.id,y:nativeScene?nativeDepth(d.y):battleDetachedPosition(d).y,draw:()=>{
