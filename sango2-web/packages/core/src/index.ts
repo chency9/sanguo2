@@ -1,15 +1,15 @@
 import { scenarioById, type GameContent, type ScenarioDefinition } from '@sango2/content';
-import { createBattle, commandBattle, tickBattle, validateBattle, battleTeamSurvivors, upgradeBattle, chooseOpponentCommander, type BattleState, type BattleCommand, type BattleCommander, type BattleMember } from './battle';
+import { createBattle, commandBattle, tickBattle, validateBattle, battleTeamSurvivors, upgradeBattle, chooseOpponentCommander, availableCommanders, type BattleState, type BattleCommand, type BattleCommander, type BattleMember } from './battle';
 export * from './battle';
 export * from './native-projection';
 export * from './battle-scene';
 export {battleScriptCameraLocked} from './battle-native-magic';
-import {armyPower,type StrategicAction} from './strategic-ai';
+import {type StrategicAction} from './strategic-ai';
 import {createNativeCampaignAI,runNativeStrategicCallback,type NativeCampaignAI} from './native-ai-campaign';
 import {initialOfficerCondition,initialConditionTimers,type NativeOfficerCondition} from './native-officer-condition';
 import {nativeTroopCapacity,type TroopSlots} from './native-troops';
 import {officerLevel,officerMaxHp,officerMaxMp,type OfficerProgress} from './native-progression';
-import {initializeOfficerEquipment,officerDefinition,officerForceMask,nativeForceNames,type OfficerEquipment} from './native-officer-runtime';
+import {initializeOfficerEquipment,officerDefinition,officerForceMask,officerFormations,nativeForceNames,type OfficerEquipment} from './native-officer-runtime';
 import {ensureDomesticAnnual} from './native-policy-annual';
 import {createDomesticState,executeDomestic,beginDomesticYear,policyGovernorId,refreshPolicyGovernors,type DomesticState,type DomesticCommand} from './native-policy';
 export {policyGovernorId,nativeDevelop,nativeAnnualRevenue} from './native-policy';
@@ -122,6 +122,21 @@ export function adjacentRoads(scene: ScenarioDefinition, cityId: string) {
   return scene.roads.filter(r => r.from === cityId || r.to === cityId);
 }
 
+/**
+ * Resolve the battlefield scenery for a strategic location.
+ *
+ * The native map selector samples CHINAMAP*.MSK at the strategic POS/2
+ * coordinate. Converted content records that source-backed result as
+ * `battleScenery`; locations without a recovered mapping intentionally keep
+ * the historical castle fallback until the seasonal route selector is wired.
+ */
+export function battleSceneryForCity(scene: ScenarioDefinition, cityId: string): NonNullable<BattleState['scenery']> {
+  const city = scene.cities.find(c => c.id === cityId);
+  const scenery = city?.battleScenery;
+  if (scenery) return {terrainId: scenery.terrainId, variant: scenery.variant};
+  return {terrainId: 0, variant: 'a'};
+}
+
 function ownCity(s: Session, id: string, actor=s.factionId) {
   const c = s.cities[id];
   if (!c || c.ownerId !== actor) throw new Error('只能在我方城池执行此命令。');
@@ -139,20 +154,70 @@ function tacticalOutcome(s:Session,battle:BattleState):EncounterOutcome {
   }
   return {attackerWon:battle.winner===invader,attackingSurvivors:battleTeamSurvivors(battle,invader),defendingSurvivors:battleTeamSurvivors(battle,defense)};
 }
-/** AI-versus-AI only: bounded, deterministic Web auto-resolution; not native combat. */
+function rivalCommander(s:Session,scene:ScenarioDefinition,id:string):BattleCommander {
+  const def=scene.generals.find(g=>g.id===id);
+  const state=s.generals[id];
+  if(!def||!state)throw new Error('战役武将资料缺失。');
+  return {id:def.id,name:def.name,portrait:def.portrait,strength:state.strength??def.strength,
+    intelligence:state.intelligence??def.intelligence,hp:state.hp,mp:state.mp,
+    maxHp:officerMaxHp(state,def),maxMp:officerMaxMp(state,def),unit:state.currentUnit??def.unit,
+    formations:officerFormations(state,def),rawSkill:def.rawSkill,rawStrategy:def.rawStrategy,
+    level:officerLevel(state,def),speed:state.speed??def.speed,skillLearnset:def.skillLearnset,
+    strategyLearnset:def.strategyLearnset,morale:state.morale??80,fatigue:state.fatigue??0,loyalty:state.loyalty??90};
+}
+
+function rivalMember(s:Session,scene:ScenarioDefinition,id:string):BattleMember {
+  const state=s.generals[id];
+  return {commander:rivalCommander(s,scene,id),troops:state.troops,
+    troopSlots:state.troopSlots?{...state.troopSlots}:undefined,withdrawn:state.hp<=0};
+}
+
+/** Computer-versus-computer battles use the same fixed-step battle state as a
+ * player encounter. The strategic map still settles the result immediately,
+ * but casualties, commander rotation, skills, retreat and RNG now come from
+ * the tactical state machine instead of a power-ratio estimate. */
 function resolveRivalEncounter(s:Session,army:Army,scene:ScenarioDefinition):EncounterOutcome {
-  const ids=stationedGenerals(s,army.to),defending=s.cities[army.to].troops;
-  const a=armyPower(scene,army.troops,army.generalIds,s.generals),d=armyPower(scene,defending,ids,s.generals);
-  const attackerWon=a>d;
-  const winnerPower=attackerWon?a:d,loserPower=attackerWon?d:a;
-  const winnerLoss=Math.min(.65,.15+.5*loserPower/Math.max(1,winnerPower));
-  const attackingSurvivors=Math.floor(army.troops*(attackerWon?1-winnerLoss:.2));
-  const defendingSurvivors=Math.floor(defending*(attackerWon?.2:1-winnerLoss));
-  for(const [members,won] of [[army.generalIds,attackerWon],[ids,!attackerWon]] as const)for(const id of members) {
-    const g=s.generals[id];g.hp=Math.max(0,g.hp-Math.ceil(g.hp*(won?.15:.5)));
+  const attacker=army.generalIds.map(id=>rivalMember(s,scene,id));
+  const defenderIds=stationedGenerals(s,army.to),defending=s.cities[army.to].troops;
+  let defender=defenderIds.map(id=>rivalMember(s,scene,id));
+  if(!defender.some(m=>!m.withdrawn)) {
+    const commander:BattleCommander={id:'garrison',name:'守城校尉',portrait:'portraits/001.png',strength:45,intelligence:45,hp:80,maxHp:80,mp:0,maxMp:0,unit:'槍'};
+    defender=[{commander,troops:defending,withdrawn:false}];
   }
-  distribute(s,army.generalIds,attackingSurvivors);distribute(s,ids,defendingSurvivors);
-  return {attackerWon,attackingSurvivors,defendingSurvivors};
+  const a=attacker.find(m=>!m.withdrawn)??attacker[0];
+  // Keep the two native RNG words in the session stream. `nativeAI` is always
+  // present in new saves, while old preview saves are restored below.
+  const rng:[number,number]=s.nativeAI?[...s.nativeAI.rng]:[s.rng,0x87654321];
+  const d=chooseOpponentCommander(defender,rng)??defender[0];
+  let b=createBattle({id:`auto-${army.id}`,armyId:army.id,cityId:army.to,attacker:a.commander,defender:d.commander,
+    attackingTroops:a.troops,defendingTroops:d.troops,seed:s.rng,aiRng:rng,rosters:{attacker,defender},
+    scenery:battleSceneryForCity(scene,army.to)});
+  b.invasionSide='attacker';
+  b.fortifications={attacker:0,defender:s.cities[army.to].defense};
+  const advance=()=>{
+    b=commandBattle(b,{type:'start'});
+    if(b.nativeCommands) b=commandBattle(b,{type:'native-order',division:256,command:1});
+    else b=commandBattle(b,{type:'order',division:'all',order:'advance'});
+    for(let i=0;i<20&&b.phase==='fighting';i++)tickBattle(b,200);
+  };
+  advance();
+  for(let round=0;round<8&&b.phase==='intermission';round++) {
+    const next=availableCommanders(b,'attacker').find(m=>m.commander.id===b.commanders.attacker.id)??availableCommanders(b,'attacker')[0];
+    if(!next)break;
+    b=commandBattle(b,{type:'next-round',commanderId:next.commander.id});
+    advance();
+  }
+  // A native battle has a hard 99-second cap. If both sides survive all
+  // available rounds, use the same end-of-day withdrawal rule as tickBattle.
+  if(b.phase==='intermission')b=commandBattle(b,{type:'withdraw'});
+  if(b.phase!=='finished'||!b.winner)throw new Error('电脑战斗未能完成结算。');
+  s.rng=b.rng;if(s.nativeAI&&b.opponentAI)s.nativeAI.rng=[...b.opponentAI.rng];
+  for(const side of ['attacker','defender'] as const)for(const member of b.rosters[side]) {
+    const g=s.generals[member.commander.id];
+    if(g){g.hp=member.commander.hp;g.mp=member.commander.mp;g.troops=member.troops;
+      if(member.troopSlots)g.troopSlots={...member.troopSlots};else delete g.troopSlots;}
+  }
+  return {attackerWon:b.winner==='attacker',attackingSurvivors:battleTeamSurvivors(b,'attacker'),defendingSurvivors:battleTeamSurvivors(b,'defender')};
 }
 function arrive(s:Session,army:Army,scene:ScenarioDefinition,outcome?:EncounterOutcome) {
   const target=s.cities[army.to],cityName=scene.cities.find(c=>c.id===army.to)!.name;
@@ -229,7 +294,7 @@ function encounter(s:Session,army:Army,scene:ScenarioDefinition,items:readonly R
   const left=defendingPlayer?defenders:attackers,right=defendingPlayer?attackers:defenders;
   const aiRng:[number,number]=s.nativeAI?[...s.nativeAI.rng]:[s.rng,0x87654321];
   const a=left.find(m=>!m.withdrawn)??left[0],d=chooseOpponentCommander(right,aiRng)??right[0];
-  s.battle=createBattle({id:`battle-${s.nextId++}`,armyId:army.id,cityId:army.to,attacker:a.commander,defender:d.commander,attackingTroops:a.troops,defendingTroops:d.troops,seed:s.rng,aiRng,rosters:{attacker:left,defender:right}});
+  s.battle=createBattle({id:`battle-${s.nextId++}`,armyId:army.id,cityId:army.to,attacker:a.commander,defender:d.commander,attackingTroops:a.troops,defendingTroops:d.troops,seed:s.rng,aiRng,rosters:{attacker:left,defender:right},scenery:battleSceneryForCity(scene,army.to)});
   s.battle.invasionSide=defendingPlayer?'defender':'attacker';
   s.battle.fortifications={attacker:defendingPlayer?s.cities[army.to].defense:0,defender:defendingPlayer?0:s.cities[army.to].defense};
   note(s,`${defendingPlayer?'敌军来袭！':''}${scene.cities.find(c=>c.id===army.to)!.name}双方列阵，我军由${a.commander.name}出战。`,'march');

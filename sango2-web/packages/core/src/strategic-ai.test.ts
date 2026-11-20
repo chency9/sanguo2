@@ -147,9 +147,11 @@ describe('rival strategy and player defense',()=>{
   it('computer-versus-computer battles resolve without interrupting the player and conserve survivors',()=>{
     const c=fixture();c.scenarios[0].roads=c.scenarios[0].roads.filter(r=>r.to==='rival');
     let s=createSession(c,'era','e');const before=s.cities.enemy.troops+s.cities.rival.troops;
+    const beforeAiRng=[...s.nativeAI!.rng];
     s=dispatch(s,{type:'march',from:'enemy',to:'rival',generalIds:['e1','e2'],troops:160},c);s.factionId='p';
     s=advance(s,2,c);expect(s.battle).toBeNull();expect(s.cities.rival.ownerId).toBe('e');
     expect(s.cities.enemy.troops+s.cities.rival.troops).toBeLessThan(before+100);
+    expect(s.nativeAI!.rng).not.toEqual(beforeAiRng);
     expect(s.reports).toEqual([]);expect(s.chronicle.some(e=>e.text.includes('诸侯战报'))).toBe(true);
     expect(()=>validateSession(s,c)).not.toThrow();
   });

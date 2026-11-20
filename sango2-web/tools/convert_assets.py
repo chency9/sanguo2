@@ -5,6 +5,7 @@ Only selected original assets are exported. No executable is launched.
 Requires Python 3.12+ and Pillow. Usage: python tools/convert_assets.py --game PATH
 """
 import argparse
+import io
 import hashlib
 import json
 from pathlib import Path
@@ -149,6 +150,16 @@ def main():
         music=args.game/f'MP3/{track:02}.mp3'
         if not music.is_file():raise ValueError(f'Missing terrain soundtrack {track}')
         shutil.copyfile(music,out/f'battle/music-{track:02}.mp3')
+    # The native map selector samples the four seasonal CHINAMAP*.MSK masks
+    # with the strategic coordinate divided by two (0x44FD1B).  Keep the
+    # decoded masks in the conversion step so each city receives its actual
+    # TERRAIN sequence instead of a name/flag heuristic.
+    map_masks=[]
+    for map_index in range(1,5):
+        mask=Image.open(io.BytesIO(read(f'SHAPE\\MAP\\CHINAMAP{map_index}.MSK')))
+        mask.load()
+        if mask.size!=(640,480):raise ValueError(f'Unexpected terrain mask size: {mask.size}')
+        map_masks.append(mask.convert('P'))
     # Keep source animation frame order, # durations and OM_ATTACK timing for later calibration.
     objects=rows(ini('THINGS.INI'),'OBJECT')
     animations={}; frame_images={}; actions=['WAIT','WALK','ATTACK','DEATH','SPELL1'];attack_rules={}
@@ -258,10 +269,15 @@ def main():
                 'color':COLORS[i%len(COLORS)],'select':number(f['SELECT']),'special':f['NAME']=='盜賊',
                 'aiType':number(f.get('TYPE','2')),'flagNumber':number(f.get('FLAGNUM','0'))})
         for c in cities:
+            px,py=(number(v)//2 for v in c['POS'].split())
+            terrain_id=map_masks[0].getpixel((px,py)) if 0<=px<640 and 0<=py<480 else 255
+            if terrain_id>11:raise ValueError(f'City {c["NAME"]} is outside the native terrain mask')
+            battle_scenery={'terrainId':int(terrain_id),'variant':'a'}
             scene['cities'].append({'id':city_id[c['NAME']],'name':c['NAME'],'ownerId':faction(c.get('KING','')),
                 'governorId':general_id.get(c.get('MAJOR','')),'position':list(map(int,c['POS'].split())),
                 'money':number(c['MONEY']),'population':number(c['POPULATION']),'defense':number(c['DEFENSE']),
-                'nativeFlags':number(c.get('FLAGS','0')),'searchCategory':number(c.get('RATE'),3) if 1<=number(c.get('RATE'),3)<=5 else 3})
+                'nativeFlags':number(c.get('FLAGS','0')),'searchCategory':number(c.get('RATE'),3) if 1<=number(c.get('RATE'),3)<=5 else 3,
+                **({'battleScenery':battle_scenery} if battle_scenery else {})})
         for g in generals:
             city=next((c for c in cities if c['NAME']==g.get('CITY')),None)
             fields=general_entries[g['_line']]

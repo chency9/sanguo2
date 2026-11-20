@@ -63,6 +63,15 @@ describe('strategic preview rules', () => {
     expect(a).toEqual(b); expect(a.reports).toHaveLength(0);expect(a.battle?.phase).toBe('deployment'); expect(() => validateSession(a,content)).not.toThrow();
     expect(()=>dispatch(a,{type:'advance',days:1},content)).toThrow('当前战斗');
   });
+  it('carries a source-backed city scenery mapping into campaign battles', () => {
+    const pack = structuredClone(content);
+    pack.scenarios[0].cities.find(c => c.id === 'enemy')!.battleScenery = {terrainId: 10, variant: 'a'};
+    let s = dispatch(fresh(), march('enemy', 80), pack);
+    s = dispatch(s, {type:'advance', days: 3}, pack);
+    expect(s.battle?.scenery).toEqual({terrainId: 10, variant: 'a'});
+    expect(s.battle?.cityId).toBe('enemy');
+    expect(() => validateSession(s, pack)).not.toThrow();
+  });
   it('returns surviving attackers after a loss', () => {
     const initial = fresh(); initial.cities.enemy.troops = 1000;
     let s = dispatch(dispatch(initial,march('enemy'),content),{type:'advance',days:3},content);
