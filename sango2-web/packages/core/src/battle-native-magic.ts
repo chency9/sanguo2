@@ -8,26 +8,69 @@ import {nativeReinforceDefinition,validateNativeMagicReinforce} from './native-m
 import {advanceBattleReinforce} from './battle-reinforce';
 import {advanceBattleExplode} from './battle-explode';
 import {nativeExplodeDefinition,validateNativeMagicExplode} from './native-magic-explode';
+import {nativeAdvanceMagicRollTub,nativeRollTubDefinition,nativeRollTubHit,validateNativeMagicRollTub} from './native-magic-rolltub';
+import {battleExplodeCollision} from './battle-explode';
+import {emitBattleSound} from './battle-audio-events';
+import {emitBattleDamageAudio} from './battle-hit-audio';
 
 /** 0x43BA59/0x441E61: normal camera management yields to spell scripts. */
 export function battleScriptCameraLocked(b:BattleState):boolean {
   const script=b.activeScript;
-  return b.cameraRules==='native-script-v1'&&(script?.kind==='native-shoot'||script?.kind==='native-heal'||script?.kind==='native-reinforce'||script?.kind==='native-explode'&&(script.runtime.cameraReleased!==true));
+  return b.cameraRules==='native-script-v1'&&(script?.kind==='native-shoot'||script?.kind==='native-heal'||script?.kind==='native-reinforce'||(script?.kind==='native-explode'||script?.kind==='native-rolltub')&&script.runtime.cameraReleased!==true);
 }
 
 export function battleMagicLocked(b:BattleState,u:BattleUnit):boolean {
   const s=b.activeScript;
-  return (s?.kind==='native-shoot'||s?.kind==='native-heal'||s?.kind==='native-reinforce'||s?.kind==='native-explode')&&s.casterId===u.id&&s.runtime.casterLocked;
+  return (s?.kind==='native-shoot'||s?.kind==='native-heal'||s?.kind==='native-reinforce'||s?.kind==='native-explode'||s?.kind==='native-rolltub')&&s.casterId===u.id&&s.runtime.casterLocked;
 }
 /** One source update, next to the unit clock. The original mixed object list,
  * child visual coroutines and their RNG interleaving are still separate work. */
-export function advanceBattleNativeMagic(b:BattleState,death:(target:BattleUnit,caster:BattleUnit)=>void):void {
+export function advanceBattleNativeMagic(b:BattleState,death:(target:BattleUnit,caster:BattleUnit)=>void,sourceTick=b.tick*3):void {
+  if(b.activeScript?.kind==='native-rolltub') {
+    const script=b.activeScript,s=script.runtime,caster=b.units.find(u=>u.id===script.casterId);
+    if(!caster){b.activeScript=undefined;return;}
+    s.origin={x:caster.movement!.px,y:caster.movement!.py,z:0};
+    // SO 0x316A4 reads the enemy's x/y only at update 55. Later waves and
+    // MoveCamera use those saved coordinates even if the general moves away.
+    const enemy=b.units.find(u=>u.general&&u.side!==script.side)!;
+    if(s.age<=55)s.target={x:enemy.movement!.px,y:enemy.movement!.py,z:0};
+    const handle=(unit:BattleUnit)=>unit.general?(unit.side===script.side?1:2):100000+unit.id;
+    const snapshot=(unit:BattleUnit)=>({id:handle(unit),general:unit.general,alive:unit.hp>0&&!unit.escaped,
+      x:unit.movement!.px,y:unit.movement!.py,z:0});
+    const targets=new Map(b.units.map(u=>[handle(u),u]));
+    nativeAdvanceMagicRollTub(s,b.opponentAI!.rng,event=>{
+      if(event.host===769)emitBattleSound(b,String(event.args[0]),Number(event.args[1]),sourceTick);
+      if(event.host===768)emitBattleSound(b,String(event.args[1]),Number(event.args[2]),sourceTick);
+      if(event.host===289)caster.movement!.clock!.deferred=(caster.movement!.clock!.deferred+40*Number(event.args[1]))|0;
+      if(event.host===293) {
+        const unit=targets.get(Number(event.args[0]));if(!unit?.general)return;
+        const result=nativeMagicDirectHit(unit.hp,b.commanders[unit.side].charge??0,Number(event.args[2]),battleMagicLocked(b,unit));
+        unit.hp=result.hp;b.commanders[unit.side].charge=result.charge;
+        if(result.actions.length)emitBattleDamageAudio(b,unit,sourceTick);
+        if(unit.hp===0&&unit.action!=='death'){unit.action='death';unit.actionTick=0;death(unit,caster);}
+      }
+    },b.units.map(snapshot));
+    const occupants=new Map<string,BattleUnit>();
+    for(const unit of b.units)if(unit.hp>0&&!unit.escaped&&!unit.movement?.exiting) {
+      const cell=battleMovementCell(unit);occupants.set(`${cell.x},${cell.y}`,unit);
+    }
+    for(const object of s.objects)if(object.alive&&object.callback===39001) {
+      const x=Math.trunc((object.x>>16)/96),y=Math.trunc((object.y>>16)/72),unit=occupants.get(`${x},${y}`);
+      if(!unit||unit.hp<=0||!battleExplodeCollision(object,{general:unit.general,ally:unit.side===script.side}))continue;
+      // 0x40A8CC sends soldier death 65539 before callback 39001. The
+      // callback itself waits, creates fragments and applies its one hit.
+      if(!unit.general){unit.hp=0;unit.action='death';unit.actionTick=0;death(unit,caster);}
+      nativeRollTubHit(s,object.handle,snapshot(unit),script.damage);
+    }
+    if(s.phase==='done')b.activeScript=undefined;
+    return;
+  }
   if(b.activeScript?.kind==='native-explode') {
-    advanceBattleExplode(b,death,unit=>battleMagicLocked(b,unit));
+    advanceBattleExplode(b,death,unit=>battleMagicLocked(b,unit),sourceTick);
     return;
   }
   if(b.activeScript?.kind==='native-reinforce') {
-    advanceBattleReinforce(b);
+    advanceBattleReinforce(b,sourceTick);
     return;
   }
   if(b.activeScript?.kind==='native-heal') {
@@ -35,6 +78,7 @@ export function advanceBattleNativeMagic(b:BattleState,death:(target:BattleUnit,
     // Hosts 261/262 and 17/21 read current object coordinates at their call.
     s.origin={x:caster.movement!.px,y:caster.movement!.py,z:0};
     nativeAdvanceMagicHeal(s,b.opponentAI!.rng,caster,event=>{
+      if(event.host===769)emitBattleSound(b,String(event.args[0]),Number(event.args[1]),sourceTick);
       // Host 289 -> 0x43AB60 adds 40*n to unit +60 (deferred decision),
       // not to its team's charge and not to an animation pose number.
       if(event.host===289)caster.movement!.clock!.deferred=(caster.movement!.clock!.deferred+40*Number(event.args[1]))|0;
@@ -48,6 +92,7 @@ export function advanceBattleNativeMagic(b:BattleState,death:(target:BattleUnit,
   // its current full fixed-point coordinates at update 70, not cast time.
   if(!s.weapon)s.origin={x:caster.movement!.px,y:caster.movement!.py,z:0};
   nativeAdvanceMagicShoot(s,b.opponentAI!.rng,event=>{
+    if(event.host===769)emitBattleSound(b,String(event.args[0]),Number(event.args[1]),sourceTick);
     if(b.cameraRules&&event.child==='LockCamera')s.cameraTrack=nativeCreateLockCamera(s.sideFlag,180,-120+s.cameraJitter);
   });
   const w=s.weapon;
@@ -69,6 +114,7 @@ export function advanceBattleNativeMagic(b:BattleState,death:(target:BattleUnit,
         if(target.general) {
           const c=b.commanders[target.side],result=nativeMagicDirectHit(target.hp,c.charge??0,script.damage,battleMagicLocked(b,target),s.style===1?50:0);
           target.hp=result.hp;c.charge=result.charge;
+          if(result.actions.length)emitBattleDamageAudio(b,target,sourceTick);
           nativeMagicWeaponHit(w,s.style);
         } else target.hp=0; // Generic collision event 65539, before SO callback.
         b.effects.push({id:b.nextId++,kind:'hit',x:target.x,y:target.y-60,toX:target.x,toY:target.y-60,ticks:8,targetId:target.id,targetZ:60});
@@ -85,6 +131,12 @@ export function validateBattleNativeMagic(b:BattleState,fail:()=>never):void {
   if(b.healRules!==undefined&&(b.healRules!=='native-heal-v1'||b.movementRules!=='native-grid-v3'))fail();
   if(b.reinforceRules!==undefined&&(b.reinforceRules!=='native-reinforce-v1'||b.movementRules!=='native-grid-v3'))fail();
   if(b.explodeRules!==undefined&&(b.explodeRules!=='native-explode-v1'||b.movementRules!=='native-grid-v3'))fail();
+  if(b.rollTubRules!==undefined&&(b.rollTubRules!=='native-rolltub-v1'||b.movementRules!=='native-grid-v3'))fail();
+  if(b.activeScript?.kind==='native-rolltub') {
+    const script=b.activeScript,definition=nativeRollTubDefinition(script.magic),caster=b.units.find(u=>u.id===script.casterId);
+    if(!b.rollTubRules||!definition||!caster?.general||caster.side!==script.side||script.runtime.script!==definition.script||script.runtime.sequence!==script.magic||script.runtime.sideFlag!==(script.side==='attacker'?1:0)||script.damage!==nativeMagicDefinition(script.magic)?.attack||script.runtime.age>b.tick*3)fail();
+    validateNativeMagicRollTub(script.runtime,fail);return;
+  }
   if(b.activeScript?.kind==='native-explode') {
     const script=b.activeScript,definition=nativeExplodeDefinition(script.magic),caster=b.units.find(u=>u.id===script.casterId);
     if(!b.explodeRules||!definition||!caster?.general||caster.side!==script.side||script.runtime.script!==definition.script||script.runtime.sequence!==script.magic||script.runtime.sideFlag!==(script.side==='attacker'?1:0)||script.damage!==nativeMagicDefinition(script.magic)?.attack||script.runtime.age>b.tick*3)fail();

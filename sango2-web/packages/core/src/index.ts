@@ -1,16 +1,18 @@
 import { scenarioById, type GameContent, type ScenarioDefinition } from '@sango2/content';
-import { createBattle, commandBattle, tickBattle, validateBattle, battleTeamSurvivors, upgradeBattle, chooseOpponentCommander, availableCommanders, type BattleState, type BattleCommand, type BattleCommander, type BattleMember } from './battle';
+import { createBattle, commandBattle, tickBattle, validateBattle, battleTeamSurvivors, upgradeBattle, chooseOpponentCommander, type BattleState, type BattleCommand, type BattleCommander, type BattleMember,type BattleSide } from './battle';
 export * from './battle';
 export * from './native-projection';
 export * from './battle-scene';
 export {battleScriptCameraLocked} from './battle-native-magic';
 import {type StrategicAction} from './strategic-ai';
-import {nativeBelow,type NativeRandomState} from './native-strategic-ai';
-import {createNativeCampaignAI,runNativeStrategicCallback,type NativeCampaignAI} from './native-ai-campaign';
+import type {NativeRandomState} from './native-strategic-ai';
+import {nativeSceneryTerrain,nativeSceneryVariant} from './native-scenery';
+import {createNativeCampaignAI,runNativeStrategicCallback,nativeCityCapacity,type NativeCampaignAI} from './native-ai-campaign';
 import {initialOfficerCondition,initialConditionTimers,type NativeOfficerCondition} from './native-officer-condition';
 import {nativeTroopCapacity,type TroopSlots} from './native-troops';
-import {officerLevel,officerMaxHp,officerMaxMp,type OfficerProgress} from './native-progression';
-import {initializeOfficerEquipment,officerDefinition,officerForceMask,officerFormations,nativeForceNames,type OfficerEquipment} from './native-officer-runtime';
+import {officerLevel,officerMaxHp,officerMaxMp,officerExperience,applyOfficerExperience,type OfficerProgress} from './native-progression';
+import {nativeVictoryMeritBonus,nativeBattleExperience,nativeParticipantDisposition,nativeFactionDisposition,isNativeBattleRecord,type NativeBattleRecord} from './native-battle-experience';
+import {initializeOfficerEquipment,officerDefinition,officerForceMask,nativeForceNames,type OfficerEquipment} from './native-officer-runtime';
 import {ensureDomesticAnnual} from './native-policy-annual';
 import {createDomesticState,executeDomestic,beginDomesticYear,policyGovernorId,refreshPolicyGovernors,type DomesticState,type DomesticCommand} from './native-policy';
 export {policyGovernorId,nativeDevelop,nativeAnnualRevenue} from './native-policy';
@@ -29,7 +31,7 @@ export const RULES = { initialTroopsPerGeneral: 80, developCost: 300, developDef
   developPopulation: 500, recruitCost: 200, recruitTroops: 50, roadUnitsPerDay: 60, maxArmyGenerals: 5 } as const;
 
 export interface CityState { ownerId: string | null; money: number; population: number; defense: number; troops: number; lastActionDay: number }
-export interface GeneralState extends Partial<NativeOfficerCondition>,Partial<OfficerProgress>,Partial<OfficerEquipment> { ownerId: string | null; cityId: string | null; armyId: string | null; status: string; hp:number; mp:number; troops:number; troopSlots?:TroopSlots; currentUnit?:string }
+export interface GeneralState extends Partial<NativeOfficerCondition>,Partial<OfficerProgress>,Partial<OfficerEquipment> { ownerId: string | null; cityId: string | null; armyId: string | null; status: string; hp:number; mp:number; troops:number; troopSlots?:TroopSlots; currentUnit?:string;battleRecord?:NativeBattleRecord;appearanceHidden?:boolean }
 export interface Army {
   id: string; ownerId: string; from: string; to: string; roadId: string; generalIds: string[];
   troops: number; totalDays: number; remainingDays: number;
@@ -131,14 +133,14 @@ export function adjacentRoads(scene: ScenarioDefinition, cityId: string) {
  * season; locations without a recovered mapping intentionally keep the
  * historical castle fallback.
  */
-export function battleSceneryForCity(scene: ScenarioDefinition, cityId: string, day = 0, rng?: NativeRandomState): NonNullable<BattleState['scenery']> {
+export function battleSceneryForCity(scene: ScenarioDefinition, cityId: string, day = 0, rng?: NativeRandomState, population?:number): NonNullable<BattleState['scenery']> {
   const city = scene.cities.find(c => c.id === cityId);
   const season = Math.floor((Math.max(0, day) % 360) / 90);
   const scenery = city?.battleSceneryBySeason?.[season] ?? city?.battleScenery;
   if (scenery) {
     const mode=city?.battleSceneryMode;
-    const variant=mode==='a'?'a':mode==='b'?'b':mode==='random'&&rng?(nativeBelow(rng,2)===0?'a':'b'):scenery.variant;
-    return {terrainId: scenery.terrainId, variant};
+    const variant=mode==='a'||mode==='b'?mode:mode==='random'&&rng?nativeSceneryVariant(mode,rng):scenery.variant;
+    return {terrainId:nativeSceneryTerrain(scenery.terrainId,population===undefined?undefined:nativeCityCapacity(population)),variant};
   }
   return {terrainId: 0, variant: 'a'};
 }
@@ -189,81 +191,112 @@ function ownCity(s: Session, id: string, actor=s.factionId) {
 }
 
 interface EncounterOutcome { attackerWon:boolean; attackingSurvivors:number; defendingSurvivors:number }
-function tacticalOutcome(s:Session,battle:BattleState):EncounterOutcome {
+function tacticalOutcome(s:Session,battle:BattleState,scene:ScenarioDefinition):EncounterOutcome {
   const invader=battle.invasionSide??'attacker',defense=invader==='attacker'?'defender':'attacker';
   for(const side of ['attacker','defender'] as const)for(const member of battle.rosters[side]) {
     const g=s.generals[member.commander.id];
     if(g){g.hp=member.commander.hp;g.mp=member.commander.mp;g.troops=member.troops;
       if(member.troopSlots)g.troopSlots={...member.troopSlots};else delete g.troopSlots;
+      if(member.commander.battleRecord)g.battleRecord={...member.commander.battleRecord};
       for(const key of ['morale','fatigue','loyalty'] as const)if(member.commander[key]!==undefined)g[key]=member.commander[key];}
   }
+  if(battle.experienceRules)settleBattleExperience(s,battle,scene);
   return {attackerWon:battle.winner===invader,attackingSurvivors:battleTeamSurvivors(battle,invader),defendingSurvivors:battleTeamSurvivors(battle,defense)};
 }
-function rivalCommander(s:Session,scene:ScenarioDefinition,id:string):BattleCommander {
+
+function settleBattleExperience(s:Session,b:BattleState,scene:ScenarioDefinition) {
+  if(!b.drawn&&b.winner) {
+    const losing=b.winner==='attacker'?'defender':'attacker',winning=b.rosters[b.winner];
+    const {merits}=nativeVictoryMeritBonus(winning.map(m=>({merit:m.merit??0})),b.rosters[losing].map(m=>m.commander.level??20));
+    winning.forEach((m,i)=>m.merit=merits[i]);
+  }
+  const annual=s.policy?ensureDomesticAnnual(s,scene):undefined;
+  const invader=b.invasionSide??'attacker',citySide=invader==='attacker'?'defender':'attacker';
+  const result:0|1|2=b.drawn?0:b.winner===citySide?1:2;
+  const owners=new Map<BattleSide,string>();
+  for(const side of ['attacker','defender'] as const)for(const member of b.rosters[side]) {
+    const g=s.generals[member.commander.id],def=scene.generals.find(d=>d.id===member.commander.id);
+    if(!g||!def)continue;
+    const owner=g.ownerId;if(owner)owners.set(side,owner);
+    const award=nativeBattleExperience(member.merit??0,officerExperience(g,def),owner?annual?.battleExperience[owner]??0:0);
+    applyOfficerExperience(g,def,award.experience);
+    if(owner&&annual)annual.battleExperience[owner]=award.factionExperience;
+    if(def.constancy!==undefined) {
+      const next=nativeParticipantDisposition({...initialOfficerCondition(g),constancy:def.constancy},side===citySide?'first':'second',result);
+      g.morale=next.morale;g.loyalty=next.loyalty;g.fatigue=next.fatigue;
+    }
+  }
+  if(result!==0)for(const [side,owner] of owners)for(const def of scene.generals) {
+    const g=s.generals[def.id];if(g.ownerId!==owner||g.status!=='登'||def.constancy===undefined)continue;
+    const next=nativeFactionDisposition({...initialOfficerCondition(g),constancy:def.constancy},side===b.winner);
+    g.morale=next.morale;g.loyalty=next.loyalty;g.fatigue=next.fatigue;
+  }
+}
+function campaignBattleMember(s:Session,scene:ScenarioDefinition,id:string,items:readonly Record<string,string>[]):BattleMember {
   const def=scene.generals.find(g=>g.id===id);
   const state=s.generals[id];
   if(!def||!state)throw new Error('战役武将资料缺失。');
-  return {id:def.id,name:def.name,portrait:def.portrait,strength:state.strength??def.strength,
-    intelligence:state.intelligence??def.intelligence,hp:state.hp,mp:state.mp,
-    maxHp:officerMaxHp(state,def),maxMp:officerMaxMp(state,def),unit:state.currentUnit??def.unit,
-    formations:officerFormations(state,def),rawSkill:def.rawSkill,rawStrategy:def.rawStrategy,
-    level:officerLevel(state,def),speed:state.speed??def.speed,skillLearnset:def.skillLearnset,
-    strategyLearnset:def.strategyLearnset,morale:state.morale??80,fatigue:state.fatigue??0,loyalty:state.loyalty??90};
+  return {commander:{...officerDefinition(state,def,items),level:officerLevel(state,def),
+    hp:state.hp,mp:state.mp,maxHp:officerMaxHp(state,def),maxMp:officerMaxMp(state,def),
+    battleRecord:state.battleRecord?{...state.battleRecord}:undefined,
+    morale:state.morale??80,fatigue:state.fatigue??0,loyalty:state.loyalty??90},
+    troops:state.troops,troopSlots:state.troopSlots?{...state.troopSlots}:undefined,withdrawn:state.hp<=0};
 }
 
-function rivalMember(s:Session,scene:ScenarioDefinition,id:string):BattleMember {
-  const state=s.generals[id];
-  return {commander:rivalCommander(s,scene,id),troops:state.troops,
-    troopSlots:state.troopSlots?{...state.troopSlots}:undefined,withdrawn:state.hp<=0};
+/** Both campaign entry points use the current governor, effective equipment
+ * and the same per-officer soldier allocations. Native linked-list mutation
+ * history is still represented by the existing reversed city-list adapter. */
+function campaignBattleRosters(s:Session,army:Army,scene:ScenarioDefinition,items:readonly Record<string,string>[]) {
+  const stationed=stationedGenerals(s,army.to),defenderIds=[...stationed].reverse();
+  const governor=s.policy?policyGovernorId(s,scene,army.to):scene.cities.find(c=>c.id===army.to)?.governorId;
+  const at=governor?defenderIds.indexOf(governor):-1;
+  if(at>0)[defenderIds[0],defenderIds[at]]=[defenderIds[at],defenderIds[0]];
+  reconcileCityTroops(s,army.to);
+  const attackers=army.generalIds.map(id=>campaignBattleMember(s,scene,id,items));
+  const defenders=defenderIds.map(id=>campaignBattleMember(s,scene,id,items));
+  if(!defenders.some(m=>!m.withdrawn)) {
+    // Preserve the existing Web fallback for a city without deployable officers.
+    // It is shared by player and computer encounters, not an original rule.
+    stationed.forEach(id=>assignAggregateTroops(s.generals[id],0));defenders.length=0;
+    const commander:BattleCommander={id:'garrison',name:'守城校尉',portrait:'portraits/001.png',strength:45,intelligence:45,hp:80,mp:0,unit:'槍'};
+    defenders.push({commander,troops:s.cities[army.to].troops,withdrawn:false});
+  }
+  return {attackers,defenders};
 }
 
 /** Computer-versus-computer battles use the same fixed-step battle state as a
  * player encounter. The strategic map still settles the result immediately,
  * but casualties, commander rotation, skills, retreat and RNG now come from
  * the tactical state machine instead of a power-ratio estimate. */
-function resolveRivalEncounter(s:Session,army:Army,scene:ScenarioDefinition):EncounterOutcome {
-  const attacker=army.generalIds.map(id=>rivalMember(s,scene,id));
-  const defenderIds=stationedGenerals(s,army.to),defending=s.cities[army.to].troops;
-  let defender=defenderIds.map(id=>rivalMember(s,scene,id));
-  if(!defender.some(m=>!m.withdrawn)) {
-    const commander:BattleCommander={id:'garrison',name:'守城校尉',portrait:'portraits/001.png',strength:45,intelligence:45,hp:80,maxHp:80,mp:0,maxMp:0,unit:'槍'};
-    defender=[{commander,troops:defending,withdrawn:false}];
-  }
-  const a=attacker.find(m=>!m.withdrawn)??attacker[0];
-  const scenery=battleSceneryForCity(scene,army.to,s.day,s.nativeAI?.rng);
+function resolveRivalEncounter(s:Session,army:Army,scene:ScenarioDefinition,items:readonly Record<string,string>[]):EncounterOutcome {
+  const {attackers:attacker,defenders:defender}=campaignBattleRosters(s,army,scene,items);
+  const scenery=battleSceneryForCity(scene,army.to,s.day,s.nativeAI?.rng,s.cities[army.to].population);
   // Keep the two native RNG words in the session stream. `nativeAI` is always
   // present in new saves, while old preview saves are restored below.
   const rng:[number,number]=s.nativeAI?[...s.nativeAI.rng]:[s.rng,0x87654321];
+  const a=chooseOpponentCommander(attacker,rng)??attacker[0];
   const d=chooseOpponentCommander(defender,rng)??defender[0];
   let b=createBattle({id:`auto-${army.id}`,armyId:army.id,cityId:army.to,attacker:a.commander,defender:d.commander,
     attackingTroops:a.troops,defendingTroops:d.troops,seed:s.rng,aiRng:rng,rosters:{attacker,defender},
-    scenery});
+    scenery,computerAttacker:true});
   b.invasionSide='attacker';
   b.fortifications={attacker:0,defender:s.cities[army.to].defense};
   const advance=()=>{
     b=commandBattle(b,{type:'start'});
-    if(b.nativeCommands) b=commandBattle(b,{type:'native-order',division:256,command:1});
-    else b=commandBattle(b,{type:'order',division:'all',order:'advance'});
     for(let i=0;i<20&&b.phase==='fighting';i++)tickBattle(b,200);
   };
   advance();
-  for(let round=0;round<8&&b.phase==='intermission';round++) {
-    const next=availableCommanders(b,'attacker').find(m=>m.commander.id===b.commanders.attacker.id)??availableCommanders(b,'attacker')[0];
-    if(!next)break;
-    b=commandBattle(b,{type:'next-round',commanderId:next.commander.id});
+  // Each round withdraws at least one previously available commander. This
+  // bound covers the complete city roster rather than truncating after nine
+  // rounds when an army encounters a large garrison.
+  const roundLimit=attacker.filter(m=>!m.withdrawn).length+defender.filter(m=>!m.withdrawn).length-1;
+  for(let round=1;round<roundLimit&&b.phase==='intermission';round++) {
+    b=commandBattle(b,{type:'auto-next-round'});
     advance();
   }
-  // A native battle has a hard 99-second cap. If both sides survive all
-  // available rounds, use the same end-of-day withdrawal rule as tickBattle.
-  if(b.phase==='intermission')b=commandBattle(b,{type:'withdraw'});
   if(b.phase!=='finished'||!b.winner)throw new Error('电脑战斗未能完成结算。');
   s.rng=b.rng;if(s.nativeAI&&b.opponentAI)s.nativeAI.rng=[...b.opponentAI.rng];
-  for(const side of ['attacker','defender'] as const)for(const member of b.rosters[side]) {
-    const g=s.generals[member.commander.id];
-    if(g){g.hp=member.commander.hp;g.mp=member.commander.mp;g.troops=member.troops;
-      if(member.troopSlots)g.troopSlots={...member.troopSlots};else delete g.troopSlots;}
-  }
-  return {attackerWon:b.winner==='attacker',attackingSurvivors:battleTeamSurvivors(b,'attacker'),defendingSurvivors:battleTeamSurvivors(b,'defender')};
+  return tacticalOutcome(s,b,scene);
 }
 function arrive(s:Session,army:Army,scene:ScenarioDefinition,outcome?:EncounterOutcome) {
   const target=s.cities[army.to],cityName=scene.cities.find(c=>c.id===army.to)!.name;
@@ -311,34 +344,11 @@ function arrive(s:Session,army:Army,scene:ScenarioDefinition,outcome?:EncounterO
 }
 
 function encounter(s:Session,army:Army,scene:ScenarioDefinition,items:readonly Record<string,string>[]) {
-  // Include every stationed defender; one commander and that commander's soldiers fight each round.
-  const stationed=stationedGenerals(s,army.to);
-  // 0x446B52 preserves the city list then swaps the governor into slot zero.
-  // Reverse source insertion is our existing city-list adapter; full native
-  // linked-list mutation history is still a separate parity gap.
-  const defenderIds=[...stationed].reverse();
-  const governorId = s.policy
-    ? policyGovernorId(s, scene, army.to)
-    : scene.cities.find(city => city.id === army.to)?.governorId;
-  const governorIndex = governorId ? defenderIds.indexOf(governorId) : -1;
-  if (governorIndex > 0) {
-    [defenderIds[0], defenderIds[governorIndex]] = [defenderIds[governorIndex], defenderIds[0]];
-  }
-  // Preserve per-officer soldiers, including zero-HP officers. Redistributing
-  // here changes native commander weights before its very first decision.
-  reconcileCityTroops(s,army.to);
-  const member=(id:string):BattleMember=>{const def=scene.generals.find(g=>g.id===id)!,state=s.generals[id];return {commander:{...officerDefinition(state,def,items),level:officerLevel(state,def),hp:state.hp,mp:state.mp,maxHp:officerMaxHp(state,def),maxMp:officerMaxMp(state,def),morale:state.morale??80,fatigue:state.fatigue??0,loyalty:state.loyalty??90},troops:state.troops,troopSlots:state.troopSlots?{...state.troopSlots}:undefined,withdrawn:state.hp===0};};
-  const attackers=army.generalIds.map(member),defenders=defenderIds.map(member);
-  if(!defenders.some(m=>!m.withdrawn)) {
-    // Existing Web garrison fallback when there is no deployable officer.
-    stationed.forEach(id=>assignAggregateTroops(s.generals[id],0));defenders.length=0;
-    const commander:BattleCommander={id:'garrison',name:'守城校尉',portrait:'portraits/001.png',strength:45,intelligence:45,hp:80,mp:0,unit:'槍'};
-    defenders.push({commander,troops:s.cities[army.to].troops,withdrawn:false});
-  }
+  const {attackers,defenders}=campaignBattleRosters(s,army,scene,items);
   // Tactical left/attacker slot is always the player. invasionSide records the strategic attacker.
   const defendingPlayer=army.ownerId!==s.factionId;
   const left=defendingPlayer?defenders:attackers,right=defendingPlayer?attackers:defenders;
-  const scenery=battleSceneryForCity(scene,army.to,s.day,s.nativeAI?.rng);
+  const scenery=battleSceneryForCity(scene,army.to,s.day,s.nativeAI?.rng,s.cities[army.to].population);
   const aiRng:[number,number]=s.nativeAI?[...s.nativeAI.rng]:[s.rng,0x87654321];
   const a=left.find(m=>!m.withdrawn)??left[0],d=chooseOpponentCommander(right,aiRng)??right[0];
   s.battle=createBattle({id:`battle-${s.nextId++}`,armyId:army.id,cityId:army.to,attacker:a.commander,defender:d.commander,attackingTroops:a.troops,defendingTroops:d.troops,seed:s.rng,aiRng,rosters:{attacker:left,defender:right},scenery});
@@ -351,7 +361,7 @@ function arrivals(s:Session,scene:ScenarioDefinition,items:readonly Record<strin
     const target=s.cities[army.to];
     if(target.ownerId&&target.ownerId!==army.ownerId) {
       if(target.ownerId===s.factionId||army.ownerId===s.factionId){encounter(s,army,scene,items);return;}
-      arrive(s,army,scene,resolveRivalEncounter(s,army,scene));
+      arrive(s,army,scene,resolveRivalEncounter(s,army,scene,items));
     } else arrive(s,army,scene);s.armies=s.armies.filter(a=>a.id!==army.id);
   }
 }
@@ -368,7 +378,7 @@ export function dispatch(previous: Session, command: Command, content: GameConte
       if(s.battle.phase!=='finished')throw new Error('战斗尚未结束。');
       const army=s.armies.find(a=>a.id===s.battle!.armyId);if(!army)throw new Error('战斗军队不存在。');
       if(s.nativeAI&&s.battle.opponentAI)s.nativeAI.rng=[...s.battle.opponentAI.rng];
-      arrive(s,army,scene,tacticalOutcome(s,s.battle));s.rng=s.battle.rng;s.armies=s.armies.filter(a=>a.id!==army.id);s.battle=null;
+      arrive(s,army,scene,tacticalOutcome(s,s.battle,scene));s.rng=s.battle.rng;s.armies=s.armies.filter(a=>a.id!==army.id);s.battle=null;
       arrivals(s,scene,content.items);
       refreshPolicyGovernors(s,scene);
       if(!s.battle&&beginDomesticYear(s,scene,content.items))note(s,`${s.policy!.year}年内政时间到了，年度赋税已入库。`);
@@ -521,6 +531,8 @@ export function validateSession(value: unknown, content: GameContent): asserts v
     if(['morale','fatigue','loyalty'].some(k=>{const n=g[k as keyof NativeOfficerCondition];return n!==undefined&&!integer(n,100);}))return fail();
     if(g.level!==undefined&&(!integer(g.level,99)||g.level<1))return fail();
     if(g.experience!==undefined&&!integer(g.experience,4294967295))return fail();
+    if(g.battleRecord!==undefined&&!isNativeBattleRecord(g.battleRecord))return fail();
+    if(g.appearanceHidden!==undefined&&typeof g.appearanceHidden!=='boolean')return fail();
     if(g.maxHp!==undefined&&(!integer(g.maxHp,32767)||g.maxHp<1))return fail();
     if(g.maxMp!==undefined&&(!integer(g.maxMp,32767)||g.maxMp<1))return fail();
     for(const key of ['strength','intelligence','speed'] as const)if(g[key]!==undefined&&(!Number.isInteger(g[key])||g[key]!< -32768||g[key]!>32767))return fail();

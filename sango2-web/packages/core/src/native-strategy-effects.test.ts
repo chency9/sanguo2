@@ -1,6 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
-import {nativeApplyStrategy,nativeStrategyRecovery,type NativeStrategyCombat} from './native-strategy-effects';
+import {nativeApplyStrategy,nativeStrategyRecovery,SUPPORTED_STRATEGY_EXECUTES,type NativeStrategyCombat} from './native-strategy-effects';
 import {nativeChooseStrategy,type NativeStrategySlot,type NativeStrategyChoice} from './native-strategist-ai';
 import type {NativeRandomState} from './native-strategic-ai';
 import {createBattle,commandBattle,tickBattle,battleGeneral,battleSkillUnavailable,validateBattle,NATIVE_STRATEGIES,type BattleCommander} from './battle';
@@ -30,6 +30,22 @@ const commander=(id:string,execute=0):BattleCommander=>({id,name:id,portrait:'po
 const battle=(own=0,enemy=0)=>createBattle({id:'wise',attacker:commander('player',own),defender:commander('enemy',enemy),attackingTroops:133,defendingTroops:133,seed:184});
 const select=(b:ReturnType<typeof battle>,execute:number)=>commandBattle(b,{type:'strategy',advisorId:'player',sequence:sequence(execute)});
 describe('strategist battle lifecycle',()=>{
+  it('supports 55 of the 67 original military strategy effects',()=>{
+    expect(SUPPORTED_STRATEGY_EXECUTES.filter(execute=>execute!==0)).toHaveLength(55);
+  });
+  it.each([{execute:53,modifier:30},{execute:54,modifier:50},{execute:55,modifier:100}])('applies experience strategy $execute to real duel merit and survives save/load',({execute,modifier})=>{
+    let b=select(battle(execute,10),execute);b=commandBattle(b,{type:'start'});
+    expect(b.strategies!.effects.attacker).toMatchObject({settlementFlags:12288,experienceModifier:modifier,fatigueModifier:2});
+    expect(b.strategies!.effects.attacker.flags).toBe(0);
+    const loaded=JSON.parse(JSON.stringify(b));validateBattle(loaded);
+    battleGeneral(b,'defender').hp=0;battleGeneral(loaded,'defender').hp=0;
+    tickBattle(b);tickBattle(loaded);expect(loaded).toEqual(b);
+    // No soldiers have died. Knockdown is 51 * enemy level, with the military
+    // strategy applied before cumulative encounter experience is awarded.
+    expect(b.rosters.attacker[0].merit).toBe(Math.trunc(51*27*(100+modifier)/100));
+    const corrupt=JSON.parse(JSON.stringify(b));corrupt.strategies.effects.attacker.experienceModifier=31;
+    expect(()=>validateBattle(corrupt)).toThrow();
+  });
   it('selects enemy strategy before formation and keeps its RNG/choice when the player changes commanders',()=>{
     const a=commander('a'),other=commander('other'),d=commander('d',50);
     const b=createBattle({id:'x',attacker:a,defender:d,attackingTroops:50,defendingTroops:50,seed:30,rosters:{attacker:[{commander:a,troops:50,withdrawn:false},{commander:other,troops:30,withdrawn:false}],defender:[{commander:d,troops:50,withdrawn:false}]}});

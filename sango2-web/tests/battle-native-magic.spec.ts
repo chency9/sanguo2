@@ -1,7 +1,7 @@
 import {finishInitialPolicy} from './campaign-fixture';
 import {test,expect,type Page} from '@playwright/test';
 import manifest from '../packages/core/src/native-magic-manifest.json' with {type:'json'};
-import {readFile} from 'node:fs/promises';
+import {readFile,mkdir} from 'node:fs/promises';
 import type {BattleState} from '../packages/core/src/battle';
 
 class NativeMagicScreen {
@@ -10,7 +10,7 @@ class NativeMagicScreen {
   async observeMagicDraws() {
     const page=this.page;
     const response=await page.request.get('/assets/battle/animations.json'),atlas=await response.json();
-    const rectangles=[13001,13003,13005,26001,26002,26004,26005,18002,18003,18004,10016].flatMap(id=>atlas.objects[id].actions.wait.frames.map((frame:{key:string})=>({id,...atlas.frames[frame.key]})));
+    const rectangles=[13001,13003,13005,26001,26002,26004,26005,18002,18003,18004,10016,49001,49002,49003,49004,49005,49006,49007,49008].flatMap(id=>atlas.objects[id].actions.wait.frames.map((frame:{key:string})=>({id,...atlas.frames[frame.key]})));
     await page.addInitScript(({rectangles})=>{
       const state=window as unknown as {nativeMagicDraws:Record<string,number>;nativeMagicBlends:Record<string,string>};state.nativeMagicDraws={};state.nativeMagicBlends={};
       const original=CanvasRenderingContext2D.prototype.drawImage;
@@ -111,7 +111,7 @@ class NativeMagicScreen {
     const occupied=new Set<string>();let allied=0,enemy=0;
     for(const unit of battle.units) {
       let x:number,y:number;
-      if(unit.general){x=unit.side==='attacker'?25:26;y=6;}
+      if(unit.general){x=unit.side==='attacker'?(sequence===35?10:25):26;y=6;}
       else if(unit.side==='attacker'){const i=allied++;x=3+Math.floor(i/12);y=1+i%12;}
       else {let i=enemy++;x=21+Math.floor(i/12);y=1+i%12;while((x===25||x===26)&&y===6||occupied.has(`${x},${y}`)){i=enemy++;x=21+Math.floor(i/12);y=1+i%12;}}
       occupied.add(`${x},${y}`);unit.x=(x+.5)/71*1200;unit.y=150+y/13*360;
@@ -125,6 +125,45 @@ class NativeMagicScreen {
     await expect(page.getByRole('button',{name:'继续战斗',exact:true})).toBeEnabled();
   }
 }
+
+test('native RollTub draws original rolling wood and fragments, then restores its actual campaign collision state',async({page},testInfo)=>{
+  await page.setViewportSize({width:1440,height:900});
+  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
+  const screen=new NativeMagicScreen(page);await screen.openExplodeCampaign(35);
+  const before=Number(await page.getByTestId('battle-defender-troops').textContent());expect(before).toBeGreaterThan(0);
+  await page.getByRole('button',{name:new RegExp(manifest.find(m=>m.sequence===35)!.name)}).click();
+  await expect(screen.canvas).toHaveAttribute('data-magic-script-kind','native-rolltub');
+  await expect(screen.canvas).toHaveAttribute('data-magic-script-phase','darken');
+  await expect(screen.canvas).toHaveAttribute('data-camera-owner','script');
+  await page.getByLabel('战场速度').selectOption('1');await page.getByRole('button',{name:'继续战斗',exact:true}).click();
+  await expect(screen.canvas).toHaveAttribute('data-scene-palette','12');
+  await expect.poll(()=>page.evaluate(()=>((window as unknown as {nativeMagicDraws:Record<string,number>}).nativeMagicDraws[49001]??0)),{timeout:15000}).toBeGreaterThan(0);
+  await expect.poll(()=>page.evaluate(()=>Object.entries((window as unknown as {nativeMagicDraws:Record<string,number>}).nativeMagicDraws).filter(([id])=>Number(id)>=49002&&Number(id)<=49008).reduce((n,[,count])=>n+count,0)),{timeout:15000}).toBeGreaterThan(0);
+  await page.getByRole('button',{name:'暂停战斗',exact:true}).click();
+  expect(Number(await page.getByTestId('battle-defender-troops').textContent())).toBeLessThan(before);
+  const rendered=await page.evaluate(()=>({draws:(window as unknown as {nativeMagicDraws:Record<string,number>}).nativeMagicDraws,blends:(window as unknown as {nativeMagicBlends:Record<string,string>}).nativeMagicBlends}));
+  expect(rendered.draws[49001]).toBeGreaterThan(0);expect(rendered.blends[49001]).toBe('source-over');
+  for(const [id,count] of Object.entries(rendered.draws))if(Number(id)>=49002&&Number(id)<=49008&&count>0)expect(rendered.blends[id]).toBe('source-over');
+  const snapshot=await screen.canvas.evaluate(node=>({tick:node.dataset.simulationTick,age:node.dataset.magicScriptAge,camera:node.dataset.scriptCamera,objects:node.dataset.rollTubObjects,brightness:node.dataset.sceneBrightness,palette:node.dataset.scenePalette}));
+  expect(JSON.parse(snapshot.objects!).some((o:{object:number})=>o.object===49001)).toBe(true);
+  expect(await screen.canvas.evaluate(node=>({x:Number(node.dataset.cameraX),y:Number(node.dataset.cameraY)}))).toEqual(JSON.parse(snapshot.camera!));
+  await mkdir('../docs/images',{recursive:true});await page.screenshot({path:'../docs/images/rolltub.png'});
+  await testInfo.attach('rolltub-rendered.png',{path:'../docs/images/rolltub.png',contentType:'image/png'});
+  await page.getByRole('button',{name:'战中存档'}).click();
+  // This test owns slot one; the other two slots remain independent.
+  await page.getByRole('dialog').getByRole('button',{name:'保存',exact:true}).first().click();
+  await expect(page.getByRole('dialog').getByRole('status')).toContainText('已保存');await page.reload();
+  await page.getByRole('button',{name:'关闭对话框'}).click();await page.getByRole('button',{name:'存读档',exact:true}).click();
+  await page.getByRole('dialog').getByRole('button',{name:'读取',exact:true}).first().click();
+  await expect(page.getByRole('button',{name:'继续战斗',exact:true})).toBeEnabled();
+  expect(await screen.canvas.evaluate(node=>({tick:node.dataset.simulationTick,age:node.dataset.magicScriptAge,camera:node.dataset.scriptCamera,objects:node.dataset.rollTubObjects,brightness:node.dataset.sceneBrightness,palette:node.dataset.scenePalette}))).toEqual(snapshot);
+  await page.getByLabel('战场速度').selectOption('4');await page.getByRole('button',{name:'继续战斗',exact:true}).click();
+  await expect(screen.canvas).toHaveAttribute('data-magic-script-kind','idle',{timeout:20000});
+  await expect(screen.canvas).toHaveAttribute('data-roll-tub-objects','[]');
+  await expect(screen.canvas).toHaveAttribute('data-camera-owner','normal');
+  await expect(screen.canvas).toHaveAttribute('data-scene-brightness','16');await expect(screen.canvas).toHaveAttribute('data-scene-palette','16');
+  expect(errors).toEqual([]);
+});
 
 for(const [sequence,width] of [[7,1440],[16,1440],[23,390]]) {
   test(`native ExplodeRound ${sequence} draws its original circle, fire and smoke at ${width}px`,async({page})=>{

@@ -11,7 +11,7 @@ const chargedSkillBattle=(sequence:number,attackingTroops=24,defendingTroops=24)
   return b;
 };
 // Pre-native-deployment saves had 100 on-field soldiers and reinforcement waves.
-function legacy(b:BattleState):BattleState {delete b.nativeCommands;delete b.troopDeployment;delete b.deploymentRules;b.formation='line';return b;}
+function legacy(b:BattleState):BattleState {delete b.nativeCommands;delete b.troopDeployment;delete b.deploymentRules;delete b.experienceRules;delete b.soundEvents;b.formation='line';return b;}
 describe('real-time battle',()=>{
   it.each(['line','wedge','square'] as const)('leaves visible space between all 100 soldiers in %s formation',formation=>{
     const b=commandBattle(fresh(),{type:'formation',formation});

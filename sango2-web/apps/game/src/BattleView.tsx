@@ -8,9 +8,9 @@ import {battleScenePoints,battleEffectScenePoints,battleGroundTextureSpans,battl
 import {BattleStrategyDialog} from './BattleStrategyDialog';
 import { battleStepDuration, SOURCE_TICKS_PER_STEP, NATIVE_MAGIC, commanderMagicSequences, battleSkillUnavailable, battleGeneral, battleSurvivors, battleFieldTroops, battleTroopScale, battleCasualtyPosition, battleDetachedPosition, nativeDetachedObject, battleTeamSurvivors, availableCommanders, availableFormations, isNativeFormation, type BattleState, type BattleCommand, type BattleUnit, type Division, type Formation } from '@sango2/core';
 
-interface Animation { frames:{key:string;ticks:number}[];ticks:number;hitTick?:number|null;hitTicks?:number[];frameTicks?:number[] }
+interface Animation { frames:{key:string;ticks:number}[];ticks:number;hitTick?:number|null;hitTicks?:number[];frameTicks?:number[];loop?:boolean }
 interface Atlas { objects:Record<string,{name:string;nativeScale?:number;whiteLight?:boolean;actions:Record<string,Animation>}>;frames:Record<string,{page:string;x:number;y:number;w:number;h:number;offsetX:number;offsetY:number}> }
-interface Props { skills:Record<string,string>[]; terrains:TerrainDefinition[]; battle:BattleState; cityName:string; training:boolean; blocked:boolean; onCommand:(command:BattleCommand)=>void;onTick:(steps:number)=>void;onFinish:()=>void;onSave:()=>void;onLeave:()=>void; music:boolean; onMusic:()=>void }
+interface Props { skills:Record<string,string>[]; terrains:TerrainDefinition[]; battle:BattleState; cityName:string; training:boolean; blocked:boolean; onCommand:(command:BattleCommand)=>void;onTick:(steps:number)=>void;onFinish:()=>void;onSave:()=>void;onLeave:()=>void; music:boolean; onMusic:()=>void; sounds:boolean; onSounds:()=>void }
 const forceCode = (unit:string) => ({'刀':100,'槍':101,'關':102,'大':102,'弓':103,'鏈':104,'鍊':104,'飛':105,'武':106,'蠻':107,'鐵':108,'籐':109,'賊':110,'黃':110,'弩':111,'女':112}[unit[0]]??100);
 
 export function BattleView(props:Props) {
@@ -70,7 +70,7 @@ export function BattleView(props:Props) {
     function frame(object:number,action:string,sourceAge:number) {
       const animation=atlas.objects[object]?.actions[action]??atlas.objects[object]?.actions.wait;if(!animation)return;
       let key=animation.frames[0].key;
-      if(animation.frameTicks)key=animation.frames[nativeAttackFrame({frameTicks:animation.frameTicks},sourceAge)].key;
+      if(animation.frameTicks)key=animation.frames[nativeAttackFrame({frameTicks:animation.frameTicks},animation.loop?sourceAge%animation.ticks:sourceAge)].key;
       else {
         let tick=['death','attack'].includes(action)?Math.min(sourceAge,animation.ticks-1):sourceAge%animation.ticks;
         for(const f of animation.frames){key=f.key;if(tick<f.ticks)break;tick-=f.ticks;}
@@ -202,7 +202,7 @@ export function BattleView(props:Props) {
       node.dataset.cssScale=String(scale/ratio);
       node.dataset.projection=nativeScene?'native-perspective-v1':'legacy';node.dataset.cameraX=String(viewCamera.x);node.dataset.cameraY=String(viewCamera.y);node.dataset.cameraZoom=String(camera.current.zoom);
       node.dataset.cameraOwner=battleScriptCameraLocked(b)?'script':'normal';
-      node.dataset.scriptCamera=b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'||b.activeScript?.kind==='native-reinforce'||b.activeScript?.kind==='native-explode'?JSON.stringify(b.activeScript.runtime.camera??null):'null';
+      node.dataset.scriptCamera=b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'||b.activeScript?.kind==='native-reinforce'||b.activeScript?.kind==='native-explode'||b.activeScript?.kind==='native-rolltub'?JSON.stringify(b.activeScript.runtime.camera??null):'null';
       const general=b.units.find(u=>u.side==='attacker'&&u.general)!,gp=unitPosition(general);
       node.dataset.generalScreen=JSON.stringify({x:(sceneX+gp.x*sceneScale)/ratio,y:(sceneY+gp.y*sceneScale)/ratio});
       node.dataset.scenery=sceneryKey;
@@ -225,10 +225,10 @@ export function BattleView(props:Props) {
       // IncreaseHP VM loop is exposed as one continuous `heal` phase while
       // `magicScriptAge` advances from the number of completed HP writes.
       node.dataset.magicScriptKind=b.activeScript?.kind??'idle';
-      node.dataset.magicScriptPhase=b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'||b.activeScript?.kind==='native-reinforce'||b.activeScript?.kind==='native-explode'?b.activeScript.runtime.phase:b.activeScript?.kind==='heal'?'heal':
+      node.dataset.magicScriptPhase=b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'||b.activeScript?.kind==='native-reinforce'||b.activeScript?.kind==='native-explode'||b.activeScript?.kind==='native-rolltub'?b.activeScript.runtime.phase:b.activeScript?.kind==='heal'?'heal':
         b.activeScript?.kind==='magic-projectile'||b.activeScript?.kind==='magic-area'||
         b.activeScript?.kind==='magic-reinforce'||b.activeScript?.kind==='magic-status'?b.activeScript.phase:'idle';
-      node.dataset.magicScriptAge=String(b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'||b.activeScript?.kind==='native-reinforce'||b.activeScript?.kind==='native-explode'?b.activeScript.runtime.age:b.activeScript?.kind==='heal'?Math.max(0,b.activeScript.nextPoint-1):
+      node.dataset.magicScriptAge=String(b.activeScript?.kind==='native-shoot'||b.activeScript?.kind==='native-heal'||b.activeScript?.kind==='native-reinforce'||b.activeScript?.kind==='native-explode'||b.activeScript?.kind==='native-rolltub'?b.activeScript.runtime.age:b.activeScript?.kind==='heal'?Math.max(0,b.activeScript.nextPoint-1):
         b.activeScript?.kind==='magic-projectile'||b.activeScript?.kind==='magic-area'||
         b.activeScript?.kind==='magic-reinforce'||b.activeScript?.kind==='magic-status'?b.activeScript.age:0);
       node.dataset.specialAttacks=String(b.units.filter(u=>u.hp>0&&u.action==='attack'&&u.movement?.clock?.special).length);
@@ -238,8 +238,9 @@ export function BattleView(props:Props) {
       node.dataset.reinforceUnits=String(b.units.filter(u=>u.reinforceHandle!==undefined&&u.hp>0).length);
       node.dataset.reinforceFading=String(b.units.filter(u=>u.reinforceHandle!==undefined&&u.hp>0&&(u.reinforceAlpha??16)<16).length);
       const sourceScript=b.activeScript;
-      const shade=sourceScript?.kind==='native-shoot'||sourceScript?.kind==='native-heal'||sourceScript?.kind==='native-reinforce'||sourceScript?.kind==='native-explode'?sourceScript.runtime:undefined;
+      const shade=sourceScript?.kind==='native-shoot'||sourceScript?.kind==='native-heal'||sourceScript?.kind==='native-reinforce'||sourceScript?.kind==='native-explode'||sourceScript?.kind==='native-rolltub'?sourceScript.runtime:undefined;
       node.dataset.explodeObjects=sourceScript?.kind==='native-explode'?JSON.stringify(sourceScript.runtime.objects.filter(o=>o.alive).map(o=>({id:o.handle,object:o.object,x:o.x,y:o.y,z:o.z,frame:o.frame,fade:o.fade,scaleX:o.scaleX,scaleY:o.scaleY}))):'[]';
+      node.dataset.rollTubObjects=sourceScript?.kind==='native-rolltub'?JSON.stringify(sourceScript.runtime.objects.filter(o=>o.alive).map(o=>({id:o.handle,object:o.object,x:o.x,y:o.y,z:o.z,frame:o.frame,fade:o.fade}))):'[]';
       node.dataset.explodeHitDivisor=String(sourceScript?.kind==='native-explode'?sourceScript.runtime.hitDivisor:0);
       node.dataset.sceneBrightness=String(shade?.brightness??16);node.dataset.scenePalette=String(shade?.palette??16);
       // Ordered by foot position so rear ranks never paint over the front incorrectly.
@@ -254,7 +255,13 @@ export function BattleView(props:Props) {
         ctx.save();ctx.translate(position.x,position.y-(nativeScene?0:p.z/65536*scale));
         ctx.globalAlpha=p.phase==='flight'?1:Math.min(16,p.fade)/16;
         ctx.scale((nativeScene?nativeSpriteFacing(p.facing):(p.facing&0x800000)?1:-1)*scale,scale);drawSourceFrame(action.frames[p.frame].key);ctx.restore();
-      }}))];
+      }})),...(sourceScript?.kind==='native-rolltub'?sourceScript.runtime.objects.filter(o=>o.alive).map(o=>({id:1000000+o.handle,y:nativeDepth(o.y),draw:()=>{
+        const p=project(o),scale=spriteScale(o.object,p),source=atlas.objects[o.object];
+        if(o.fade<1||!source?.actions.wait)return;
+        ctx.save();ctx.translate(p.x,p.y);ctx.scale(nativeSpriteFacing(o.facing*65536)*scale,scale);
+        ctx.globalAlpha=Math.max(0,Math.min(16,o.fade))/16;if(source.whiteLight)ctx.globalCompositeOperation='screen';
+        frame(o.object,'wait',o.frame);ctx.restore();
+      }})):[])];
       actors.sort((a,c)=>a.y-c.y||a.id-c.id).forEach(a=>a.draw());
       const magic=b.activeScript;
       if(magic?.kind==='heal') {
@@ -371,7 +378,7 @@ export function BattleView(props:Props) {
         else {const r=7*to.scale;ctx.moveTo(to.x-r,to.y-r);ctx.lineTo(to.x+r,to.y+r);ctx.moveTo(to.x+r,to.y-r);ctx.lineTo(to.x-r,to.y+r);}
         ctx.stroke();
       }
-      if(magic?.kind==='native-shoot'||magic?.kind==='native-heal'||magic?.kind==='native-reinforce'||magic?.kind==='native-explode') {
+      if(magic?.kind==='native-shoot'||magic?.kind==='native-heal'||magic?.kind==='native-reinforce'||magic?.kind==='native-explode'||magic?.kind==='native-rolltub') {
         const s=magic.runtime;
         // The source script exposes both screen brightness and palette shade.
         // Canvas composes their scene shade here; OF_WHITELIGHT child artwork
@@ -442,7 +449,7 @@ export function BattleView(props:Props) {
           ...(latest.current.battle.healRules?[26001,26002,26004,26005]:[]),
           // Preload every original ExplodeRound resource before the first
           // source update, including the on-hit burning soldier animation.
-          ...(latest.current.battle.movementRules==='native-grid-v3'?[18002,18003,18004,10016]:[])];
+          ...(latest.current.battle.movementRules==='native-grid-v3'?[18002,18003,18004,10016,49001,49002,49003,49004,49005,49006,49007,49008]:[])];
         for(const id of magicObjects) {
           const object=atlas.objects[id];if(!object)throw new Error(`缺少武将技动画 ${id}`);
           for(const animation of Object.values(object.actions))for(const f of animation.frames)pages.add(atlas.frames[f.key].page);
@@ -475,7 +482,7 @@ export function BattleView(props:Props) {
   const canCommand=b.phase==='deployment'||b.phase==='fighting';
   const knownSkills=commanderMagicSequences(b.commanders.attacker.rawSkill,b.commanders.attacker.level,b.commanders.attacker.skillLearnset);
   return <main ref={battleRoot} className="battle-screen" data-phase={b.phase}>
-    <header ref={heading} className="battle-heading"><div><span>{props.training?'校场演武':b.invasionSide==='defender'?'敌军来袭 · 我军守城':'我军攻城'}</span><h1 ref={title} tabIndex={-1}>{props.cityName}之战</h1></div><div><button onClick={()=>setPaused(p=>!p)} disabled={b.phase!=='fighting'||!ready}>{paused?'继续战斗':'暂停战斗'}</button><select aria-label="战场速度" value={speed} onChange={e=>setSpeed(Number(e.target.value))}><option value="1">正常速度</option><option value="2">二倍速</option><option value="4">四倍速</option></select><button disabled={props.training} onClick={()=>{setPaused(true);props.onSave();}}>战中存档</button><button type="button" disabled={!document.fullscreenEnabled} onClick={()=>void toggleFullscreen()}>{isFullscreen?'退出全屏':'全屏战场'}</button><button type="button" aria-pressed={props.music} onClick={props.onMusic}>{props.music?'音乐开':'音乐关'}</button><button type="button" aria-expanded={showRoster} onClick={()=>{setPaused(true);setShowRoster(v=>!v);}}>两军名册</button>{props.training&&<button onClick={props.onLeave}>返回地图</button>}</div>{b.deploymentRules==='native-tables-v1'&&ready&&<BattleCameraControls toolbar camera={camera} battle={b} onChange={()=>refreshCamera(n=>n+1)}/>}</header>
+    <header ref={heading} className="battle-heading"><div><span>{props.training?'校场演武':b.invasionSide==='defender'?'敌军来袭 · 我军守城':'我军攻城'}</span><h1 ref={title} tabIndex={-1}>{props.cityName}之战</h1></div><div><button onClick={()=>setPaused(p=>!p)} disabled={b.phase!=='fighting'||!ready}>{paused?'继续战斗':'暂停战斗'}</button><select aria-label="战场速度" value={speed} onChange={e=>setSpeed(Number(e.target.value))}><option value="1">正常速度</option><option value="2">二倍速</option><option value="4">四倍速</option></select><button disabled={props.training} onClick={()=>{setPaused(true);props.onSave();}}>战中存档</button><button type="button" disabled={!document.fullscreenEnabled} onClick={()=>void toggleFullscreen()}>{isFullscreen?'退出全屏':'全屏战场'}</button><button type="button" aria-pressed={props.music} onClick={props.onMusic}>{props.music?'音乐开':'音乐关'}</button><button type="button" aria-pressed={props.sounds} onClick={props.onSounds}>{props.sounds?'音效开':'音效关'}</button><button type="button" aria-expanded={showRoster} onClick={()=>{setPaused(true);setShowRoster(v=>!v);}}>两军名册</button>{props.training&&<button onClick={props.onLeave}>返回地图</button>}</div>{b.deploymentRules==='native-tables-v1'&&ready&&<BattleCameraControls toolbar camera={camera} battle={b} onChange={()=>refreshCamera(n=>n+1)}/>}</header>
     <div ref={hud} className="battle-hud-wrap"><BattleHud battle={b} camera={resolveBattleCamera(b,camera.current)} onLocate={battleScriptCameraLocked(b)?undefined:(x,y)=>{Object.assign(camera.current,{x,y,follow:null});refreshCamera(n=>n+1);}}/></div>
     {fullscreenError&&<p className="fullscreen-notice" role="status">{fullscreenError}<button onClick={()=>setFullscreenError('')} aria-label="关闭全屏提示">×</button></p>}
     {showRoster&&<section className="battle-rosters" aria-label="两军出阵名册">

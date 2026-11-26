@@ -163,10 +163,16 @@ def main():
         map_masks.append(mask.convert('P'))
     # Keep source animation frame order, # durations and OM_ATTACK timing for later calibration.
     objects=rows(ini('THINGS.INI'),'OBJECT')
-    animations={}; frame_images={}; actions=['WAIT','WALK','ATTACK','DEATH','SPELL1'];attack_rules={}
-    ids=[10,10016,18002,18003,18004]+list(range(26001,26007))+list(range(13001,13012))+list(range(500,504))+list(range(180,186))+list(range(190,196))+list(range(100,113))+list(range(120,133))+list(range(140,153))+list(range(160,173))+list(range(600,660))+list(range(800,860))+list(range(700,768))+list(range(900,908))
+    animations={}; frame_images={}; actions=['WAIT','WALK','ATTACK','DEATH','SPELL1'];attack_rules={};hit_audio={}
+    ids=[10,10016,18002,18003,18004]+list(range(49001,49009))+list(range(26001,26007))+list(range(13001,13012))+list(range(500,504))+list(range(180,186))+list(range(190,196))+list(range(100,113))+list(range(120,133))+list(range(140,153))+list(range(160,173))+list(range(600,660))+list(range(800,860))+list(range(700,768))+list(range(900,908))
     for obj in objects:
         if number(obj.get('SEQUENCE')) not in ids:continue
+        reaction_sounds={}
+        for reaction in ['PAIN','DEFENSE']:
+            if (600<=number(obj['SEQUENCE'])<660 or 800<=number(obj['SEQUENCE'])<860) and obj.get(reaction):
+                frames=attack_frames(obj[reaction],obj['DIRECTORY'],finite=False)
+                reaction_sounds[reaction.lower()]=attack_timeline(frames)
+        if reaction_sounds:hit_audio[obj['SEQUENCE']]=reaction_sounds
         anim={}
         for action in actions:
             frames=[]; duration=6; elapsed=0; hit=None; remove=None
@@ -203,6 +209,14 @@ def main():
                 for f in frames:
                     if f['key'] not in frame_images:frame_images[f['key']]=shp_image(read(f['key']))
                 anim[action.lower()]={'frames':[{'key':f['key'],'ticks':f['ticks']} for f in frames],**attack_timeline(frames),'loop':True}
+        if 49001<=number(obj['SEQUENCE'])<=49008:
+            # #9999 modifies the final fragment node before SCROVER; it is
+            # not a prefix for an omitted shape. Keep it held until the
+            # original fade removes it, while the rolling tube loops #3.
+            frames=attack_frames(obj['WAIT'],obj['DIRECTORY'],finite=False)
+            for f in frames:
+                if f['key'] not in frame_images:frame_images[f['key']]=shp_image(read(f['key']))
+            anim['wait']={'frames':[{'key':f['key'],'ticks':f['ticks']} for f in frames],**attack_timeline(frames),'loop':number(obj['SEQUENCE'])==49001}
         animations[obj['SEQUENCE']]={'name':obj['NAME'],'nativeScale':48384 if 'OF_BIGSHAPE' in obj.get('FLAGS','') else 65536,
                                      'whiteLight':'OF_WHITELIGHT' in obj.get('FLAGS',''),'actions':anim}
     # Bounded pages: the client decodes only pages used by the current duel.
@@ -227,11 +241,20 @@ def main():
     save_page()
     (out/'battle/animations.json').write_text(json.dumps({'objects':animations,'frames':atlas_frames,'pages':pages,'sourceTickRate':60,'tickRateVerified':False,'durationSemanticsVerified':False,'attackRules':'native-actions-v1'},ensure_ascii=False,separators=(',',':')),encoding='utf8')
     (ROOT/'packages/core/src/native-attack-actions.json').write_text(json.dumps(attack_rules,separators=(',',':')),encoding='utf8')
+    (ROOT/'packages/core/src/native-hit-audio.json').write_text(json.dumps(hit_audio,separators=(',',':')),encoding='utf8')
     print(f'Battle content: {len(animations)} objects, {len(frame_images)} source frames')
     music=args.game/'MP3/01.mp3'
     if music.exists():shutil.copyfile(music,out/'music.mp3')
     battle_music=args.game/'MP3/06.mp3'
     if battle_music.exists():shutil.copyfile(battle_music,out/'battle/music.mp3')
+    # Keep every original WAV available to the client. Attack/action metadata
+    # refers to the source SOUND\\*.WAV name; exporting the complete catalogue
+    # avoids substituting browser beeps when a later event path requests one.
+    sounds=[]
+    for source_name in sorted(name for name in entries if name.startswith('SOUND\\') and name.endswith('.WAV')):
+        target=f"sound/{source_name.rsplit(chr(92),1)[-1].lower()}"
+        path=out/target;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(read(source_name))
+        sounds.append({'id':source_name,'path':target})
     items=rows(ini('SANGO.INI'),'ITEM'); item_by_name={r['NAME']:r for r in items}
     def appearance(g):
         weapon=item_by_name.get(g.get('WEAPON'),{})
@@ -301,6 +324,9 @@ def main():
                 'weapon':g.get('WEAPON',''),'horse':g.get('HORSE',''),'item':g.get('THING',''),
                 'appearance':appearance(g),'bodyType':number(g.get('TYPE')),'baseExperience':number(g.get('BASEEXP')),
                 'unit':g.get('USEFORCE',''),'forceMask':force_mask(g.get('FORCE','')),'formations':g.get('BATTLEARRAY','').split(),
+                'constancy':number(g.get('CONSTANCY')),
+                'appearanceCities':[city_id.get(name) for name in g.get('POS','').split()],
+                'relativeId':general_id.get(g.get('BLOOD','')),
                 'skillLearnset':learning_entries(fields,'SKILL'),'strategyLearnset':learning_entries(fields,'WISESKILL'),
                 'rawSkill':'\n'.join(v for k,v in fields if k=='SKILL'),
                 'rawStrategy':'\n'.join(v for k,v in fields if k=='WISESKILL'),'sourceLine':g['_line']})
@@ -333,7 +359,7 @@ def main():
         assert len(scene['generals'])==401 and len(scene['cities'])==60 and len(scene['roads'])==116
         scenarios.append(scene)
     content={'version':1,'id':'sg2-105plus-20210916-pack-v1','sourceHash':digest,
-             'scenarios':scenarios,'terrains':terrains,'skills':rows(ini('MAGIC.INI'),'MAGIC'),
+             'scenarios':scenarios,'terrains':terrains,'sounds':sounds,'skills':rows(ini('MAGIC.INI'),'MAGIC'),
              'strategies':rows(ini('MAGIC.INI'),'WISE'),'items':rows(ini('SANGO.INI'),'ITEM')}
     (out/'content.json').write_text(json.dumps(content,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
     (out/'manifest.json').write_text(json.dumps({'sourceHash':digest,'converterVersion':2,'assets':asset_records},ensure_ascii=False,indent=2),encoding='utf-8')

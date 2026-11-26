@@ -90,6 +90,17 @@ describe('strategic preview rules', () => {
     scene.cities[0].battleSceneryMode='b';
     expect(battleSceneryForCity(scene, 'home', 0, rng).variant).toBe('b');
   });
+  it('uses live city capacity for castle scenery and freezes the chosen scene in battle saves',()=>{
+    const pack=structuredClone(content),scene=pack.scenarios[0];
+    scene.cities.find(c=>c.id==='enemy')!.battleScenery={terrainId:2,variant:'a'};
+    for(const [population,terrainId] of [[30000,0],[239999,0],[240000,1],[520000,2]] as const) {
+      let s=fresh();s.cities.enemy.population=population;
+      s=dispatch(dispatch(s,march('enemy',80),pack),{type:'advance',days:3},pack);
+      expect(s.battle!.scenery).toEqual({terrainId,variant:'a'});
+      s.cities.enemy.population=1000000;
+      expect(readSession(JSON.parse(JSON.stringify(s)),pack).battle!.scenery).toEqual({terrainId,variant:'a'});
+    }
+  });
   it('exposes source-backed seasonal terrain at a road midpoint', () => {
     const scene = structuredClone(content.scenarios[0]);
     scene.roads[0].midpointTerrainBySeason = [2, 3, 4, 5];

@@ -8,10 +8,10 @@ export interface NativeStrategyCombat {
   /** Optional only for older saves; native combat initializes power to 150. */
   soldierPower?:number;generalHitBonus?:number;
   morale?:number;loyalty?:number;
-  /** These are TEAM fields +52/+56, not combat flags +132. */
-  settlementFlags?:number;fatigueModifier?:number;
+  /** These are TEAM fields +52/+56/+60, not combat flags +132. */
+  settlementFlags?:number;fatigueModifier?:number;experienceModifier?:number;
 }
-export const SUPPORTED_STRATEGY_EXECUTES=[0,1,2,3,4,5,6,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,35,36,37,38,39,40,41,42,43,50,51,52,58,59,60,61,62,63,64,65,66,67] as const;
+export const SUPPORTED_STRATEGY_EXECUTES=[0,1,2,3,4,5,6,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,35,36,37,38,39,40,41,42,43,50,51,52,53,54,55,58,59,60,61,62,63,64,65,66,67] as const;
 export function nativeStrategySupported(execute:number):boolean {
   return (SUPPORTED_STRATEGY_EXECUTES as readonly number[]).includes(execute);
 }
@@ -46,6 +46,8 @@ export function nativeApplyStrategy(execute:number,own:NativeStrategyCombat,enem
     own.flags|=512;own.generalHitBonus=[10,15,20][execute-41];
   } else if(execute>=50&&execute<=52) {
     own.flags|=32;own.chargeModifier+=execute-49;
+  } else if(execute>=53&&execute<=55) {
+    own.settlementFlags=(own.settlementFlags??0)|8192;own.experienceModifier=[30,50,100][execute-53];
   } else if(execute>=58&&execute<=60) {
     const rate=[10,15,25][execute-58];
     // Active and reserve soldiers are rounded separately in the native code.

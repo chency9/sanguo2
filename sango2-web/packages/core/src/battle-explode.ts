@@ -3,6 +3,8 @@ import {battleMovementCell} from './battle-movement';
 import {nativeAdvanceMagicExplode,nativeExplodeHit} from './native-magic-explode';
 import {nativeMagicCollision,nativeMagicDirectHit} from './native-magic-shoot';
 import {projectBattleCell} from './native-battle-grid';
+import {emitBattleSound} from './battle-audio-events';
+import {emitBattleDamageAudio} from './battle-hit-audio';
 
 /** Original generic process skips dead draw objects, death action 32 and an
  * empty occupancy cell before the shared height / affiliation mask gate. */
@@ -21,18 +23,21 @@ function targetSnapshot(unit:BattleUnit,casterSide:BattleUnit['side']) {
 
 /** Original ExplodeRound creates point-collision objects around the caster.
  * It never applies one probabilistic area pulse to the entire army. */
-export function advanceBattleExplode(b:BattleState,death:(target:BattleUnit,caster:BattleUnit)=>void,locked:(unit:BattleUnit)=>boolean):void {
+export function advanceBattleExplode(b:BattleState,death:(target:BattleUnit,caster:BattleUnit)=>void,locked:(unit:BattleUnit)=>boolean,sourceTick=b.tick*3):void {
   const script=b.activeScript;if(script?.kind!=='native-explode')return;
   const s=script.runtime,caster=b.units.find(u=>u.id===script.casterId);
   if(!caster){b.activeScript=undefined;return;}
   s.origin={x:caster.movement!.px,y:caster.movement!.py,z:0};
   const targetUnits=new Map(b.units.map(u=>[u.general?(u.side===script.side?1:2):100000+u.id,u]));
   const emit=(event:{host?:number;args:(number|string)[]})=>{
+    if(event.host===769)emitBattleSound(b,String(event.args[0]),Number(event.args[1]),sourceTick);
+    if(event.host===768)emitBattleSound(b,String(event.args[1]),Number(event.args[2]),sourceTick);
     if(event.host===289)caster.movement!.clock!.deferred=(caster.movement!.clock!.deferred+40*Number(event.args[1]))|0;
     if(event.host===293) {
       const unit=targetUnits.get(Number(event.args[0]));if(!unit?.general)return;
       const result=nativeMagicDirectHit(unit.hp,b.commanders[unit.side].charge??0,Number(event.args[2]),locked(unit));
       unit.hp=result.hp;b.commanders[unit.side].charge=result.charge;
+      if(result.actions.length)emitBattleDamageAudio(b,unit,sourceTick);
       if(unit.hp===0&&unit.action!=='death'){unit.action='death';unit.actionTick=0;death(unit,caster);}
     }
   };

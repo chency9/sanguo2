@@ -7,6 +7,7 @@ import {nativeWeightedChoice,type NativeRandomState} from './native-strategic-ai
 import {nativeTacticalWeights,nativeSkillWeights,nativeCommanderWeights,nativeFormationWeights} from './native-tactical-ai';
 import {nativeAttackHits,nativeGeneralDamage,nativeCombatPower,type NativeCombatUnit} from './native-combat';
 import {initialOfficerCondition,nativeBattleFatigue,type NativeOfficerCondition} from './native-officer-condition';
+import {nativeRoundMerit,isNativeBattleRecord,type NativeRoundKind,type NativeBattleRecord} from './native-battle-experience';
 import {allocateBattleTroops,nativeTroopCapacity,nativeTroopDivisions,type TroopSlots} from './native-troops';
 import {nativeGridOccupancy,nativeGridCount,projectBattleCell} from './native-battle-grid';
 import type {NativeFlight,NativeDetached} from './native-casualty';
@@ -16,7 +17,7 @@ import {nearbyPairs} from './nearby-pairs';
 import {updateBattleUnits} from './battle-unit-scheduler';
 import {validateBattleAttackActions} from './native-attack-animation';
 import {validateBattleProjectiles,type BattleProjectile} from './battle-projectiles';
-import {formationToNativeIndex,nativeFormationMask,defaultFormation,canUseFormation,isNativeFormation,type Formation} from './battle-formations';
+import {formationToNativeIndex,nativeIndexToFormation,nativeFormationMask,defaultFormation,canUseFormation,isNativeFormation,type Formation} from './battle-formations';
 import {createNativeCommands,issueNativeCommand,advanceNativeAI,validateNativeCommands,syncNativeCommands,type BattleNativeCommands,type NativeCommand,type NativeDivision} from './battle-commands';
 import {nativeCanAdvance,NATIVE_COMMAND_LABELS} from './native-commands';
 import type {NativeWorldPoint} from './native-projection';
@@ -24,8 +25,11 @@ import {nativeCreateMagicShoot,nativeShootDefinition,type NativeMagicShoot} from
 import {nativeCreateMagicHeal,type NativeMagicHeal} from './native-magic-heal';
 import {nativeCreateMagicReinforce,nativeReinforceDefinition,type NativeMagicReinforce} from './native-magic-reinforce';
 import {nativeCreateMagicExplode,nativeExplodeDefinition,type NativeMagicExplode} from './native-magic-explode';
+import {nativeCreateMagicRollTub,nativeRollTubDefinition,type NativeMagicRollTub} from './native-magic-rolltub';
 import {advanceBattleNativeMagic,battleMagicLocked,validateBattleNativeMagic} from './battle-native-magic';
 import {advanceBattleGeneral} from './battle-general-tick';
+import {createBattleSoundEvents,validateBattleSoundEvents,type BattleSoundEvents} from './battle-audio-events';
+import {emitBattleHitAudio,validateBattleHitAudio} from './battle-hit-audio';
 export {NATIVE_COMMAND_LABELS} from './native-commands';
 export {FORMATION_OPTIONS,NATIVE_FORMATIONS,formationDefinition,formationLabel,formationToNativeIndex,nativeFormationMask,nativeIndexToFormation,availableFormations,canUseFormation,isNativeFormation} from './battle-formations';
 export {battleAttackAction,nativeAttackFrame} from './native-attack-animation';
@@ -50,8 +54,8 @@ export type BattleSide = 'attacker' | 'defender';
 export type Order = 'advance' | 'hold' | 'retreat';
 export type Division = 'all' | 'front' | 'rear' | 'general';
 export type {Formation} from './battle-formations';
-export interface BattleCommander extends Partial<NativeOfficerCondition> { id: string; name: string; portrait: string; strength: number; intelligence: number; hp: number; mp: number; unit: string; rawSkill?:string; rawStrategy?:string;level?:number; speed?:number; skillLearnset?:SkillLearning[];strategyLearnset?:SkillLearning[]; maxHp?:number; charge?:number; maxMp?:number; appearance?:CombatAppearance;formations?:string[] }
-export interface BattleMember { commander:BattleCommander; troops:number; withdrawn:boolean;troopSlots?:TroopSlots }
+export interface BattleCommander extends Partial<NativeOfficerCondition> { id: string; name: string; portrait: string; strength: number; intelligence: number; hp: number; mp: number; unit: string; rawSkill?:string; rawStrategy?:string;level?:number; speed?:number; skillLearnset?:SkillLearning[];strategyLearnset?:SkillLearning[]; maxHp?:number; charge?:number; maxMp?:number; appearance?:CombatAppearance;formations?:string[];battleRecord?:NativeBattleRecord }
+export interface BattleMember { commander:BattleCommander; troops:number; withdrawn:boolean;troopSlots?:TroopSlots;merit?:number;battleStatus?:number }
 export interface RoundReport { round:number; attackerId:string; defenderId:string; winner:BattleSide; reason:string }
 export interface BattleUnit {
   id: number; side: BattleSide; general: boolean; division: Exclude<Division,'all'>;
@@ -89,6 +93,7 @@ export interface BattleEffect {
   /** Fixed scene origin for effects without an actor, such as the reserve gate. */
   point?: NativeWorldPoint;
 }
+export interface BattleAIState {countdown:number;flags:number;entryHp:number;chargeTick:number;lastAction:number;lastSkill:number;formation?:number}
 export interface BattleState {
   version: 2; id: string; armyId: string | null; cityId: string | null; tick: number; nextId: number; rng: number;
   /** Missing in old saves: preserve their original 180-second/20 Hz timing. */
@@ -100,10 +105,12 @@ export interface BattleState {
   commanders: Record<BattleSide,BattleCommander>; initial: Record<BattleSide,number>; reserves: Record<BattleSide,number>;
   units: BattleUnit[]; effects: BattleEffect[]; formation: Formation; orders: Record<Exclude<Division,'all'>,Order>;
   log: string[];
+  soundEvents?:BattleSoundEvents;
   activeScript?:
     | {kind:'native-heal';side:BattleSide;casterId:number;magic:number;runtime:NativeMagicHeal}
     | {kind:'native-reinforce';side:BattleSide;casterId:number;magic:number;runtime:NativeMagicReinforce}
     | {kind:'native-explode';side:BattleSide;casterId:number;magic:number;damage:number;runtime:NativeMagicExplode}
+    | {kind:'native-rolltub';side:BattleSide;casterId:number;magic:number;damage:number;runtime:NativeMagicRollTub}
     | {kind:'native-shoot';side:BattleSide;casterId:number;targetId:number;magic:number;script:number;damage:number;runtime:NativeMagicShoot}
     | {kind:'heal'; side:BattleSide; targetId:number; initialHp:number; nextPoint:number; amount:number; wait:number; magic:NativeMagic['sequence']}
     | {kind:'magic-projectile'; side:BattleSide; casterId:number; targetId:number; magic:NativeMagic['sequence']; script:number; damage:number; phase:'windup'|'flight'|'impact'; phaseAge:number; duration:number; fromX:number; fromY:number; toX:number; toY:number; x:number; y:number; z:number; age:number; hit:boolean}
@@ -133,15 +140,24 @@ export interface BattleState {
   reinforceRules?:'native-reinforce-v1';
   /** Source ExplodeRound objects replace the earlier generic area pulse. */
   explodeRules?:'native-explode-v1';
+  /** Original RollTub waves, point collisions and break callbacks. */
+  rollTubRules?:'native-rolltub-v1';
   cameraRules?:'native-script-v1';
   /** Existing saves retain grouped growth and their old retreat gauge. */
   generalRules?:'native-source-v1';
   projectiles?:BattleProjectile[];
   detached?:BattleDetached[];
   strategies?:BattleStrategies;
-  opponentAI?:{rng:NativeRandomState;countdown:number;flags:number;entryHp:number;chargeTick:number;lastAction:number;lastSkill:number;formation?:number};
+  opponentAI?:BattleAIState&{rng:NativeRandomState};
+  /** Present only for computer-versus-computer battles. Its decisions share
+   * opponentAI.rng with combat, but have independent timers and observations. */
+  attackerAI?:BattleAIState;
+  /** Old in-flight saves omit this marker and keep their former settlement. */
+  experienceRules?:'native-merit-v1';
+  /** Both armies exhausted their last commanders on a native timeout. */
+  drawn?:boolean;
 }
-export type BattleCommand = { type: 'start' } | { type: 'next-round' | 'select-commander'; commanderId:string } | { type:'withdraw' } | { type: 'formation'; formation: Formation } |
+export type BattleCommand = { type: 'start' } | { type: 'next-round' | 'select-commander'; commanderId:string } | {type:'auto-next-round'} | { type:'withdraw' } | { type: 'formation'; formation: Formation } |
   {type:'native-order';division:number;command:NativeCommand} |
   {type:'strategy';advisorId:string;sequence:number} |
   { type:'skill'; sequence:number } |
@@ -231,6 +247,12 @@ function castSkill(b:BattleState,sequence:number,side:BattleSide) {
     b.activeScript={kind:'magic-projectile',side,casterId:target.id,targetId:enemy.id,magic:magic.sequence,script:magic.script,damage:magic.attack,
       phase:'windup',phaseAge:0,duration:12,fromX,fromY,toX,toY,x:fromX,y:fromY,z:0,age:0,hit:false};
     b.log.unshift(`${caster.name}施展${magic.name}，金色箭光锁定敌方主将。`);
+  } else if(b.movementRules==='native-grid-v3'&&nativeRollTubDefinition(magic.script)) {
+    prepareBattleMovement(b);const m=target.movement!,enemy=battleGeneral(b,opposite(side)).movement!;
+    b.rollTubRules='native-rolltub-v1';
+    b.activeScript={kind:'native-rolltub',side,casterId:target.id,magic:sequence,damage:magic.attack,
+      runtime:nativeCreateMagicRollTub(magic.script,{x:m.px,y:m.py,z:0},side==='attacker'?1:0,{x:enemy.px,y:enemy.py,z:0})};
+    b.log.unshift(`${caster.name}施展${magic.name}！`);
   } else if(b.movementRules==='native-grid-v3'&&nativeExplodeDefinition(magic.script)) {
     prepareBattleMovement(b);const m=target.movement!;
     b.explodeRules='native-explode-v1';
@@ -268,52 +290,54 @@ function castSkill(b:BattleState,sequence:number,side:BattleSide) {
 }
 /** Native scoring/lottery, with explicit Web grid/order adapters. Grid
  * occupancy and unsupported skill execution still prevent whole-battle parity. */
-function decideOpponent(b:BattleState) {
-  const ai=b.opponentAI??(b.opponentAI={rng:[b.rng,0x87654321],countdown:10,flags:0,entryHp:battleGeneral(b,'defender').hp,chargeTick:0,lastAction:0,lastSkill:0});
+function decideOpponent(b:BattleState,side:BattleSide='defender') {
+  const shared=b.opponentAI??(b.opponentAI={rng:[b.rng,0x87654321],countdown:10,flags:0,entryHp:battleGeneral(b,'defender').hp,chargeTick:0,lastAction:0,lastSkill:0});
+  const ai=side==='defender'?shared:b.attackerAI;if(!ai)return;
+  const enemySide=opposite(side),rng=shared.rng;
   ai.countdown-=SOURCE_TICKS_PER_STEP;if(ai.countdown>0)return;ai.countdown+=60;
   if(b.activeScript)return;
-  const g=battleGeneral(b,'defender');if(g.hp<=0||g.escaped||g.order==='retreat'||activeStatus(g,'stunned',b.tick))return;
-  const opponent=battleGeneral(b,'attacker'),caster=b.commanders.defender;
-  const own=b.units.filter(u=>u.side==='defender'&&!u.general&&u.hp>0&&!u.escaped),enemy=b.units.filter(u=>u.side==='attacker'&&!u.general&&u.hp>0&&!u.escaped);
+  const g=battleGeneral(b,side);if(g.hp<=0||g.escaped||g.order==='retreat'||activeStatus(g,'stunned',b.tick))return;
+  const opponent=battleGeneral(b,enemySide),caster=b.commanders[side];
+  const own=b.units.filter(u=>u.side===side&&!u.general&&u.hp>0&&!u.escaped),enemy=b.units.filter(u=>u.side===enemySide&&!u.general&&u.hp>0&&!u.escaped);
   // Native queries include generals and one occupant per cell. The continuous
   // position-to-cell adapter is shared with the minimap; old saves keep theirs.
   const cell=(u:BattleUnit)=>b.movementRules?battleMovementCell(u):b.casualtyRules?projectBattleCell(u.x,u.y):({x:Math.max(0,Math.min(54,Math.trunc(u.x/1200*55))),y:Math.max(0,Math.min(13,Math.trunc(u.y/600*14)))});
   const a=cell(g),d=cell(opponent),distance=Math.abs(a.x-d.x);
   const grid=nativeGridOccupancy(b.units.filter(u=>u.hp>0&&!u.escaped&&!u.movement?.exiting).map(u=>({...cell(u),side:u.side==='attacker'?0:1})));
-  const count=(side:BattleSide,x1:number,y1:number,x2:number,y2:number)=>b.casualtyRules?nativeGridCount(grid,side==='attacker'?0:1,x1,y1,x2,y2):new Set((side==='defender'?own:enemy).filter(u=>{const p=cell(u);return p.x>=Math.min(x1,x2)&&p.x<=Math.max(x1,x2)&&p.y>=Math.min(y1,y2)&&p.y<=Math.max(y1,y2);}).map(u=>{const p=cell(u);return `${p.x},${p.y}`;})).size;
+  const count=(querySide:BattleSide,x1:number,y1:number,x2:number,y2:number)=>b.casualtyRules?nativeGridCount(grid,querySide==='attacker'?0:1,x1,y1,x2,y2):new Set((querySide===side?own:enemy).filter(u=>{const p=cell(u);return p.x>=Math.min(x1,x2)&&p.x<=Math.max(x1,x2)&&p.y>=Math.min(y1,y2)&&p.y<=Math.max(y1,y2);}).map(u=>{const p=cell(u);return `${p.x},${p.y}`;})).size;
   const learned=commanderMagicSequences(caster.rawSkill,caster.level,caster.skillLearnset).map(sequence=>nativeSkills.find(s=>s.sequence===sequence)??{sequence,mp:0,attack:0,flags:0});
   const weights=nativeTacticalWeights({hp:g.hp,maxHp:g.maxHp,entryHp:ai.entryHp||g.maxHp,enemyHp:opponent.hp,enemyMaxHp:opponent.maxHp,
-    strength:caster.strength,enemyStrength:b.commanders.attacker.strength,troops:own.length,enemyTroops:enemy.length,initialTroops:b.strategies?.applied?b.strategies.effects.defender.troops+b.strategies.effects.defender.reserve:b.troopDeployment?b.troopDeployment.defender.active+b.troopDeployment.defender.reserve:b.initial.defender,
-    formationMask:1<<(ai.formation??0),unitClass:nativeUnitClass(caster),enemyUnitClass:nativeUnitClass(b.commanders.attacker),distanceX:distance,
-    flags:ai.flags,enemyFlags:b.nativeCommands?.attacker.flags??(opponent.order==='retreat'?4:0),blockedFlags:0,canAdvance:b.nativeCommands?nativeCanAdvance(ai.formation??0,b.nativeCommands.defender.orders):own.some(u=>u.order!=='advance'),
-    canCast:!((b.strategies?.effects.defender.flags??0)&256)&&caster.charge===CHARGE_LIMIT&&!activeStatus(g,'silenced',b.tick)&&learned.some(s=>s.mp<=caster.mp),
+    strength:caster.strength,enemyStrength:b.commanders[enemySide].strength,troops:own.length,enemyTroops:enemy.length,initialTroops:b.strategies?.applied?b.strategies.effects[side].troops+b.strategies.effects[side].reserve:b.troopDeployment?b.troopDeployment[side].active+b.troopDeployment[side].reserve:b.initial[side],
+    formationMask:1<<(ai.formation??0),unitClass:nativeUnitClass(caster),enemyUnitClass:nativeUnitClass(b.commanders[enemySide]),distanceX:distance,
+    flags:ai.flags,enemyFlags:b.nativeCommands?.[enemySide].flags??(opponent.order==='retreat'?4:0),blockedFlags:0,canAdvance:b.nativeCommands?nativeCanAdvance(ai.formation??0,b.nativeCommands[side].orders):own.some(u=>u.order!=='advance'),
+    canCast:!((b.strategies?.effects[side].flags??0)&256)&&caster.charge===CHARGE_LIMIT&&!activeStatus(g,'silenced',b.tick)&&learned.some(s=>s.mp<=caster.mp),
     hasDirectSkill:learned.some(s=>!!(s.flags&0x50)),hasAreaSkill:learned.some(s=>!!(s.flags&15)),
     hasHealSkill:learned.slice(0,4).some(s=>!!(s.flags&256)),hasReinforceSkill:learned.some(s=>!!(s.flags&512)),
-    betweenUnits:count('defender',a.x,a.y,d.x,d.y),nearbyEnemies:count('attacker',a.x-3,0,a.x+3,13),
+    betweenUnits:count(side,a.x,a.y,d.x,d.y),nearbyEnemies:count(enemySide,a.x-3,0,a.x+3,13),
     elapsedSinceCharge:b.tick*3-ai.chargeTick,restrictRetreat:false});
   // 0x4687A0 varargs stop at the first negative weight, even before the -1 sentinel.
   const end=weights.findIndex(w=>w<0);
-  const selected=nativeWeightedChoice(end<0?weights:weights.slice(0,end),ai.rng);ai.lastAction=selected;
+  const selected=nativeWeightedChoice(end<0?weights:weights.slice(0,end),rng);ai.lastAction=selected;
   if(selected===4) {
     const capacity=Math.min(200,Math.max(5,(caster.level??20)*5));
     const skillWeights=nativeSkillWeights(learned,caster.mp,g.hp/g.maxHp,own.length/capacity,opponent.hp/opponent.maxHp,distance,
       // 54 is intentional: original 0x402A79 edge-skill queries stop there,
       // even though the occupancy map itself has 71 columns.
-      {line:count('attacker',a.x,a.y-1,d.x,d.y+1),edges:count('attacker',0,0,54,3)+count('attacker',0,9,54,13),near:count('attacker',a.x-2,a.y-2,a.x+2,a.y+2),enemyTroops:enemy.length});
-    const slot=nativeWeightedChoice(skillWeights,ai.rng),skill=learned[slot];ai.lastSkill=skill?.sequence??0;
+      {line:count(enemySide,a.x,a.y-1,d.x,d.y+1),edges:count(enemySide,0,0,54,3)+count(enemySide,0,9,54,13),near:count(enemySide,a.x-2,a.y-2,a.x+2,a.y+2),enemyTroops:enemy.length});
+    const slot=nativeWeightedChoice(skillWeights,rng),skill=learned[slot];ai.lastSkill=skill?.sequence??0;
     // Every selected manifest entry has a deterministic executor. The two
     // closed-loop skills remain evidence-verified; the remaining scripts use
     // their manifest target/effect metadata and are explicitly inferred.
-    if(skill&&battleSkillUnavailable(b,skill.sequence,'defender')===null)castSkill(b,skill.sequence,'defender');
+    if(skill&&battleSkillUnavailable(b,skill.sequence,side)===null)castSkill(b,skill.sequence,side);
   } else if([2,3,5,6].includes(selected)) {
     if(b.nativeCommands) {
-      if(selected===2)advanceNativeAI(b);
-      else issueNativeCommand(b,'defender',selected===5?0:selected===3?257:256,selected===5?1:selected===3?7:8);
+      if(selected===2)advanceNativeAI(b,side);
+      else issueNativeCommand(b,side,selected===5?0:selected===3?257:256,selected===5?1:selected===3?7:8);
       if(selected===3)ai.chargeTick=b.tick*3;
       if(selected===6){b.log.unshift(`${caster.name}下令撤军。`);b.log.length=Math.min(8,b.log.length);}
       return;
     }
-    for(const u of b.units)if(u.side==='defender'&&u.hp>0&&(selected===3||selected===6||u.general===(selected===5))) {
+    for(const u of b.units)if(u.side===side&&u.hp>0&&(selected===3||selected===6||u.general===(selected===5))) {
       u.order=selected===6?'retreat':'advance';
       if(b.movementRules!=='native-grid-v3'){u.target=null;u.action='walk';u.actionTick=0;}
     }
@@ -394,14 +418,19 @@ function deployTroops(b:BattleState,side:BattleSide):void {
     if(b.nativeCommands)u.order=b.nativeCommands[side].orders[div+1]===0?'hold':b.nativeCommands[side].orders[div+1]===8?'retreat':'advance';
   }
 }
-export function createBattle(input: {id:string; armyId?:string; cityId?:string; attacker:BattleCommander; defender:BattleCommander; attackingTroops:number; defendingTroops:number; seed:number; aiRng?:NativeRandomState; rosters?:Record<BattleSide,BattleMember[]>; scenery?:BattleState['scenery']}): BattleState {
+export function createBattle(input: {id:string; armyId?:string; cityId?:string; attacker:BattleCommander; defender:BattleCommander; attackingTroops:number; defendingTroops:number; seed:number; aiRng?:NativeRandomState; rosters?:Record<BattleSide,BattleMember[]>; scenery?:BattleState['scenery'];computerAttacker?:boolean;experienceRules?:boolean}): BattleState {
   for (const n of [input.attackingTroops,input.defendingTroops]) if (!Number.isInteger(n)||n<0||n>1000000) throw new Error('战场兵力无效。');
   const rosters=structuredClone(input.rosters??{attacker:[{commander:input.attacker,troops:input.attackingTroops,withdrawn:false}],defender:[{commander:input.defender,troops:input.defendingTroops,withdrawn:false}]});
   const b:BattleState={version:2,timing:'native-99',id:input.id,armyId:input.armyId??null,cityId:input.cityId??null,tick:0,nextId:1,rng:(input.seed>>>0)||1,phase:'deployment',winner:null,reason:'',
     opponentAI:{rng:input.aiRng?[...input.aiRng]:[input.seed>>>0,0x87654321],countdown:10,flags:0,entryHp:input.defender.hp,chargeTick:0,lastAction:0,lastSkill:0},
     round:1,rosters,totalInitial:{attacker:rosters.attacker.reduce((n,m)=>n+m.troops,0),defender:rosters.defender.reduce((n,m)=>n+m.troops,0)},history:[],
     commanders:{attacker:normalizeCommander(input.attacker),defender:normalizeCommander(input.defender)},initial:{attacker:input.attackingTroops,defender:input.defendingTroops},
-    reserves:{attacker:input.attackingTroops,defender:input.defendingTroops},units:[],effects:[],formation:defaultFormation(input.attacker.formations),orders:{front:'hold',rear:'hold',general:'hold'},log:['双方列阵，等待军令。']};
+    reserves:{attacker:input.attackingTroops,defender:input.defendingTroops},units:[],effects:[],soundEvents:createBattleSoundEvents(),formation:defaultFormation(input.attacker.formations),orders:{front:'hold',rear:'hold',general:'hold'},log:['双方列阵，等待军令。']};
+  if(input.computerAttacker)b.attackerAI={countdown:10,flags:0,entryHp:input.attacker.hp,chargeTick:0,lastAction:0,lastSkill:0};
+  if(input.experienceRules!==false) {
+    b.experienceRules='native-merit-v1';
+    for(const members of Object.values(b.rosters))for(const m of members){m.merit??=0;m.battleStatus??=0;}
+  }
   b.casualtyRules='native-v1';b.detached=[];
   b.movementRules='native-grid-v3';
   b.deploymentRules='native-tables-v1';
@@ -420,6 +449,11 @@ export function createBattle(input: {id:string; armyId?:string; cityId?:string; 
   }
   // 0x4042ED: commander has already been chosen; strategy precedes formation.
   b.strategies=createBattleStrategies(b);
+  if(b.attackerAI) {
+    const cap=nativeTroopCapacity(input.attacker.level??20),slots=b.troopDeployment.attacker;
+    const formation=nativeWeightedChoice(nativeFormationWeights(slots.active+slots.reserve,cap.active+cap.reserve,1<<nativeUnitIndex(input.attacker),nativeUnitClass(input.attacker),nativeFormationMask(input.attacker.formations)),b.opponentAI!.rng);
+    b.attackerAI.formation=Math.max(0,formation);b.formation=nativeIndexToFormation(b.attackerAI.formation);
+  }
   const learned=nativeFormationMask(input.defender.formations);
   const cap=nativeTroopCapacity(input.defender.level??20),slots=b.troopDeployment.defender;
   const formation=nativeWeightedChoice(nativeFormationWeights(slots.active+slots.reserve,cap.active+cap.reserve,1<<nativeUnitIndex(input.defender),nativeUnitClass(input.defender),learned),b.opponentAI!.rng);
@@ -473,13 +507,16 @@ export function commandBattle(previous:BattleState,command:BattleCommand):Battle
     if(b.phase!=='intermission')throw new Error('须在两阵之间下令全军收兵。');
     b.phase='finished';b.winner='defender';b.reason='进攻方收兵，余部撤回。';return b;
   }
-  if(command.type==='next-round'||command.type==='select-commander') {
-    if(b.phase!==(command.type==='next-round'?'intermission':'deployment'))throw new Error('当前不能选将。');
-    const a=availableCommanders(b,'attacker').find(m=>m.commander.id===command.commanderId);
+  if(command.type==='next-round'||command.type==='select-commander'||command.type==='auto-next-round') {
+    if(b.phase!==(command.type==='select-commander'?'deployment':'intermission'))throw new Error('当前不能选将。');
+    if(command.type==='auto-next-round'&&!b.attackerAI)throw new Error('当前进攻方由玩家选将。');
     const aiRng:NativeRandomState=b.opponentAI?[...b.opponentAI.rng]:[b.rng,0x87654321];
+    let a:BattleMember|undefined;
+    if(command.type==='auto-next-round'||b.attackerAI&&command.type==='next-round')a=chooseOpponentCommander(b.rosters.attacker,aiRng);
+    else a=availableCommanders(b,'attacker').find(m=>m.commander.id===command.commanderId);
     const d=command.type==='select-commander'?b.rosters.defender.find(m=>m.commander.id===b.commanders.defender.id):chooseOpponentCommander(b.rosters.defender,aiRng);
     if(!a||!d)throw new Error('请选择尚能出战的武将。');
-    const next=createBattle({id:b.id,armyId:b.armyId??undefined,cityId:b.cityId??undefined,attacker:a.commander,defender:d.commander,attackingTroops:a.troops,defendingTroops:d.troops,seed:b.rng,aiRng,rosters:b.rosters});
+    const next=createBattle({id:b.id,armyId:b.armyId??undefined,cityId:b.cityId??undefined,attacker:a.commander,defender:d.commander,attackingTroops:a.troops,defendingTroops:d.troops,seed:b.rng,aiRng,rosters:b.rosters,computerAttacker:!!b.attackerAI,experienceRules:!!b.experienceRules});
     next.timing=b.timing;
     next.invasionSide=b.invasionSide;
     next.reinforceRules=b.reinforceRules;
@@ -489,11 +526,11 @@ export function commandBattle(previous:BattleState,command:BattleCommand):Battle
       next.units=next.units.filter(u=>u.side!=='defender'||u.general);deployTroops(next,'defender');
     }
     if(b.strategies&&next.strategies) {
-      next.strategies.choices.attacker={...b.strategies.choices.attacker,status:'selected'};
+      if(!b.attackerAI)next.strategies.choices.attacker={...b.strategies.choices.attacker,status:'selected'};
       if(command.type==='select-commander')next.strategies.choices.defender=structuredClone(b.strategies.choices.defender);
     }
     next.scenery=structuredClone(b.scenery??{terrainId:0,variant:'a'});
-    next.round=b.round+(command.type==='next-round'?1:0);next.totalInitial=b.totalInitial;next.history=b.history;
+    next.round=b.round+(command.type==='select-commander'?0:1);next.totalInitial=b.totalInitial;next.history=b.history;
     next.log=[`第${next.round}阵：${a.commander.name}对阵${d.commander.name}。`,...b.log].slice(0,8);
     return next;
   }
@@ -549,15 +586,38 @@ export function commandBattle(previous:BattleState,command:BattleCommand):Battle
   b.log.unshift(`${names[command.division]}${orders[command.order]}！`); b.log.length=Math.min(8,b.log.length);
   return b;
 }
-function finish(b:BattleState,winner:BattleSide,reason:string) {
+function finish(b:BattleState,winner:BattleSide,reason:string,kind:NativeRoundKind=1) {
   // Source coroutines belong to one round. A round-ending commander defeat
   // must not leave child objects in an intermission snapshot whose source
   // clock will never advance them again.
   b.activeScript=undefined;
   recordRound(b);
+  if(b.experienceRules) {
+    const loser=opposite(winner);
+    const member=(side:BattleSide)=>b.rosters[side].find(m=>m.commander.id===b.commanders[side].id)!;
+    const input=(side:BattleSide)=>{
+      const m=member(side),initial=b.troopDeployment![side],cap=nativeTroopCapacity(m.commander.level??20);
+      return {level:m.commander.level??20,initialActive:initial.active,initialReserve:initial.reserve,
+        active:Math.min(m.troopSlots?.active??0,Math.max(0,cap.active)),reserve:Math.min(m.troopSlots?.reserve??0,cap.reserve),
+        merit:m.merit??0,status:m.battleStatus??0,record:m.commander.battleRecord,
+        settlementFlags:b.strategies?.effects[side].settlementFlags??0,
+        experienceModifier:b.strategies?.effects[side].experienceModifier??0};
+    };
+    const result=nativeRoundMerit(input(winner),input(loser),kind);
+    for(const [side,r] of [[winner,result.first],[loser,result.second]] as const) {
+      const m=member(side);m.merit=r.merit;m.battleStatus=r.status;m.commander.battleRecord=r.record;
+      b.commanders[side].battleRecord={...r.record};
+    }
+  }
   b.rosters[opposite(winner)].find(m=>m.commander.id===b.commanders[opposite(winner)].id)!.withdrawn=true;
+  if(b.experienceRules&&kind===3)b.rosters[winner].find(m=>m.commander.id===b.commanders[winner].id)!.withdrawn=true;
   b.history.push({round:b.round,attackerId:b.commanders.attacker.id,defenderId:b.commanders.defender.id,winner,reason});
-  b.phase=availableCommanders(b,opposite(winner)).length?'intermission':'finished';
+  if(b.experienceRules&&kind===3) {
+    const a=availableCommanders(b,'attacker').length,d=availableCommanders(b,'defender').length;
+    b.phase=a&&d?'intermission':'finished';
+    if(!a&&!d)b.drawn=true;
+    winner=a&&!d?'attacker':d&&!a?'defender':opposite(b.invasionSide??'attacker');
+  } else b.phase=availableCommanders(b,opposite(winner)).length?'intermission':'finished';
   b.winner=b.phase==='finished'?winner:null;b.reason=reason;b.log.unshift(reason);b.log.length=Math.min(8,b.log.length);
 }
 
@@ -566,7 +626,7 @@ function finish(b:BattleState,winner:BattleSide,reason:string) {
 function advanceNativeScript(b:BattleState,nativeSteps:number) {
   for(let i=0;i<nativeSteps&&b.activeScript;i++) {
     const script=b.activeScript;
-    if(script.kind==='native-shoot'||script.kind==='native-heal'||script.kind==='native-reinforce'||script.kind==='native-explode')break; // Runs on the source unit clock.
+    if(script.kind==='native-shoot'||script.kind==='native-heal'||script.kind==='native-reinforce'||script.kind==='native-explode'||script.kind==='native-rolltub')break; // Runs on the source unit clock.
     if(script.kind==='magic-projectile') {
       script.age++;script.phaseAge++;
       const target=b.units.find(u=>u.id===script.targetId&&u.general&&u.side===opposite(script.side));
@@ -730,13 +790,15 @@ function separateAllies(b:BattleState) {
 }
 
 /** Damage event adapter shared by the legacy and source-clock schedulers. */
-function resolveBattleHit(b:BattleState,u:BattleUnit,current:BattleUnit,forced=false,projectile=u.ranged):boolean {
+function resolveBattleHit(b:BattleState,u:BattleUnit,current:BattleUnit,forced=false,projectile=u.ranged,sourceTick=b.tick*3):boolean {
   const attacker=combatUnit(b,u),target=combatUnit(b,current),rng=b.opponentAI!.rng;
   const hit=forced||nativeAttackHits(attacker,target,rng);
+  const blocked=current.general&&battleMagicLocked(b,current);
   if(hit) {
-    current.hp=current.general?battleMagicLocked(b,current)?current.hp:Math.max(0,current.hp-nativeGeneralDamage(attacker,rng)):0;
+    current.hp=current.general?blocked?current.hp:Math.max(0,current.hp-nativeGeneralDamage(attacker,rng)):0;
     if(current.hp===0) {current.action='death';current.actionTick=0;beginBattleCasualty(b,current,u,nativeUnitIndex(b.commanders[current.side]));}
   }
+  emitBattleHitAudio(b,u,current,hit,sourceTick,blocked);
   if(projectile||hit)b.effects.push({id:b.nextId++,kind:projectile?'arrow':'hit',x:u.x,y:u.y-25,toX:current.x,toY:current.y-23,ticks:projectile?7:4,sourceId:u.id,targetId:current.id,sourceZ:25,targetZ:23});
   return hit;
 }
@@ -756,13 +818,14 @@ export function tickBattle(b:BattleState,steps=1):void {
     advanceNativeScript(b,SOURCE_TICKS_PER_STEP);
     advanceBattleCasualties(b,SOURCE_TICKS_PER_STEP);
     prepareBattleMovement(b);
+    if(b.attackerAI)decideOpponent(b,'attacker');
     decideOpponent(b);
     for(const e of b.effects)e.ticks--;
     b.effects=b.effects.filter(e=>e.ticks>0);
     if(b.movementRules==='native-grid-v3') {
-      updateBattleUnits(b,{sourceStep:()=>advanceBattleNativeMagic(b,(target,caster)=>beginBattleCasualty(b,target,caster,nativeUnitIndex(b.commanders[target.side]))),generalStep:u=>advanceBattleGeneral(b,u),
-        unitType:u=>nativeUnitIndex(b.commanders[u.side]),hit:(u,target,forced,projectile)=>resolveBattleHit(b,u,target,forced,projectile),
-        escaped:u=>{if(u.general)finish(b,opposite(u.side),`${b.commanders[u.side].name}撤离战场。`);}});
+      updateBattleUnits(b,{sourceStep:sourceTick=>advanceBattleNativeMagic(b,(target,caster)=>beginBattleCasualty(b,target,caster,nativeUnitIndex(b.commanders[target.side])),sourceTick),generalStep:u=>advanceBattleGeneral(b,u),
+        unitType:u=>nativeUnitIndex(b.commanders[u.side]),hit:(u,target,forced,projectile,sourceTick)=>resolveBattleHit(b,u,target,forced,projectile,sourceTick),
+        escaped:u=>{if(u.general)finish(b,opposite(u.side),`${b.commanders[u.side].name}撤离战场。`,2);}});
     } else {
       const alive=b.units.filter(u=>u.hp>0&&!u.escaped);
       const sides={attacker:alive.filter(u=>u.side==='attacker'),defender:alive.filter(u=>u.side==='defender')};
@@ -779,13 +842,13 @@ export function tickBattle(b:BattleState,steps=1):void {
           if(u.status&&u.status.until>b.tick){u.action='wait';u.actionTick=0;u.target=null;return;}
           if(b.movementRules&&u.movement!.remaining>0) {
             advanceBattleMovement(u,SOURCE_TICKS_PER_STEP);
-            if(u.escaped&&u.general){finish(b,opposite(u.side),`${b.commanders[u.side].name}撤离战场。`);return;}
+            if(u.escaped&&u.general){finish(b,opposite(u.side),`${b.commanders[u.side].name}撤离战场。`,2);return;}
             return;
           }
           if(u.order==='retreat') {
             if(b.movementRules){planBattleMovement(b,u,undefined,nativeUnitIndex(b.commanders[u.side]),yieldContext);advanceBattleMovement(u,SOURCE_TICKS_PER_STEP);return;}
             u.x+=(u.side==='attacker'?-1:1)*(u.general?62:48)*battleStepDuration(b);u.action='walk';
-            if(u.x<20||u.x>1180) {u.escaped=true;if(u.general)finish(b,opposite(u.side),`${b.commanders[u.side].name}撤离战场。`);}
+            if(u.x<20||u.x>1180) {u.escaped=true;if(u.general)finish(b,opposite(u.side),`${b.commanders[u.side].name}撤离战场。`,2);}
             return;
           }
           const targets=sides[opposite(u.side)].filter(t=>t.hp>0&&!t.escaped);
@@ -824,7 +887,8 @@ export function tickBattle(b:BattleState,steps=1):void {
       for(const u of b.units){updateUnit(u);if(b.phase!=='fighting')break;}
     }
     if(b.phase!=='fighting')break;
-    for(const side of ['attacker','defender'] as const) if(battleGeneral(b,side).hp<=0) {finish(b,opposite(side),`${b.commanders[side].name}败退，此战结束。`);break;}
+    if(b.experienceRules&&battleGeneral(b,'attacker').hp<=0&&battleGeneral(b,'defender').hp<=0)finish(b,opposite(b.invasionSide??'attacker'),'双方主将同时倒地，双方收兵。',3);
+    else for(const side of ['attacker','defender'] as const) if(battleGeneral(b,side).hp<=0) {finish(b,opposite(side),`${b.commanders[side].name}败退，此战结束。`);break;}
     if(b.phase!=='fighting')break;
     separateAllies(b);
     // Reserves represent actual soldiers waiting off-field, never a visual multiplier.
@@ -853,7 +917,7 @@ export function tickBattle(b:BattleState,steps=1):void {
     // the dead current target, until the next command decision advances it.
     const commandTargets=new Set(b.nativeCommands?Object.values(b.nativeCommands).map(s=>s.target):[]);
     b.units=b.units.filter(u=>u.general||u.hp>0||u.actionTick<50||projectileOwners.has(u.id)||commandTargets.has(u.id)||effectOwners.has(u.id));
-    if(battleRemainingUpdates(b)===0)finish(b,opposite(b.invasionSide??'attacker'),'日暮收兵，进攻方撤回。');
+    if(battleRemainingUpdates(b)===0)finish(b,opposite(b.invasionSide??'attacker'),'日暮收兵，进攻方撤回。',3);
   }
 }
 
@@ -868,6 +932,13 @@ export function validateBattle(value:unknown):asserts value is BattleState {
     if(!a||!Array.isArray(a.rng)||a.rng.length!==2||!a.rng.every(n=>integer(n,4294967295))||!integer(a.countdown,60)||!integer(a.flags,7)||!integer(a.entryHp,10000)||!integer(a.chargeTick)||!integer(a.lastAction,6)||!integer(a.lastSkill,127))return fail();
     if(a.formation!==undefined&&!integer(a.formation,6))return fail();
   }
+  if(b.attackerAI!==undefined) {
+    const a=b.attackerAI;
+    if(!a||!b.opponentAI||!integer(a.countdown,60)||!integer(a.flags,7)||!integer(a.entryHp,10000)||!integer(a.chargeTick)||!integer(a.lastAction,6)||!integer(a.lastSkill,127)||!integer(a.formation,6))return fail();
+    if(a.formation!==formationToNativeIndex(b.formation))return fail();
+  }
+  if(b.experienceRules!==undefined&&(b.experienceRules!=='native-merit-v1'||!b.troopDeployment))fail();
+  if(b.drawn!==undefined&&(b.drawn!==true||!b.experienceRules||b.phase!=='finished'))fail();
   if(b.scenery!==undefined)validateScenery(b.scenery);
   if(b.fortifications!==undefined&&(!b.fortifications||!integer(b.fortifications.attacker,1000000000)||!integer(b.fortifications.defender,1000000000)))return fail();
   if((b.phase==='finished')!==['attacker','defender'].includes(b.winner as string)|| (b.phase!=='finished'&&b.winner!==null)||typeof b.reason!=='string'||b.reason.length>500)return fail();
@@ -908,20 +979,26 @@ export function validateBattle(value:unknown):asserts value is BattleState {
     for(const m of members) {
       const mc=m.commander;
       if(!mc||typeof mc.id!=='string'||typeof mc.name!=='string'||typeof mc.portrait!=='string'||typeof mc.unit!=='string'||![mc.hp,mc.mp,mc.strength,mc.intelligence].every(n=>integer(n,10000))||!integer(m.troops)||typeof m.withdrawn!=='boolean')return fail();
+      if(mc.battleRecord!==undefined&&!isNativeBattleRecord(mc.battleRecord))fail();
+      if(m.merit!==undefined&&!integer(m.merit,4294967295)||m.battleStatus!==undefined&&!integer(m.battleStatus,6))fail();
+      if(b.experienceRules&&(m.merit===undefined||m.battleStatus===undefined))fail();
       validateAppearance(mc,fail);if(mc.maxHp!==undefined&&(!integer(mc.maxHp,10000)||mc.hp>mc.maxHp))return fail();
       const cap=nativeTroopCapacity(mc.level??20);
       if(m.troopSlots!==undefined&&(!m.troopSlots||!integer(m.troopSlots.active,Math.max(0,cap.active))||!integer(m.troopSlots.reserve,cap.reserve)||m.troopSlots.active+m.troopSlots.reserve>m.troops))return fail();
     }
     validateAppearance(c,fail);
+    if(c.battleRecord!==undefined&&!isNativeBattleRecord(c.battleRecord))fail();
     if(c.charge!==undefined&&(!Number.isInteger(c.charge)||c.charge>CHARGE_LIMIT||c.charge<(b.generalRules?-2147483648:0)))return fail();
     if(c.maxMp!==undefined&&(!integer(c.maxMp,10000)||c.mp>c.maxMp))return fail();
   }
   validateBattleAttackActions(b,fail);
   validateBattleProjectiles(b,fail);
   validateBattleNativeMagic(b,fail);
+  validateBattleSoundEvents(b,fail);
+  validateBattleHitAudio(b,fail);
   if(b.activeScript!==undefined) {
     const x=b.activeScript;
-    if(x.kind==='native-shoot'||x.kind==='native-heal'||x.kind==='native-reinforce'||x.kind==='native-explode') {
+    if(x.kind==='native-shoot'||x.kind==='native-heal'||x.kind==='native-reinforce'||x.kind==='native-explode'||x.kind==='native-rolltub') {
       // Full native coroutine/weapon validation lives with its adapter.
     } else if(x.kind==='heal') {
       if(!['attacker','defender'].includes(x.side)||!integer(x.targetId,b.nextId-1)||!integer(x.initialHp,10000)||!integer(x.nextPoint,10000)||!integer(x.amount,10000)||!integer(x.wait,100)||!integer(x.magic,100))return fail();
@@ -982,6 +1059,8 @@ function validateAppearance(c:BattleCommander,fail:()=>never) {
 export function upgradeBattle(value:BattleState):BattleState {
   if((value.version as number)!==1)return value;
   const b=value;b.version=2;b.round=1;b.history=[];
+  // A single-duel save has no native merit history to reconstruct.
+  delete b.experienceRules;delete b.drawn;
   b.rosters={attacker:[],defender:[]};b.totalInitial={...b.initial};
   for(const side of ['attacker','defender'] as const)b.rosters[side]=[{commander:structuredClone(b.commanders[side]),troops:b.initial[side],withdrawn:false}];
   if(b.phase==='finished') {

@@ -33,6 +33,8 @@ export interface GeneralDefinition {
   appearance?: CombatAppearance; bodyType?: number; baseExperience?: number;
   loyalFactionId?:string|null;
   forceMask?:number;
+  constancy?:number;
+  appearanceCities?:(string|null)[];relativeId?:string|null;
   level?:number; baseHp?:number; baseMp?:number; speed?:number; skillLearnset?:SkillLearning[]; strategyLearnset?:SkillLearning[];
 }
 export interface ScenarioDefinition {
@@ -44,10 +46,11 @@ export interface TerrainDefinition {
   id:number; name:string; soundtrack:number; sourceLine:number; floor:string;
   variants:{id:'a'|'b'; background:string; midground:string; foreground:string}[];
 }
+export interface SoundDefinition {id:string;path:string}
 export interface GameContent {
   version: 1; id: string; sourceHash: string; scenarios: ScenarioDefinition[];
   skills: Record<string, string>[]; strategies: Record<string, string>[]; items: Record<string, string>[];
-  terrains:TerrainDefinition[];
+  terrains:TerrainDefinition[]; sounds?:SoundDefinition[];
 }
 
 export function scenarioById(content: GameContent, id: string): ScenarioDefinition {
@@ -62,6 +65,7 @@ export function validateContent(value: unknown): asserts value is GameContent {
   if (c.version !== 1 || typeof c.id !== 'string' || !/^[a-f0-9]{64}$/.test(c.sourceHash) ||
       !Array.isArray(c.scenarios) || c.scenarios.length !== 5) throw new Error('游戏资料版本不受支持，请重新生成资源。');
   if(!Array.isArray(c.terrains)||c.terrains.length!==12||new Set(c.terrains.map(t=>t.id)).size!==12)throw new Error('战场地形资料不完整，请重新生成资源。');
+  if(c.sounds!==undefined&&(!Array.isArray(c.sounds)||new Set(c.sounds.map(s=>s.id)).size!==c.sounds.length||c.sounds.some(s=>!s||typeof s.id!=='string'||!/^SOUND\\[^\\]+\.WAV$/i.test(s.id)||typeof s.path!=='string'||!/^sound\/[^/]+\.wav$/i.test(s.path))))throw new Error('音效资料无效。');
   for(const t of c.terrains) {
     const asset=(path:unknown)=>typeof path==='string'&&/^battle\/terrain-\d{2}\/[a-z-]+\.png$/.test(path);
     if(!Number.isInteger(t.id)||t.id<0||t.id>11||typeof t.name!=='string'||![4,5,6].includes(t.soundtrack)||!asset(t.floor)||
@@ -83,6 +87,10 @@ export function validateContent(value: unknown): asserts value is GameContent {
     if(s.generals.some(g=>g.loyalFactionId!==undefined&&g.loyalFactionId!==null&&!s.factions.some(f=>f.id===g.loyalFactionId)))throw new Error('武将情义势力资料无效。');
     if(s.generals.some(g=>g.speed!==undefined&&(!Number.isInteger(g.speed)||g.speed < -32768||g.speed>32767)))throw new Error('武将速度资料无效。');
     if(s.generals.some(g=>g.forceMask!==undefined&&(!Number.isInteger(g.forceMask)||g.forceMask<0||g.forceMask>8191)))throw new Error('武将兵种资料无效。');
+    if(s.generals.some(g=>g.constancy!==undefined&&(!Number.isInteger(g.constancy)||g.constancy< -32768||g.constancy>32767)))throw new Error('武将节操资料无效。');
+    const generals=new Set(s.generals.map(g=>g.id));
+    if(s.generals.some(g=>g.appearanceCities!==undefined&&(!Array.isArray(g.appearanceCities)||g.appearanceCities.length!==5||g.appearanceCities.some(id=>id!==null&&!cities.has(id)))))throw new Error('武将出场地点资料无效。');
+    if(s.generals.some(g=>g.relativeId!==undefined&&g.relativeId!==null&&!generals.has(g.relativeId)))throw new Error('武将血缘资料无效。');
     if (s.roads.some(r => !cities.has(r.from) || !cities.has(r.to) || !Number.isFinite(r.length) || r.points.length < 2 || (r.midpointTerrainBySeason!==undefined&&(!Array.isArray(r.midpointTerrainBySeason)||r.midpointTerrainBySeason.length!==4||r.midpointTerrainBySeason.some(t=>!Number.isInteger(t)||t<0||t>11))))) throw new Error('道路资料无效。');
   }
 }

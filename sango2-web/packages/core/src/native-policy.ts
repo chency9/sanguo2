@@ -1,5 +1,5 @@
-/** Domestic rules from the pinned 1.05+ executable. System.SO presentation
- * and annual historical appearance events remain separate. */
+/** Domestic rules from the pinned 1.05+ executable. Full System.SO
+ * presentation and historical events remain separate from annual POS/BLOOD. */
 import type {ScenarioDefinition} from '@sango2/content';
 import type {Session} from './index';
 import {nativeBelow,type NativeRandomState} from './native-strategic-ai';
@@ -10,6 +10,7 @@ import {officerForceMask,nativeForceNames} from './native-officer-runtime';
 import type {AutonomyMode} from './native-policy-search';
 import {ensureDomesticAnnual,runAnnualDomesticAI,type DomesticAnnualState} from './native-policy-annual';
 import {previewPlayerItem} from './native-player-items';
+import {runAnnualOfficerAppearances} from './native-policy-appearance';
 
 export interface DomesticResult {year:number;cityId:string;generalId:string;population:number;defense:number;reportedPopulation:number;reportedDefense:number}
 export interface DomesticState {
@@ -75,7 +76,10 @@ export function createDomesticState(s:Session,scene:ScenarioDefinition,items:rea
  * development, reserve transfer and annual tax instead of old preview rules. */
 export function beginDomesticYear(s:Session,scene:ScenarioDefinition,items:readonly Record<string,string>[]=[]):boolean {
   if(!s.policy||s.policy.year>=scene.year+Math.floor(s.day/360))return false;
-  s.policy.year=scene.year+Math.floor(s.day/360);s.policy.active=true;s.policy.acted=[];
+  s.policy.year=scene.year+Math.floor(s.day/360);s.policy.active=true;
+  runAnnualOfficerAppearances(s,scene,items);
+  // 0x423681 precedes the new-year action reset and rival policy passes.
+  s.policy.acted=[];
   refreshPolicyGovernors(s,scene);
   runAnnualDomesticAI(s,scene,items);
   for(const def of scene.cities)s.cities[def.id].money+=nativeAnnualRevenue(s.cities[def.id].population,def.nativeFlags===2);

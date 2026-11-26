@@ -50,7 +50,10 @@ pnpm dev
 - `packages/core/src/index.ts`：战役命令、存档迁移与校验。
 - `packages/core/src/battle.ts`：固定步长战斗与轮战接入。
 - `packages/core/src/native-*.ts`：原版规则纯函数。
-- `packages/core/src/battle-native-magic.ts`：四种 ShootObject 技能的实战适配。
+- `packages/core/src/battle-native-magic.ts`：飞射、治疗、增兵、虎咆和滚木原脚本的实战适配。
+- `packages/core/src/native-battle-experience.ts`：每阵战功、胜奖、经验与原战绩。
+- `packages/core/src/native-policy-appearance.ts`：年度POS出场、亲族归附和即时成长。
+- `apps/game/src/battle-sound.ts`：原WAV按需解码、独立开关和读档去重。
 - `packages/core/src/native-magic-camera.ts`：原脚本锁定与返回镜头的整数轨迹。
 - `packages/core/src/native-general-tick.ts`：主将逐源集气、撤退与军师恢复。
 - `packages/core/fixtures/`：原机器码和 SO 脚本的对照样本。
@@ -59,6 +62,9 @@ pnpm dev
 `dispatch` 不改变输入状态；`tickBattle` 修改调用者持有的战斗快照。渲染和镜头不修改模拟状态、不抽取战斗随机数。新规则使用可选版本标记，旧 Web 存档保留原有执行路径。
 
 ## 本轮验证与证据
+
+2026-11-26：63个核心测试文件、18,386项测试、79项Chromium场景、6项Python测试，以及类型检查和生产构建通过。已补双方电脑战术控制、战功与经验闭环、增加经验军师技三档、年度人物出场、滚木三技及原WAV事件播放。详见[本轮实现与证据](docs/NATIVE-CAMPAIGN-BATTLE-2026-11-26.md)和[年度人物出场](docs/NATIVE-OFFICER-APPEARANCE-2026-11-26.md)。此前日期与数量是历史验证记录，不能代替本轮重新检查。
+
 
 2026-11-19：44 个测试文件、14,718 项核心测试、54 个 Chromium 场景、6 项 Python 测试通过；类型检查与生产构建通过。本次新增17项主动兵种选择集成检查，覆盖13兵种真实出征、现役/预备原对象、攻击动作与读档；前序有384组玩家物品入口原x86样本，并验证全部77件物品提交与读档、开发收益和真实出征；前序有840组电脑年度/普通升级/装备属性原x86样本；前序有780组搜索/登用/成长/自治及240组开发/税收原机器码样本；前序有72组Heal脚本树原解释器样本，共28,224次源更新；前序装备速度测试包含 698 组原码样本。
 

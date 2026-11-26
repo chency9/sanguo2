@@ -15,7 +15,8 @@ export function syncNativeCommands(b:BattleState,side:BattleSide):void {
   const state=b.nativeCommands![side];
   for(const u of b.units)if(u.side===side)u.order=commandOrder(battleUnitCommand(b,u));
   if(side==='attacker')for(const [key,slot] of [['general',0],['front',1],['rear',2]] as const)b.orders[key]=commandOrder(state.orders[slot]);
-  else if(b.opponentAI)b.opponentAI.flags=state.flags;
+  if(side==='attacker'&&b.attackerAI)b.attackerAI.flags=state.flags;
+  else if(side==='defender'&&b.opponentAI)b.opponentAI.flags=state.flags;
 }
 export function issueNativeCommand(b:BattleState,side:BattleSide,division:number,command:NativeCommand):void {
   const state=b.nativeCommands![side];
@@ -29,9 +30,10 @@ export function issueNativeCommand(b:BattleState,side:BattleSide,division:number
   if(command===2||command===5||command===6)state.strict=false;
   syncNativeCommands(b,side);
 }
-export function advanceNativeAI(b:BattleState):void {
-  nativeAdvanceDivision(b.opponentAI?.formation??0,b.nativeCommands!.defender.orders,b.opponentAI!.rng);
-  syncNativeCommands(b,'defender');
+export function advanceNativeAI(b:BattleState,side:BattleSide='defender'):void {
+  const ai=side==='defender'?b.opponentAI:b.attackerAI;
+  nativeAdvanceDivision(ai?.formation??0,b.nativeCommands![side].orders,b.opponentAI!.rng);
+  syncNativeCommands(b,side);
 }
 export function battleChargeTarget(b:BattleState,side:BattleSide):BattleUnit {
   const state=b.nativeCommands![side],enemies=b.units.filter(u=>u.side!==side&&!u.general);

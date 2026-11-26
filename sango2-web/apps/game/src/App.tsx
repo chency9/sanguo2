@@ -4,6 +4,7 @@ import { adjacentRoads, createSession, dispatch, gameDate, RULES, stationedGener
 import { exportGame, importGame, listSaves, saveGame, type SaveSlot } from './storage';
 import { cityOwnership } from './city-ownership';
 import {PolicyScreen} from './PolicyScreen';
+import {BattleSoundPlayer} from './battle-sound';
 
 const WorldMap = lazy(() => import('./WorldMap').then(module => ({ default: module.WorldMap })));
 const BattleView = lazy(() => import('./BattleView').then(module => ({ default: module.BattleView })));
@@ -92,6 +93,9 @@ export function App({ content }: { content: GameContent }) {
   const [cityScope, setCityScope] = useState('own'); const [cityQuery, setCityQuery] = useState('');
   const [message, setMessage] = useState('择一方诸侯，开启你的征程。');
   const [music, setMusic] = useState(false); const audio = useRef<HTMLAudioElement>(null);
+  const [sounds,setSounds]=useState(false);
+  const soundPlayer=useRef<BattleSoundPlayer|null>(null);
+  if(!soundPlayer.current)soundPlayer.current=new BattleSoundPlayer(content.sounds??[]);
   const [training,setTraining]=useState<BattleState|null>(null);const trainingRef=useRef<BattleState|null>(null);
   const city = scene.cities.find(c => c.id === selected) ?? scene.cities[0];
   const state = session.cities[city.id];
@@ -112,6 +116,7 @@ export function App({ content }: { content: GameContent }) {
     catch (e) { const message=e instanceof Error ? e.message : '命令执行失败';setRunning(false);setMessage(message);return {ok:false,message}; }
   }
   function load(next: Session) {
+    soundPlayer.current?.reset(next.battle);
     trainingRef.current=null;setTraining(null);
     commit(next); const nextScene = scenarioById(content, next.scenarioId);
     setSelected(nextScene.cities.find(c => next.cities[c.id].ownerId === next.factionId)?.id ?? nextScene.cities[0].id);
@@ -127,6 +132,10 @@ export function App({ content }: { content: GameContent }) {
     if (!audio.current) return;
     if (music) { audio.current.pause(); setMusic(false); }
     else try { audio.current.volume = .3; await audio.current.play(); setMusic(true); } catch { setMessage('音乐暂时无法播放，请检查浏览器声音权限。'); }
+  }
+  async function toggleSounds() {
+    try {await soundPlayer.current!.setEnabled(!sounds);setSounds(!sounds);}
+    catch {setSounds(false);setMessage('音效暂时无法播放，请检查浏览器声音权限。');}
   }
   function practice(multiple=false) {
     const attacker=scene.generals.find(g=>g.name==='曹操')??leader??scene.generals[0];
@@ -152,6 +161,12 @@ export function App({ content }: { content: GameContent }) {
     else run({type:'battle-tick',steps});
   }
   const activeBattle=training??session.battle;
+  useEffect(()=>{soundPlayer.current?.consume(activeBattle);},[activeBattle]);
+  useEffect(()=>{
+    const silence=()=>{if(document.hidden)soundPlayer.current?.silence();};
+    document.addEventListener('visibilitychange',silence);
+    return()=>{document.removeEventListener('visibilitychange',silence);soundPlayer.current?.dispose();};
+  },[]);
   const terrain=activeBattle?content.terrains.find(t=>t.id===(activeBattle.scenery?.terrainId??0)):undefined;
   const musicSource=activeBattle?`/assets/battle/music-${String(terrain?.soundtrack??6).padStart(2,'0')}.mp3`:'/assets/music.mp3';
   useEffect(()=>{
@@ -161,8 +176,8 @@ export function App({ content }: { content: GameContent }) {
     return()=>{cancelled=true;};
   },[musicSource]);
   return <div className="app">
-    <header className="topbar"><a className="brand" href="#realm"><span className="seal">群</span><span><strong>三國群英傳 <b>II</b></strong><small>修正版 1.05+ · WEB 重制</small></span></a><div className="edition"><span>乱世逐鹿</span><small>{scene.title} · {faction.name}</small></div><nav aria-label="游戏菜单"><button disabled={!started||!!activeBattle} onClick={()=>setPanel('policy')}>内政经营</button><button onClick={() => setPanel('new')}>新征程</button><button disabled={!!activeBattle} onClick={()=>practice()}>演武场</button><button disabled={!!activeBattle} onClick={()=>practice(true)}>双将演武</button><button onClick={() => setPanel('saves')}>存读档</button><button onClick={() => setPanel('help')}>玩法说明</button><button className="music-button" aria-pressed={music} onClick={() => void toggleMusic()}>{music ? '♫ 音乐开' : '♪ 音乐关'}</button></nav></header>
-    {activeBattle?<Suspense fallback={<div className="boot">正在进入战场…</div>}><BattleView skills={content.skills} terrains={content.terrains} music={music} onMusic={()=>void toggleMusic()} key={activeBattle.id} battle={activeBattle} cityName={training?'校场':scene.cities.find(c=>c.id===activeBattle.cityId)?.name??'城池'} training={!!training} blocked={!!panel} onCommand={battleCommand} onTick={battleTick} onSave={()=>{if(training)setMessage('演武不写入战役存档。');else setPanel('saves');}} onLeave={()=>{trainingRef.current=null;setTraining(null);}} onFinish={()=>{if(training){trainingRef.current=null;setTraining(null);}else run({type:'battle-finish'});}}/></Suspense>:<main id="realm" className="realm">
+    <header className="topbar"><a className="brand" href="#realm"><span className="seal">群</span><span><strong>三國群英傳 <b>II</b></strong><small>修正版 1.05+ · WEB 重制</small></span></a><div className="edition"><span>乱世逐鹿</span><small>{scene.title} · {faction.name}</small></div><nav aria-label="游戏菜单"><button disabled={!started||!!activeBattle} onClick={()=>setPanel('policy')}>内政经营</button><button onClick={() => setPanel('new')}>新征程</button><button disabled={!!activeBattle} onClick={()=>practice()}>演武场</button><button disabled={!!activeBattle} onClick={()=>practice(true)}>双将演武</button><button onClick={() => setPanel('saves')}>存读档</button><button onClick={() => setPanel('help')}>玩法说明</button><button className="music-button" aria-pressed={music} onClick={() => void toggleMusic()}>{music ? '♫ 音乐开' : '♪ 音乐关'}</button><button aria-pressed={sounds} onClick={()=>void toggleSounds()}>{sounds?'音效开':'音效关'}</button></nav></header>
+    {activeBattle?<Suspense fallback={<div className="boot">正在进入战场…</div>}><BattleView skills={content.skills} terrains={content.terrains} music={music} onMusic={()=>void toggleMusic()} sounds={sounds} onSounds={()=>void toggleSounds()} key={activeBattle.id} battle={activeBattle} cityName={training?'校场':scene.cities.find(c=>c.id===activeBattle.cityId)?.name??'城池'} training={!!training} blocked={!!panel} onCommand={battleCommand} onTick={battleTick} onSave={()=>{if(training)setMessage('演武不写入战役存档。');else setPanel('saves');}} onLeave={()=>{trainingRef.current=null;setTraining(null);}} onFinish={()=>{if(training){trainingRef.current=null;setTraining(null);}else run({type:'battle-finish'});}}/></Suspense>:<main id="realm" className="realm">
       <aside className="empire"><div className="faction-header">{leader && <Portrait path={leader.portrait} name={leader.name} />}<div><span className="eyebrow">主 公</span><h1>{faction.name}</h1><p><i style={{ background: faction.color }} />据守 {ownCities.length} 城</p></div></div>
         <div className="empire-totals"><div><span>府库总金</span><strong>{number(totals.money)}</strong></div><div><span>城内驻军</span><strong>{number(totals.troops)}</strong></div></div>
         <button className="roster-link" onClick={() => setPanel('roster')}><span>武将名册</span><b>{Object.values(session.generals).filter(g => g.ownerId === session.factionId).length} <span>→</span></b></button>

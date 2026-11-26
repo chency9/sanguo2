@@ -112,6 +112,7 @@ describe('native reinforce battle integration',()=>{
   it('retains the earlier executor for saves without the source unit clock',()=>{
     let b=ready();
     delete b.movementRules;delete b.nativeCommands;delete b.troopDeployment;delete b.deploymentRules;
+    delete b.experienceRules;delete b.soundEvents;
     delete b.magicRules;delete b.healRules;delete b.cameraRules;delete b.generalRules;
     delete b.casualtyRules;delete b.detached;delete b.attackRules;delete b.projectileRules;delete b.projectiles;
     for(const unit of b.units)delete unit.movement;
@@ -142,7 +143,7 @@ describe('native reinforce battle integration',()=>{
   it('keeps earned soldiers valid across three successive commanders',()=>{
     let b=ready(40,0,37);
     for(const side of ['attacker','defender'] as const) {
-      for(let i=1;i<3;i++)b.rosters[side].push({commander:{...b.commanders[side],id:`${side}-${i}`},troops:0,withdrawn:false});
+      for(let i=1;i<3;i++)b.rosters[side].push({commander:{...b.commanders[side],id:`${side}-${i}`},troops:0,withdrawn:false,merit:0,battleStatus:0});
     }
     for(let round=0;round<3;round++) {
       if(round>0){b=commandBattle(b,{type:'next-round',commanderId:`attacker-${round}`});b=commandBattle(b,{type:'start'});prepareBattleMovement(b);}

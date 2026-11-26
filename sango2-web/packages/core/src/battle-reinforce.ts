@@ -1,6 +1,7 @@
 import type {BattleSide,BattleState,BattleUnit} from './battle';
 import {commandOrder} from './battle-commands';
 import {nativeAdvanceMagicReinforce} from './native-magic-reinforce';
+import {emitBattleSound} from './battle-audio-events';
 
 /** 0x43A971 scans 200 per-side records; 0x43DB0D marks a death reusable
  * immediately, independently of its still-visible corpse object. */
@@ -43,7 +44,7 @@ export function createBattleReinforceSoldier(b:BattleState,side:BattleSide,encod
 
 /** host 281 -> 0x43A971. Object ids stay unique even when a soldier record
  * is reused, so arrows and corpses can keep their original saved ownership. */
-export function advanceBattleReinforce(b:BattleState):void {
+export function advanceBattleReinforce(b:BattleState,sourceTick=b.tick*3):void {
   const script=b.activeScript;if(script?.kind!=='native-reinforce')return;
   const r=script.runtime,caster=b.units.find(u=>u.id===script.casterId);
   if(!caster){b.activeScript=undefined;return;}
@@ -65,6 +66,7 @@ export function advanceBattleReinforce(b:BattleState):void {
     occupant:(x,y)=>b.units.some(u=>u.hp>0&&!u.escaped&&!u.movement?.exiting&&u.movement?.x===x&&u.movement?.y===y),
     spawn:(x,y)=>createBattleReinforceSoldier(b,side,x,y),
   },event=>{
+    if(event.host===769)emitBattleSound(b,String(event.args[0]),Number(event.args[1]),sourceTick);
     // host 289 delays the caster's next decision on the same source clock.
     if(event.host===289)caster.movement!.clock!.deferred=(caster.movement!.clock!.deferred+40*Number(event.args[1]))|0;
   });

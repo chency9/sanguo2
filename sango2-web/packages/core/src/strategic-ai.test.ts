@@ -14,8 +14,12 @@ function fixture():GameContent {
   }]};
 }
 const advance=(s:Session,n:number,c:GameContent)=>dispatch(s,{type:'advance',days:n},c);
-function invasion() {
+function invasion(extraDefender=false) {
   const c=fixture();c.scenarios[0].roads=c.scenarios[0].roads.filter(r=>r.to==='home');
+  if(extraDefender) {
+    c.scenarios[0].generals.push({...c.scenarios[0].generals[0],id:'p2',name:'p2'});
+    c.scenarios[0].cities[0].governorId='p1';
+  }
   let s=createSession(c,'era','e');
   s=dispatch(s,{type:'march',from:'enemy',to:'home',generalIds:['e1','e2'],troops:160},c);s.factionId='p';
   // Settlement regression setup is independent of the native weighted decision draw.
@@ -180,11 +184,14 @@ describe('rival strategy and player defense',()=>{
     expect(s.cities.home.ownerId).toBe('e');expect(s.reports[0].won).toBe(false);
     expect(s.generals.p1.ownerId).toBeNull();expect(()=>validateSession(s,c)).not.toThrow();
   });
-  it('protects a defending player at timeout and keeps the strategic role across rounds',()=>{
-    let {c,s}=invasion();s=dispatch(s,{type:'battle-command',command:{type:'start'}},c);
+  it('withdraws both commanders at dusk and keeps the strategic role for the next pair',()=>{
+    let {c,s}=invasion(true);s=dispatch(s,{type:'battle-command',command:{type:'start'}},c);
     s.battle!.tick=3959;s=dispatch(s,{type:'battle-tick',steps:1},c);
     expect(s.battle!.history[0].winner).toBe('attacker');
-    s=dispatch(s,{type:'battle-command',command:{type:'next-round',commanderId:'p1'}},c);
+    expect(s.battle!.rosters.attacker.find(m=>m.commander.id==='p1')!.withdrawn).toBe(true);
+    expect(s.battle!.rosters.defender.find(m=>m.commander.id===s.battle!.commanders.defender.id)!.withdrawn).toBe(true);
+    expect(()=>dispatch(s,{type:'battle-command',command:{type:'next-round',commanderId:'p1'}},c)).toThrow();
+    s=dispatch(s,{type:'battle-command',command:{type:'next-round',commanderId:'p2'}},c);
     expect(s.battle!.invasionSide).toBe('defender');
   });
   it('does not return a defeated army to its captured origin',()=>{

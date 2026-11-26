@@ -11,7 +11,7 @@ const atlas=JSON.parse(readFileSync(new URL('animations.json',assets),'utf8'));
 describe('original 0x436B9A / 0x421E1B / 0x421BF2 on real PAK attack streams',()=>{
   it.each(vectors.cases)('matches object $object / $action, its events and every source frame',v=>{
     const special=v.action==='WIN',timing=nativeAttackAction(v.object,special)!;
-    expect(timing).toEqual({ticks:v.native.ticks,hitTicks:v.native.hitTicks,frameTicks:v.native.frames.map(f=>f.ticks)});
+    expect(timing).toMatchObject({ticks:v.native.ticks,hitTicks:v.native.hitTicks,frameTicks:v.native.frames.map(f=>f.ticks)});
     expect(v.native.trace.map((_,age)=>nativeAttackFrame(timing,age))).toEqual(v.native.trace);
     const exported=atlas.objects[v.object].actions[special?'specialAttack':'sourceAttack'];
     expect(exported.frames).toEqual(v.native.frames.map(({key,ticks})=>({key,ticks})));

@@ -7,7 +7,7 @@ export interface BattleCameraState extends NativeCamera {
 }
 export function resolveBattleCamera(b:BattleState,c:BattleCameraState):NativeCamera {
   const script=b.activeScript;
-  if(battleScriptCameraLocked(b)&&(script?.kind==='native-shoot'||script?.kind==='native-heal'||script?.kind==='native-reinforce'||script?.kind==='native-explode')) {
+  if(battleScriptCameraLocked(b)&&(script?.kind==='native-shoot'||script?.kind==='native-heal'||script?.kind==='native-reinforce'||script?.kind==='native-explode'||script?.kind==='native-rolltub')) {
     const key=`${b.id}:${b.round}:${script.casterId}:${b.tick*3-script.runtime.age}`;
     // Freeze the current view until the SO's first host-256 write. This is
     // private presentation state: no battle coordinates or RNG are changed.

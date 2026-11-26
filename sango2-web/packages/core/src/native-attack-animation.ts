@@ -1,7 +1,8 @@
 import actions from './native-attack-actions.json';
 import type {BattleState,BattleUnit} from './battle';
+import type {NativeAttackSound} from './battle-audio-events';
 
-export interface NativeAttackAction {ticks:number;hitTicks:number[];frameTicks:number[]}
+export interface NativeAttackAction {ticks:number;hitTicks:number[];frameTicks:number[];soundTicks?:NativeAttackSound[]}
 const catalogue=actions as Record<string,Partial<Record<'sourceAttack'|'specialAttack',NativeAttackAction>>>;
 export function nativeAttackAction(object:number,special:boolean):NativeAttackAction|undefined {return catalogue[object]?.[special?'specialAttack':'sourceAttack'];}
 export function nativeAttackFrame(action:{frameTicks:readonly number[]},age:number):number {

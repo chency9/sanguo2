@@ -5,12 +5,14 @@ import {nativeGridIndex} from './native-battle-grid';
 import {nativeMovementRange} from './native-movement';
 import {battleAttackAction} from './native-attack-animation';
 import {launchBattleProjectile,advanceBattleProjectiles} from './battle-projectiles';
+import {emitBattleAttackSounds} from './battle-audio-events';
+import {beginBattleAttackAudio,finishBattleAttackAudio,pruneBattleHitAudio} from './battle-hit-audio';
 
 export interface BattleUnitCallbacks {
-  sourceStep?:()=>void;
+  sourceStep?:(tick:number)=>void;
   generalStep?:(u:BattleUnit)=>void;
   unitType:(u:BattleUnit)=>number;
-  hit:(u:BattleUnit,target:BattleUnit,forced:boolean,projectile:boolean)=>boolean|void;
+  hit:(u:BattleUnit,target:BattleUnit,forced:boolean,projectile:boolean,sourceTick:number)=>boolean|void;
   escaped:(u:BattleUnit)=>void;
 }
 /** Per-source-update unit clock/target adapter. Global AI, effects and casualty
@@ -18,8 +20,9 @@ export interface BattleUnitCallbacks {
  * mixed object ordering remain parity work. */
 export function updateBattleUnits(b:BattleState,callbacks:BattleUnitCallbacks):void {
   for(let step=0;step<3&&b.phase==='fighting';step++) {
-    callbacks.sourceStep?.();
     const tick=(b.tick-1)*3+step+1,active=new Set<number>();
+    callbacks.sourceStep?.(tick);
+    pruneBattleHitAudio(b);
     const context:BattleYieldContext={tick,active,update};
     function update(u:BattleUnit):void {
       const m=u.movement;
@@ -56,6 +59,7 @@ export function updateBattleUnits(b:BattleState,callbacks:BattleUnitCallbacks):v
             // 0x43CCE3 / 0x43C1E7: center the event and stop its velocity.
             m.px=(96*m.x+48)*65536;m.py=(72*m.y+36)*65536;m.vx=0;m.vy=0;m.remaining=0;
             m.facing=distance>0?0:0x800000;u.action='attack';u.target=target.id;u.hit=false;c.actionAge=0;c.special=attack.special;
+            beginBattleAttackAudio(b,u);
             if(b.attackRules)c.attackEvent=0;
           } else {
             let nearest:BattleUnit|undefined,best=Infinity;
@@ -67,7 +71,7 @@ export function updateBattleUnits(b:BattleState,callbacks:BattleUnitCallbacks):v
             if(before!==u.action)c.actionAge=0;u.target=null;
           }
         } else integrate(u);
-        c.actionAge++;
+        const previousAge=c.actionAge;c.actionAge++;
         if(u.action==='attack') {
           const appearance=b.commanders[u.side].appearance;
           const timing=appearance?.[u.general?'generalAttack':u.nativeReserve?'reserveSoldierAttack':'soldierAttack']??appearance?.soldierAttack;
@@ -89,9 +93,10 @@ export function updateBattleUnits(b:BattleState,callbacks:BattleUnitCallbacks):v
               // Legacy snapshots keep their immediate damage adapter.
               target=b.units.find(other=>other.id===u.target&&other.hp>0&&!other.escaped);projectile=true;
             }
-            if(target&&target.side!==u.side)callbacks.hit(u,target,!u.general&&!projectile&&c.special&&nativeMovementRange(callbacks.unitType(u),u.nativeReserve===true)<=1,projectile);
+            if(target&&target.side!==u.side)callbacks.hit(u,target,!u.general&&!projectile&&c.special&&nativeMovementRange(callbacks.unitType(u),u.nativeReserve===true)<=1,projectile,tick);
           }
-          if(c.actionAge>=(native?.ticks??timing?.ticks??60)){u.action='wait';c.actionAge=0;u.target=null;}
+          emitBattleAttackSounds(b,native?.soundTicks,previousAge,c.actionAge,tick);
+          if(c.actionAge>=(native?.ticks??timing?.ticks??60)){u.action='wait';c.actionAge=0;u.target=null;finishBattleAttackAudio(b,u,tick);}
         }
         u.actionTick=Math.floor(c.actionAge/3);
       } finally {m.updatedAt=tick;active.delete(u.id);}
@@ -105,7 +110,7 @@ export function updateBattleUnits(b:BattleState,callbacks:BattleUnitCallbacks):v
       if(m.vx||m.vy){u.x+=m.vx/65536/96/71*1200;u.y+=m.vy/65536/72/13*360;}
     }
     for(const u of b.units)update(u);
-    if(b.phase==='fighting')advanceBattleProjectiles(b,(u,target)=>callbacks.hit(u,target,false,false)===true);
+    if(b.phase==='fighting')advanceBattleProjectiles(b,(u,target)=>callbacks.hit(u,target,false,false,tick)===true);
   }
   // Existing corpse fade is grouped and independent of source attack clocks.
   for(const u of b.units)if(u.hp<=0)u.actionTick++;

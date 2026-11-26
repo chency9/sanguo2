@@ -22,14 +22,14 @@ export function battleStrategyOptions(c:BattleCommander) {
 }
 const vitals=(c:BattleCommander):Vitals=>({hp:c.hp,mp:c.mp,maxHp:c.maxHp??c.hp,maxMp:c.maxMp??c.mp,morale:c.morale??80});
 function blank(c:BattleCommander,troops:number):NativeStrategyCombat {
-  return {...vitals(c),troops:Math.min(100,troops),reserve:Math.max(0,troops-100),flags:0,parameter:0,recoveryClock:0,chargeModifier:0,soldierPower:150,generalHitBonus:0,loyalty:c.loyalty??90,settlementFlags:0,fatigueModifier:0};
+  return {...vitals(c),troops:Math.min(100,troops),reserve:Math.max(0,troops-100),flags:0,parameter:0,recoveryClock:0,chargeModifier:0,soldierPower:150,generalHitBonus:0,loyalty:c.loyalty??90,settlementFlags:0,fatigueModifier:0,experienceModifier:0};
 }
 export function createBattleStrategies(b:BattleState):BattleStrategies {
   const choices={} as Record<BattleSide,Choice>;
   for(const side of sides) {
     const members=b.rosters[side],advisor=members[nativeStrategistIndex(members.map(m=>m.commander.intelligence))].commander;
     const troops=b.troopDeployment?b.troopDeployment[side].active+b.troopDeployment[side].reserve:b.initial[side];
-    const draw=side==='defender'?nativeChooseStrategy(battleStrategyOptions(advisor),troops,b.opponentAI!.rng):{slot:-1,sequence:0};
+    const draw=side==='defender'||b.attackerAI?nativeChooseStrategy(battleStrategyOptions(advisor),troops,b.opponentAI!.rng):{slot:-1,sequence:0};
     choices[side]={advisorId:advisor.id,slot:draw.slot,sequence:draw.sequence,status:'selected'};
   }
   return {version:1,applied:false,choices,
@@ -78,6 +78,7 @@ export function applyBattleStrategies(b:BattleState):void {
     if(!b.troopDeployment)b.reserves[side]=effect.reserve;
   }
   if(b.opponentAI)b.opponentAI.entryHp=s.effects.defender.hp;
+  if(b.attackerAI)b.attackerAI.entryHp=s.effects.attacker.hp;
   b.log.length=Math.min(8,b.log.length);
 }
 export function recoverBattleStrategy(b:BattleState,side:BattleSide,updates:number):void {
@@ -109,7 +110,8 @@ export function validateBattleStrategies(b:BattleState,fail:()=>never):void {
     if(ef.soldierPower!==undefined&&(!Number.isInteger(ef.soldierPower)||ef.soldierPower<105||ef.soldierPower>195))fail();
     if(ef.generalHitBonus!==undefined&&![0,10,15,20].includes(ef.generalHitBonus))fail();
     if([ef.morale,ef.loyalty,entry.morale].some(n=>n!==undefined&&!int(n,100)))fail();
-    if(ef.settlementFlags!==undefined&&![0,4096].includes(ef.settlementFlags))fail();
+    if(ef.settlementFlags!==undefined&&![0,4096,8192,12288].includes(ef.settlementFlags))fail();
     if(ef.fatigueModifier!==undefined&&(!Number.isInteger(ef.fatigueModifier)||Math.abs(ef.fatigueModifier)>6))fail();
+    if(ef.experienceModifier!==undefined&&![0,30,50,100].includes(ef.experienceModifier))fail();
   }
 }

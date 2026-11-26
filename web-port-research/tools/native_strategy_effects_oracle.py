@@ -9,10 +9,10 @@ import shutil
 from native_ai_oracle import Oracle, ROOT, HEAP, SHA, UC_HOOK_CODE, UC_X86_REG_ESP, UC_X86_REG_EAX, UC_X86_REG_EIP
 from native_strategist_oracle import selection
 
-SUPPORTED=[1,2,3,4,5,6,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,35,36,37,38,39,40,41,42,43,50,51,52,58,59,60,61,62,63,64,65,66,67]
+SUPPORTED=[1,2,3,4,5,6,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,35,36,37,38,39,40,41,42,43,50,51,52,53,54,55,58,59,60,61,62,63,64,65,66,67]
 FIELDS={'maxHp':16,'hp':18,'maxMp':20,'mp':22,'troops':68,'reserve':72,'morale':56,'loyalty':60}
 MODIFIERS={'flags':132,'parameter':136,'recoveryClock':140,'chargeModifier':144,'soldierPower':112,'generalHitBonus':116}
-TEAM={'settlementFlags':52,'fatigueModifier':56}
+TEAM={'settlementFlags':52,'fatigueModifier':56,'experienceModifier':60}
 OUT=ROOT/'evidence/ai'
 CAPTURES=[json.loads((OUT/f'runtime-strategist-{i}.json').read_text(encoding='utf8')) for i in [1,2,3]]
 assert all(v['status']=='captured' and v['exeSha256']==SHA and v['rows']==CAPTURES[0]['rows'] for v in CAPTURES)
@@ -64,7 +64,7 @@ def main():
         maximum=rand.randrange(50,201);mp=rand.randrange(40,151)
         return dict(hp=rand.randrange(1,maximum+1),maxHp=maximum,mp=rand.randrange(mp+1),maxMp=mp,
                     troops=rand.randrange(101),reserve=rand.randrange(101),flags=0,parameter=0,recoveryClock=0,chargeModifier=0,
-                    soldierPower=rand.randrange(100,201),generalHitBonus=0,morale=rand.randrange(101),loyalty=rand.randrange(101),settlementFlags=0,fatigueModifier=0)
+                    soldierPower=rand.randrange(100,201),generalHitBonus=0,morale=rand.randrange(101),loyalty=rand.randrange(101),settlementFlags=0,fatigueModifier=0,experienceModifier=0)
     effects=[];recoveries=[];choices=[]
     for row in ROWS:
         if row['execute'] not in SUPPORTED:continue

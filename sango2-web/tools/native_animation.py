@@ -31,8 +31,11 @@ def attack_frames(text, directory, *, finite=True):
     return frames
 
 def attack_timeline(frames):
-    elapsed=0;hits=[]
+    elapsed=0;hits=[];sounds=[]
     for frame in frames:
         if frame['hit']:hits.append(elapsed)
+        if frame.get('sound'):
+            # 0x421BF2 node entry invokes positional playback at volume 192.
+            sounds.append({'tick':elapsed,'name':'SOUND\\'+frame['sound']+'.WAV','volume':192})
         elapsed+=frame['ticks']
-    return {'ticks':elapsed,'hitTicks':hits,'frameTicks':[f['ticks'] for f in frames]}
+    return {'ticks':elapsed,'hitTicks':hits,'frameTicks':[f['ticks'] for f in frames],'soundTicks':sounds}
