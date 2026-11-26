@@ -6,6 +6,7 @@ import './styles.css';
 import './classic.css';
 import './battle-roster.css';
 import './battle-fullscreen.css';
+import './original-fonts.css';
 
 const root = createRoot(document.getElementById('root')!);
 root.render(<main className="boot"><span className="seal">群</span><h1>山河将启</h1><p>正在载入五朝风云…</p></main>);

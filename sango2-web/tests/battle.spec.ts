@@ -29,7 +29,7 @@ test('real sprites, formations, ranged combat, pause and retreat in the drill',a
 
 test('enemy encounter pauses campaign, survives reload and settles actual casualties',async({page})=>{
   await delayRivalDecisions(page);
-  await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();await finishInitialPolicy(page);
+  await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();await finishInitialPolicy(page,true);
   const startingTroops=await page.getByTestId('city-troops').textContent();
   await page.getByRole('button',{name:'调兵出征'}).click();
   const destination=page.getByLabel('行军目标');

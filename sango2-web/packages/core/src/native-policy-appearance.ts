@@ -17,7 +17,7 @@ export function runAnnualOfficerAppearances(s:Session,scene:ScenarioDefinition,i
   const world:NativeAppearanceWorld={
     // 0x4068EB appends initial officers, so global iteration uses source order.
     officers:scene.generals.map(def=>{const g=s.generals[def.id];return {id:def.id,
-      status:g.status==='登'?1:g.appearanceHidden||!def.appearanceCities?4096:g.status==='野'?8:8192,
+      status:g.status==='登'?1:g.status==='死'||g.appearanceHidden||!def.appearanceCities?4096:g.status==='野'?8:8192,
       cityId:g.cityId,ownerId:g.ownerId,relativeId:def.relativeId??null,locations:def.appearanceCities??[]};}),
     cities:scene.cities.map(def=>({id:def.id,ownerId:s.cities[def.id].ownerId,capacity:nativeCityCapacity(s.cities[def.id].population),hidden:def.nativeFlags===1,
       officerCount:scene.generals.filter(g=>{const state=s.generals[g.id];return state.status==='登'&&!state.armyId&&state.cityId===def.id&&state.ownerId===s.cities[def.id].ownerId;}).length})),

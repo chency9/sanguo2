@@ -5,7 +5,7 @@ export * from './native-projection';
 export * from './battle-scene';
 export {battleScriptCameraLocked} from './battle-native-magic';
 import {type StrategicAction} from './strategic-ai';
-import type {NativeRandomState} from './native-strategic-ai';
+import {nativeBelow,type NativeRandomState} from './native-strategic-ai';
 import {nativeSceneryTerrain,nativeSceneryVariant} from './native-scenery';
 import {createNativeCampaignAI,runNativeStrategicCallback,nativeCityCapacity,type NativeCampaignAI} from './native-ai-campaign';
 import {initialOfficerCondition,initialConditionTimers,type NativeOfficerCondition} from './native-officer-condition';
@@ -14,6 +14,11 @@ import {officerLevel,officerMaxHp,officerMaxMp,officerExperience,applyOfficerExp
 import {nativeVictoryMeritBonus,nativeBattleExperience,nativeParticipantDisposition,nativeFactionDisposition,isNativeBattleRecord,type NativeBattleRecord} from './native-battle-experience';
 import {initializeOfficerEquipment,officerDefinition,officerForceMask,nativeForceNames,type OfficerEquipment} from './native-officer-runtime';
 import {ensureDomesticAnnual} from './native-policy-annual';
+import {nativeResolveAICaptives,nativePreparePlayerCaptive,nativePlayerCaptiveDecision,nativeCapturedJoinLoyalty,nativeRulerCanEscape,nativeCaptiveDefeatCondition,type NativeCaptureCandidate,type NativePlayerCaptive} from './native-capture';
+import {initNativeCampaignMovement,runNativeCampaignMovement,settleNativeArmyAftermath,nativeDefeatedCityRetreat,validateNativeCampaignMovement,nativeCampaignArmyPosition,retargetNativeCampaignArmy,type NativeCampaignMovement,type NativeCampaignEncounter} from './campaign-native-movement';
+import {createCampaignRoadBattle,resolveComputerRoadBattle,settleCampaignRoadBattle,validateCampaignRoadBattle} from './campaign-road-battle';
+import {createNativeCaptiveScript,advanceNativeCaptiveScript,validateNativeCaptiveScript,type NativeCaptiveScript} from './native-captive-script';
+import {emitBattleSound} from './battle-audio-events';
 import {createDomesticState,executeDomestic,beginDomesticYear,policyGovernorId,refreshPolicyGovernors,type DomesticState,type DomesticCommand} from './native-policy';
 export {policyGovernorId,nativeDevelop,nativeAnnualRevenue} from './native-policy';
 export * from './native-progression';
@@ -36,6 +41,7 @@ export interface Army {
   id: string; ownerId: string; from: string; to: string; roadId: string; generalIds: string[];
   troops: number; totalDays: number; remainingDays: number;
   treasury?:number;
+  nativeMovement?:NativeCampaignMovement;
 }
 export interface Chronicle { id: number; day: number; text: string; kind: 'info' | 'march' | 'victory' | 'defeat' }
 export interface BattleReport {
@@ -50,6 +56,11 @@ export interface Session {
   battle: BattleState | null;
   nativeAI?:NativeCampaignAI;
   policy?:DomesticState;
+  captureRules?:'native-capture-v1';
+  pendingCaptive?:{version:1;side:BattleSide;winnerFactionId:string;current:NativePlayerCaptive;script?:NativeCaptiveScript};
+  endgame?:{result:'victory'|'defeat';day:number;reason:'unification'|'ruler-lost'};
+  movementRules?:'native-strategic-v1';
+  nativeMovementClock?:{callbackInDay:number};
 }
 export type Command =
   | DomesticCommand
@@ -58,7 +69,10 @@ export type Command =
   | { type: 'advance'; days: number }
   | { type: 'battle-command'; command: BattleCommand }
   | { type: 'battle-tick'; steps: number }
-  | { type: 'battle-finish' };
+  | { type: 'battle-finish' }
+  | { type:'capture-choice';choice:'yield'|'kill'|'free' }
+  | { type:'capture-dialogue-next' }
+  | { type:'capture-script-tick';steps:number };
 
 function note(s: Session, text: string, kind: Chronicle['kind'] = 'info') {
   s.chronicle.unshift({ id: s.nextId++, day: s.day, text, kind });
@@ -79,6 +93,7 @@ export function createSession(content: GameContent, scenarioId: string, factionI
   for (const g of scene.generals) generals[g.id] = { ownerId: g.ownerId, cityId: g.cityId, armyId: null, status: g.status, hp:g.hp,mp:g.mp,troops:0,...initialOfficerCondition() };
   const s: Session = { schemaVersion: 1, ruleset: RULESET, contentId: content.id, contentHash: content.sourceHash,
     scenarioId, factionId, day: 0, rng: (seed >>> 0) || 1, nextId: 1, cities, generals, armies: [], chronicle: [], reports: [], battle: null };
+  if(scene.initialization==='native-105plus'){s.captureRules='native-capture-v1';s.movementRules='native-strategic-v1';}
   for(const c of scene.cities)assignCityTroops(s,c.id);
   if(scene.initialization==='native-105plus') {
     // 0x42D1A3 initializes both troop slots to their level-derived maxima.
@@ -159,6 +174,7 @@ export function roadMidpointTerrainForDay(scene: ScenarioDefinition, roadId: str
  * the map renderer use the same distance fraction, so a later object-pair
  * query cannot disagree with the position shown to the player. */
 export function strategicArmyPosition(scene: ScenarioDefinition, army: Army): [number, number] | null {
+  const native=nativeCampaignArmyPosition(army);if(native)return native;
   const road=scene.roads.find(r=>r.id===army.roadId);
   if(!road||road.points.length<2||army.totalDays<=0)return null;
   const points=road.from===army.from?road.points:[...road.points].reverse();
@@ -190,7 +206,7 @@ function ownCity(s: Session, id: string, actor=s.factionId) {
   return c;
 }
 
-interface EncounterOutcome { attackerWon:boolean; attackingSurvivors:number; defendingSurvivors:number }
+interface EncounterOutcome { attackerWon:boolean; attackingSurvivors:number; defendingSurvivors:number;sourceSettled?:boolean }
 function tacticalOutcome(s:Session,battle:BattleState,scene:ScenarioDefinition):EncounterOutcome {
   const invader=battle.invasionSide??'attacker',defense=invader==='attacker'?'defender':'attacker';
   for(const side of ['attacker','defender'] as const)for(const member of battle.rosters[side]) {
@@ -211,8 +227,8 @@ function settleBattleExperience(s:Session,b:BattleState,scene:ScenarioDefinition
     winning.forEach((m,i)=>m.merit=merits[i]);
   }
   const annual=s.policy?ensureDomesticAnnual(s,scene):undefined;
-  const invader=b.invasionSide??'attacker',citySide=invader==='attacker'?'defender':'attacker';
-  const result:0|1|2=b.drawn?0:b.winner===citySide?1:2;
+  const invader=b.invasionSide??'attacker',nativeFirstSide=b.roadEncounter?.firstSide??(invader==='attacker'?'defender':'attacker');
+  const result:0|1|2=b.drawn?0:b.winner===nativeFirstSide?1:2;
   const owners=new Map<BattleSide,string>();
   for(const side of ['attacker','defender'] as const)for(const member of b.rosters[side]) {
     const g=s.generals[member.commander.id],def=scene.generals.find(d=>d.id===member.commander.id);
@@ -222,7 +238,7 @@ function settleBattleExperience(s:Session,b:BattleState,scene:ScenarioDefinition
     applyOfficerExperience(g,def,award.experience);
     if(owner&&annual)annual.battleExperience[owner]=award.factionExperience;
     if(def.constancy!==undefined) {
-      const next=nativeParticipantDisposition({...initialOfficerCondition(g),constancy:def.constancy},side===citySide?'first':'second',result);
+      const next=nativeParticipantDisposition({...initialOfficerCondition(g),constancy:def.constancy},side===nativeFirstSide?'first':'second',result);
       g.morale=next.morale;g.loyalty=next.loyalty;g.fatigue=next.fatigue;
     }
   }
@@ -241,6 +257,140 @@ function campaignBattleMember(s:Session,scene:ScenarioDefinition,id:string,items
     battleRecord:state.battleRecord?{...state.battleRecord}:undefined,
     morale:state.morale??80,fatigue:state.fatigue??0,loyalty:state.loyalty??90},
     troops:state.troops,troopSlots:state.troopSlots?{...state.troopSlots}:undefined,withdrawn:state.hp<=0};
+}
+
+function captureCandidates(s:Session,b:BattleState,scene:ScenarioDefinition,side:BattleSide):NativeCaptureCandidate[] {
+  return b.rosters[side].map(m=>{
+    const def=scene.generals.find(g=>g.id===m.commander.id),g=s.generals[m.commander.id],owner=g?.ownerId;
+    const faction=scene.factions.find(f=>f.id===owner),loyal=def?.loyalFactionId??null;
+    const loyalLeader=scene.factions.find(f=>f.id===loyal)?.leaderId,leaderState=loyalLeader?s.generals[loyalLeader]:undefined;
+    return {id:m.commander.id,status:m.battleStatus??0,loyalty:m.commander.loyalty??90,constancy:def?.constancy??0,
+      loyalFactionId:loyal,loyalLeaderOwnerId:leaderState?.ownerId??null,loyalLeaderActive:leaderState?.status==='登',
+      isRuler:faction?.leaderId===m.commander.id,ownerIsPlayer:owner===s.factionId,
+      rulerHasOtherCity:!!owner&&scene.cities.some(c=>c.id!==g.cityId&&s.cities[c.id].ownerId===owner)};
+  });
+}
+/** Real-time 0x447037 -> 0x447520 -> 0x44E820. The captured roster order,
+ * one-time condition penalty and cached persuasion result all survive saves. */
+function prepareCampaignCaptives(s:Session,b:BattleState,scene:ScenarioDefinition):boolean {
+  if(!b.captureRules||b.drawn||!b.winner)return false;
+  const side:BattleSide=b.winner==='attacker'?'defender':'attacker',rng=b.opponentAI!.rng;
+  if(!b.capturePrepared) {
+    const candidates=captureCandidates(s,b,scene,side);
+    for(let i=0;i<candidates.length;i++) {
+      const c=candidates[i],member=b.rosters[side][i];if(c.status!==3)continue;
+      if(nativeRulerCanEscape(c.isRuler,c.ownerIsPlayer,c.rulerHasOtherCity))member.battleStatus=7;
+      else if(!b.attackerAI) {
+        const penalty=nativeCaptiveDefeatCondition(member.commander.morale??80,c.loyalty,c.constancy);
+        // Original 44E820 clamps the selected prisoner before persuasion, and
+        // 40FA92 clamps all remaining participants. Save the equivalent bounded
+        // projection so intermediate Web saves retain valid condition fields.
+        member.commander.morale=Math.max(0,Math.min(100,penalty.morale));member.commander.loyalty=Math.max(0,Math.min(100,penalty.loyalty));
+      }
+    }
+    b.capturePrepared=true;
+  }
+  const winningOwner=s.generals[b.rosters[b.winner][0].commander.id]?.ownerId;
+  if(!winningOwner)return false;
+  if(winningOwner===s.factionId&&!b.attackerAI) {
+    const current=nativePreparePlayerCaptive(winningOwner,captureCandidates(s,b,scene,side),rng);
+    if(current){s.pendingCaptive={version:1,side,winnerFactionId:winningOwner,current};return true;}
+  } else {
+    const results=nativeResolveAICaptives(winningOwner,Object.values(s.cities).some(c=>c.ownerId===winningOwner),captureCandidates(s,b,scene,side),rng);
+    results.forEach((result,i)=>b.rosters[side][i].battleStatus=result.status);
+  }
+  return false;
+}
+
+function detachCampaignOfficer(s:Session,id:string):void {
+  const g=s.generals[id];
+  if(g.cityId&&s.cities[g.cityId])s.cities[g.cityId].troops=Math.max(0,s.cities[g.cityId].troops-g.troops);
+  if(g.armyId) {
+    const army=s.armies.find(a=>a.id===g.armyId);
+    if(army){army.generalIds=army.generalIds.filter(member=>member!==id);army.troops=army.generalIds.reduce((n,member)=>n+s.generals[member].troops,0);}
+  }
+  g.cityId=null;g.armyId=null;
+}
+function captureMovementArmy(s:Session,scene:ScenarioDefinition,ids:string[],ownerId:string,from:string,to:string,retreat=false):Army {
+  const army:Army={id:`army-${s.nextId++}`,ownerId,from,to,roadId:'',generalIds:[...ids],troops:ids.reduce((n,id)=>n+s.generals[id].troops,0),totalDays:1,remainingDays:1,treasury:0};
+  if(!initNativeCampaignMovement(scene,army,{cityId:from,destinationId:to}))throw new Error('原版战后军团找不到可用路线。');
+  for(const id of ids){detachCampaignOfficer(s,id);s.generals[id].armyId=army.id;}
+  s.armies.push(army);if(retreat)settleNativeArmyAftermath(s,scene,army,16);return army;
+}
+/** The executable keeps the designated leader pointer. Changing that
+ * officer's owner makes the old faction inactive; there is no invented heir. */
+function refreshCampaignFactions(s:Session,scene:ScenarioDefinition):void {
+  if(!s.captureRules)return;
+  const bandits=scene.factions.find(f=>f.special),active=(f:typeof scene.factions[number])=>!!f.leaderId&&s.generals[f.leaderId]?.ownerId===f.id;
+  if(bandits)for(const army of s.armies) {
+    const owner=scene.factions.find(f=>f.id===army.ownerId);
+    if(owner&&!owner.special&&owner.leaderId&&!active(owner)) {
+      army.ownerId=bandits.id;for(const id of army.generalIds)s.generals[id].ownerId=bandits.id;
+    }
+  }
+  const player=scene.factions.find(f=>f.id===s.factionId),opponents=scene.factions.filter(f=>!f.special&&f.id!==s.factionId&&f.leaderId);
+  if(opponents.length&&!opponents.some(active))s.endgame={result:'victory',day:s.day,reason:'unification'};
+  else if(player?.leaderId&&!active(player))s.endgame={result:'defeat',day:s.day,reason:'ruler-lost'};
+}
+
+/** Original status5 removes an officer, status6 creates a one-officer return
+ * army with existing wounds/slots/equipment, and status7 relocates its ruler. */
+function applyCampaignCaptiveDisposition(s:Session,b:BattleState,scene:ScenarioDefinition,army:Army):void {
+  if(!b.winner||b.drawn)return;
+  const losing:BattleSide=b.winner==='attacker'?'defender':'attacker',winnerId=s.generals[b.rosters[b.winner][0].commander.id]?.ownerId;
+  if(!winnerId)return;
+  for(const member of b.rosters[losing]) {
+    const g=s.generals[member.commander.id];if(!g)continue;
+    if(member.battleStatus===5) {detachCampaignOfficer(s,member.commander.id);g.ownerId=null;g.status='死';g.appearanceHidden=true;}
+    else if(member.battleStatus===6) {
+      detachCampaignOfficer(s,member.commander.id);g.ownerId=winnerId;g.loyalty=nativeCapturedJoinLoyalty(g.loyalty??90);
+      const road=b.roadEncounter;
+      const destination=road?(
+        s.armies.find(a=>a.id===(b.winner===road.firstSide?road.firstArmyId:road.secondArmyId))?.nativeMovement?.lastCityId
+        ??scene.cities.find(c=>s.cities[c.id].ownerId===winnerId)?.id):army.to;
+      if(!destination)throw new Error('归附武将没有原版目的城。');
+      if(s.cities[destination].ownerId===null)s.cities[destination].ownerId=winnerId;
+      captureMovementArmy(s,scene,[member.commander.id],winnerId,destination,destination);
+    } else if(member.battleStatus===7&&g.ownerId) {
+      const all=scene.cities.filter(c=>s.cities[c.id].ownerId===g.ownerId).map(c=>c.id),old=s.nativeAI!.cityOrder[g.ownerId]??[];
+      const choices=[...all.filter(id=>!old.includes(id)).reverse(),...old.filter(id=>all.includes(id))];
+      if(choices.length) {
+        const destination=choices[nativeBelow(s.nativeAI!.rng,choices.length)];
+        // 40EDA1's a2 prevents moving a defending ruler back into the city
+        // which is about to fall. Its random selection still consumes a draw.
+        if(destination===army.to&&b.winner===(b.invasionSide??'attacker'))continue;
+        detachCampaignOfficer(s,member.commander.id);g.cityId=destination;s.cities[destination].troops+=g.troops;
+        if(s.policy)s.policy.governors[destination]=member.commander.id;
+      }
+    }
+  }
+  army.generalIds=army.generalIds.filter(id=>s.generals[id].armyId===army.id&&s.generals[id].ownerId===army.ownerId&&s.generals[id].status==='登');
+  army.troops=army.generalIds.reduce((n,id)=>n+s.generals[id].troops,0);
+}
+
+function settleNativeCityBattle(s:Session,b:BattleState,scene:ScenarioDefinition,army:Army):void {
+  const target=s.cities[army.to],previousOwner=target.ownerId,cityName=scene.cities.find(c=>c.id===army.to)!.name;
+  const invader=b.invasionSide??'attacker',won=!b.drawn&&b.winner===invader;
+  target.troops=stationedGenerals(s,army.to).reduce((sum,id)=>sum+s.generals[id].troops,0);
+  const before=army.troops;applyCampaignCaptiveDisposition(s,b,scene,army);
+  if(won) {
+    // 0x40F692 chooses its route while the city still belongs to the loser.
+    const destination=nativeDefeatedCityRetreat(s,scene,army.to);
+    const remaining=stationedGenerals(s,army.to);
+    if(remaining.length&&!destination)throw new Error('败城余将找不到原版撤退目标。');
+    for(let i=0;i<remaining.length;i+=5)captureMovementArmy(s,scene,remaining.slice(i,i+5),previousOwner!,army.to,destination!,true);
+    target.ownerId=army.ownerId;target.troops=0;
+    for(const id of army.generalIds){s.generals[id].cityId=army.to;s.generals[id].armyId=null;target.troops+=s.generals[id].troops;}
+    target.money+=army.treasury??0;s.armies=s.armies.filter(a=>a!==army);
+  } else if(army.generalIds.length) {
+    if(!army.nativeMovement&&!initNativeCampaignMovement(scene,army,{cityId:army.to,destinationId:army.from}))throw new Error('败军找不到原版撤退路线。');
+    settleNativeArmyAftermath(s,scene,army,4);
+  } else s.armies=s.armies.filter(a=>a!==army);
+  const playerWon=b.winner==='attacker'&&!b.drawn;
+  const text=b.drawn?`${cityName}日暮收兵，双方余部各自撤军。`:won?`${scene.factions.find(f=>f.id===army.ownerId)!.name}军攻下${cityName}。`:`进攻${cityName}失利，余部沿道路撤军。`;
+  s.reports.unshift({id:s.nextId++,day:s.day,cityId:army.to,commanderId:b.rosters[invader][0].commander.id,won:playerWon,attackingTroops:before,defendingTroops:b.totalInitial[invader==='attacker'?'defender':'attacker'],survivors:battleTeamSurvivors(b,'attacker'),text});s.reports.length=Math.min(20,s.reports.length);
+  note(s,text,playerWon?'victory':b.drawn?'info':'defeat');
+  refreshCampaignFactions(s,scene);if(s.policy)ensureDomesticAnnual(s,scene);refreshPolicyGovernors(s,scene);
 }
 
 /** Both campaign entry points use the current governor, effective equipment
@@ -280,6 +430,7 @@ function resolveRivalEncounter(s:Session,army:Army,scene:ScenarioDefinition,item
     attackingTroops:a.troops,defendingTroops:d.troops,seed:s.rng,aiRng:rng,rosters:{attacker,defender},
     scenery,computerAttacker:true});
   b.invasionSide='attacker';
+  if(s.captureRules)b.captureRules=s.captureRules;
   b.fortifications={attacker:0,defender:s.cities[army.to].defense};
   const advance=()=>{
     b=commandBattle(b,{type:'start'});
@@ -296,9 +447,11 @@ function resolveRivalEncounter(s:Session,army:Army,scene:ScenarioDefinition,item
   }
   if(b.phase!=='finished'||!b.winner)throw new Error('电脑战斗未能完成结算。');
   s.rng=b.rng;if(s.nativeAI&&b.opponentAI)s.nativeAI.rng=[...b.opponentAI.rng];
+  if(b.captureRules){prepareCampaignCaptives(s,b,scene);if(s.nativeAI&&b.opponentAI)s.nativeAI.rng=[...b.opponentAI.rng];const outcome=tacticalOutcome(s,b,scene);settleNativeCityBattle(s,b,scene,army);return {...outcome,sourceSettled:true};}
   return tacticalOutcome(s,b,scene);
 }
 function arrive(s:Session,army:Army,scene:ScenarioDefinition,outcome?:EncounterOutcome) {
+  if(outcome?.sourceSettled)return;
   const target=s.cities[army.to],cityName=scene.cities.find(c=>c.id===army.to)!.name;
   const commander=scene.generals.find(g=>g.id===army.generalIds[0])!;
   const factionName=scene.factions.find(f=>f.id===army.ownerId)!.name;
@@ -353,16 +506,72 @@ function encounter(s:Session,army:Army,scene:ScenarioDefinition,items:readonly R
   const a=left.find(m=>!m.withdrawn)??left[0],d=chooseOpponentCommander(right,aiRng)??right[0];
   s.battle=createBattle({id:`battle-${s.nextId++}`,armyId:army.id,cityId:army.to,attacker:a.commander,defender:d.commander,attackingTroops:a.troops,defendingTroops:d.troops,seed:s.rng,aiRng,rosters:{attacker:left,defender:right},scenery});
   s.battle.invasionSide=defendingPlayer?'defender':'attacker';
+  if(s.captureRules)s.battle.captureRules=s.captureRules;
   s.battle.fortifications={attacker:defendingPlayer?s.cities[army.to].defense:0,defender:defendingPlayer?0:s.cities[army.to].defense};
   note(s,`${defendingPlayer?'敌军来袭！':''}${scene.cities.find(c=>c.id===army.to)!.name}双方列阵，我军由${a.commander.name}出战。`,'march');
 }
 function arrivals(s:Session,scene:ScenarioDefinition,items:readonly Record<string,string>[]) {
-  for(const army of [...s.armies].filter(a=>a.remainingDays===0).sort((a,b)=>a.id.localeCompare(b.id))) {
+  for(const army of [...s.armies].filter(a=>!a.nativeMovement&&a.remainingDays===0).sort((a,b)=>a.id.localeCompare(b.id))) {
     const target=s.cities[army.to];
     if(target.ownerId&&target.ownerId!==army.ownerId) {
       if(target.ownerId===s.factionId||army.ownerId===s.factionId){encounter(s,army,scene,items);return;}
-      arrive(s,army,scene,resolveRivalEncounter(s,army,scene,items));
+      const outcome=resolveRivalEncounter(s,army,scene,items);arrive(s,army,scene,outcome);if(outcome.sourceSettled)continue;
     } else arrive(s,army,scene);s.armies=s.armies.filter(a=>a.id!==army.id);
+  }
+}
+
+function finishCampaignBattle(s:Session,b:BattleState,scene:ScenarioDefinition,items:readonly Record<string,string>[]):void {
+  const army=s.armies.find(a=>a.id===b.armyId);if(!army)throw new Error('战斗军队不存在。');
+  if(s.nativeAI&&b.opponentAI)s.nativeAI.rng=[...b.opponentAI.rng];
+  const outcome=tacticalOutcome(s,b,scene);
+  if(b.roadEncounter) {
+    settleCampaignRoadBattle(s,scene,b,()=>{if(b.captureRules)applyCampaignCaptiveDisposition(s,b,scene,army);});
+    refreshCampaignFactions(s,scene);
+  } else if(b.captureRules)settleNativeCityBattle(s,b,scene,army);
+  else {arrive(s,army,scene,outcome);s.armies=s.armies.filter(a=>a.id!==army.id);}
+  s.rng=b.rng;s.battle=null;delete s.pendingCaptive;
+  if(!s.endgame)arrivals(s,scene,items);
+  refreshPolicyGovernors(s,scene);
+  if(!s.battle&&!s.endgame&&!s.nativeMovementClock&&beginDomesticYear(s,scene,items))note(s,`${s.policy!.year}年内政时间到了，年度赋税已入库。`);
+}
+
+function resolveNativeCampaignEncounter(s:Session,scene:ScenarioDefinition,entry:NativeCampaignEncounter,items:readonly Record<string,string>[]):void {
+  if(entry.kind==='city') {
+    const army=s.armies.find(a=>a.id===entry.secondId);if(!army)return;
+    // The encountered endpoint can interrupt a route to a more distant city.
+    army.to=entry.firstId;if(army.nativeMovement)army.nativeMovement.destinationId=entry.firstId;
+    if(army.ownerId===s.factionId||s.cities[entry.firstId].ownerId===s.factionId)encounter(s,army,scene,items);
+    else {const outcome=resolveRivalEncounter(s,army,scene,items);arrive(s,army,scene,outcome);}
+    return;
+  }
+  const first=s.armies.find(a=>a.id===entry.firstId),second=s.armies.find(a=>a.id===entry.secondId);
+  if(!first||!second||first.ownerId===second.ownerId)return;
+  if(first.ownerId===s.factionId||second.ownerId===s.factionId) {
+    s.battle=createCampaignRoadBattle(s,scene,first,second,items);
+    if(s.battle)note(s,'两军途中相遇，列阵交战。','march');
+  } else resolveComputerRoadBattle(s,scene,first,second,items,b=>{
+    if(b.captureRules)prepareCampaignCaptives(s,b,scene);
+    if(s.nativeAI&&b.opponentAI)s.nativeAI.rng=[...b.opponentAI.rng];
+    tacticalOutcome(s,b,scene);if(b.captureRules)applyCampaignCaptiveDisposition(s,b,scene,first);
+  });
+  if(!s.battle)refreshCampaignFactions(s,scene);
+}
+
+/** Complete the saved fraction of a strategic day. Encounters freeze after
+ * their source callback; the remaining callbacks resume after settlement. */
+function advanceNativeCampaignDay(s:Session,scene:ScenarioDefinition,items:readonly Record<string,string>[]):void {
+  const clock=s.nativeMovementClock??(s.nativeMovementClock={callbackInDay:0});
+  while(clock.callbackInDay<10&&!s.battle&&!s.endgame) {
+    runNativeCampaignMovement(s,scene,{
+      afterMovement:()=>runNativeStrategicCallback(s,scene,(plan,owner)=>{
+        executeStrategic(s,plan.command,scene,owner);s.cities[plan.command.from].money-=plan.money;s.armies[s.armies.length-1].treasury=plan.money;
+      }),encounter:entry=>resolveNativeCampaignEncounter(s,scene,entry,items),
+    });
+    clock.callbackInDay++;
+  }
+  if(clock.callbackInDay===10&&!s.battle&&!s.endgame) {
+    delete s.nativeMovementClock;refreshPolicyGovernors(s,scene);
+    if(beginDomesticYear(s,scene,items))note(s,`${s.policy!.year}年内政时间到了，年度赋税已入库。`);
   }
 }
 
@@ -370,18 +579,40 @@ export function dispatch(previous: Session, command: Command, content: GameConte
   const s = structuredClone(previous);
   const scene = scenarioById(content, s.scenarioId);
   if (s.ruleset !== RULESET || s.contentHash !== content.sourceHash) throw new Error('战役规则与当前资料不一致。');
+  if(s.endgame)throw new Error('此局已经结束，请开始新的战役。');
+  if(command.type==='capture-choice'||command.type==='capture-dialogue-next'||command.type==='capture-script-tick') {
+    const p=s.pendingCaptive,b=s.battle;
+    if(!p||!b||b.phase!=='finished')throw new Error('当前没有待处置的俘将。');
+    if(command.type==='capture-choice') {
+      if(!['yield','kill','free'].includes(command.choice))throw new Error('俘将处置命令无效。');
+      if(p.script)throw new Error('请先完成当前俘将对白。');
+      const rulerId=scene.factions.find(f=>f.id===p.winnerFactionId)?.leaderId??b.commanders.attacker.id;
+      p.script=createNativeCaptiveScript(command.choice,p.current.accepted,{rulerId,captiveId:p.current.id,
+        rulerName:scene.generals.find(g=>g.id===rulerId)?.name,captiveName:scene.generals.find(g=>g.id===p.current.id)?.name});
+      advanceNativeCaptiveScript(p.script,b.opponentAI!.rng,{type:'source-tick'});return s;
+    }
+    if(!p.script)throw new Error('当前没有进行中的俘将对白。');
+    const emit=(event:{host:number;args:(string|number)[]})=>{if(event.host===769)emitBattleSound(b,String(event.args[0]),Number(event.args[1]),b.tick*3);};
+    if(command.type==='capture-dialogue-next') {advanceNativeCaptiveScript(p.script,b.opponentAI!.rng,{type:'dialogue-next'},emit);return s;}
+    if(!Number.isInteger(command.steps)||command.steps<1||command.steps>200)throw new Error('俘将脚本更新次数无效。');
+    for(let i=0;i<command.steps&&p.script.phase!=='done'&&p.script.phase!=='dialogue';i++)advanceNativeCaptiveScript(p.script,b.opponentAI!.rng,{type:'source-tick'},emit);
+    if(p.script.phase!=='done')return s;
+    const result=nativePlayerCaptiveDecision(p.current,p.script.choice);delete p.script;
+    b.rosters[p.side][p.current.index].battleStatus=result.status;
+    if(!result.advance){note(s,`${b.rosters[p.side][p.current.index].commander.name}不肯归降。`);return s;}
+    delete s.pendingCaptive;
+    if(prepareCampaignCaptives(s,b,scene))return s;
+    finishCampaignBattle(s,b,scene,content.items);return s;
+  }
   if(command.type==='battle-command'||command.type==='battle-tick'||command.type==='battle-finish') {
     if(!s.battle)throw new Error('当前没有进行中的战斗。');
     if(command.type==='battle-command')s.battle=commandBattle(s.battle,command.command);
     else if(command.type==='battle-tick')tickBattle(s.battle,command.steps);
     else {
       if(s.battle.phase!=='finished')throw new Error('战斗尚未结束。');
-      const army=s.armies.find(a=>a.id===s.battle!.armyId);if(!army)throw new Error('战斗军队不存在。');
-      if(s.nativeAI&&s.battle.opponentAI)s.nativeAI.rng=[...s.battle.opponentAI.rng];
-      arrive(s,army,scene,tacticalOutcome(s,s.battle,scene));s.rng=s.battle.rng;s.armies=s.armies.filter(a=>a.id!==army.id);s.battle=null;
-      arrivals(s,scene,content.items);
-      refreshPolicyGovernors(s,scene);
-      if(!s.battle&&beginDomesticYear(s,scene,content.items))note(s,`${s.policy!.year}年内政时间到了，年度赋税已入库。`);
+      if(s.pendingCaptive)return s;
+      if(prepareCampaignCaptives(s,s.battle,scene))return s;
+      finishCampaignBattle(s,s.battle,scene,content.items);
     }
     return s;
   }
@@ -395,24 +626,20 @@ export function dispatch(previous: Session, command: Command, content: GameConte
   if(s.policy?.active)throw new Error('当前为内政阶段，请先完成内政，再返回征战。');
   if (command.type === 'advance') {
     if (!Number.isInteger(command.days) || command.days < 1 || command.days > 30) throw new Error('推进天数必须在1至30天之间。');
+    if(s.nativeMovementClock){advanceNativeCampaignDay(s,scene,content.items);if(s.battle||s.endgame||s.policy?.active)return s;}
     arrivals(s,scene,content.items);if(s.battle)return s;
     for (let day = 0; day < command.days; day++) {
       s.day++;
       // Every faction uses the same economy and march validation as the player.
-      for (const army of s.armies) army.remainingDays=Math.max(0,army.remainingDays-1);
+      for (const army of s.armies)if(!army.nativeMovement)army.remainingDays=Math.max(0,army.remainingDays-1);
       if (!s.policy && s.day % 30 === 0) {
         for (const c of Object.values(s.cities)) if (c.ownerId) c.money += Math.floor(c.population / 1000);
         note(s, '月初赋税入库，各城获得人口数千分之一的金钱。');
       }
       arrivals(s,scene,content.items);if(s.battle)break;
       refreshPolicyGovernors(s,scene);
-      // Patched native calendar 0x41B7F2: 300 callbacks/month, 10/day.
-      // Movement still uses the Web daily road model; no claim of global timing parity.
-      for(let callback=0;callback<10;callback++)runNativeStrategicCallback(s,scene,(plan,owner)=>{
-        executeStrategic(s,plan.command,scene,owner);
-        s.cities[plan.command.from].money-=plan.money;
-        s.armies[s.armies.length-1].treasury=plan.money;
-      });
+      advanceNativeCampaignDay(s,scene,content.items);
+      if(s.battle||s.endgame||s.policy?.active)break;
       refreshPolicyGovernors(s,scene);
       if(beginDomesticYear(s,scene,content.items)) {note(s,`${s.policy!.year}年内政时间到了，年度赋税已入库。`);break;}
     }
@@ -447,7 +674,7 @@ function executeStrategic(s:Session,command:StrategicAction,scene:ScenarioDefini
   if (command.type === 'march') {
     const city = ownCity(s, command.from,actor);
     const road = scene.roads.find(r => (r.from === command.from && r.to === command.to) || (r.to === command.from && r.from === command.to));
-    if (!road || road.restricted) throw new Error('目标没有可用的相邻道路。');
+    if (!road || (!s.movementRules&&road.restricted)) throw new Error('目标没有可用的相邻道路。');
     if (!Number.isInteger(command.troops) || command.troops < 1 || command.troops > city.troops) throw new Error('出征兵力超出驻军数量。');
     const ids = command.generalIds;
     if (!ids.length || ids.length > RULES.maxArmyGenerals || new Set(ids).size !== ids.length || ids.some(id => !stationedGenerals(s, command.from).includes(id))) throw new Error('请选择城中尚未出征的武将，最多五人。');
@@ -456,6 +683,7 @@ function executeStrategic(s:Session,command:StrategicAction,scene:ScenarioDefini
     const totalDays = Math.max(2, Math.ceil(road.length / RULES.roadUnitsPerDay));
     const army: Army = { id: 'army-' + s.nextId++, ownerId: actor, from: command.from, to: command.to,
       roadId: road.id, generalIds: [...ids], troops: command.troops, totalDays, remainingDays: totalDays };
+    if(s.movementRules&&!initNativeCampaignMovement(scene,army))throw new Error('原版军团无法进入此道路。');
     city.troops -= army.troops;
     s.armies.push(army);
     for (const id of ids) { s.generals[id].cityId = null; s.generals[id].armyId = army.id; }
@@ -463,7 +691,7 @@ function executeStrategic(s:Session,command:StrategicAction,scene:ScenarioDefini
     else distribute(s,ids,army.troops);
     if(actor===s.factionId)assignCityTroops(s,command.from);
     const leader = scene.generals.find(g => g.id === ids[0])!;
-    note(s, `${prefix}${leader.name}率${army.troops}人向${scene.cities.find(c => c.id === army.to)!.name}进发，预计${totalDays}天抵达。`, 'march');
+    note(s, `${prefix}${leader.name}率${army.troops}人向${scene.cities.find(c => c.id === army.to)!.name}进发，预计${army.totalDays}天抵达。`, 'march');
     refreshPolicyGovernors(s,scene);
     return s;
   }
@@ -487,6 +715,20 @@ export function validateSession(value: unknown, content: GameContent): asserts v
       !Array.isArray(s.armies) || s.armies.length > scene.generals.length || !Array.isArray(s.chronicle) || s.chronicle.length > 100 ||
       !Array.isArray(s.reports) || s.reports.length > 20) return fail();
   const owner = (id: unknown) => id === null || scene.factions.some(f => f.id === id);
+  if(s.captureRules!==undefined&&s.captureRules!=='native-capture-v1')return fail();
+  if(s.movementRules!==undefined&&s.movementRules!=='native-strategic-v1')return fail();
+  if(s.nativeMovementClock!==undefined&&(!s.nativeMovementClock||!integer(s.nativeMovementClock.callbackInDay,10)))return fail();
+  if(s.endgame!==undefined&&(!s.captureRules||!s.endgame||!['victory','defeat'].includes(s.endgame.result)||!['unification','ruler-lost'].includes(s.endgame.reason)||!integer(s.endgame.day,s.day)||s.battle!==null))return fail();
+  if(s.pendingCaptive!==undefined) {
+    const p=s.pendingCaptive,b=s.battle;
+    if(!p||p.version!==1||!b||b.phase!=='finished'||!b.captureRules||!b.capturePrepared||b.drawn||b.winner!=='attacker'||p.side!=='defender'||p.winnerFactionId!==s.factionId||!p.current||
+      typeof p.current.accepted!=='boolean'||!integer(p.current.index,b.rosters[p.side].length-1)||!integer(p.current.reason,19)||
+      ![1,2,3,6,16,17,18,19].includes(p.current.reason)||b.rosters[p.side][p.current.index].commander.id!==p.current.id||b.rosters[p.side][p.current.index].battleStatus!==3)return fail();
+    if(p.script!==undefined) {
+      validateNativeCaptiveScript(p.script,fail);
+      if(p.script.accepted!==p.current.accepted||p.script.context.captiveId!==p.current.id||p.script.context.rulerId!==scene.factions.find(f=>f.id===p.winnerFactionId)?.leaderId||p.script.phase==='done')fail();
+    }
+  }
   const cityIds = new Set(scene.cities.map(c => c.id));
   if(s.nativeAI!==undefined) {
     const a=s.nativeAI,keys=scene.factions.map(f=>f.id);
@@ -507,10 +749,11 @@ export function validateSession(value: unknown, content: GameContent): asserts v
   const armyIds = new Set<string>(); const marching = new Set<string>();
   for (const a of s.armies) {
     const road = scene.roads.find(r => r.id === a.roadId);
-    if (typeof a.id !== 'string' || !/^army-[1-9]\d*$/.test(a.id) || !integer(Number(a.id.slice(5)), s.nextId - 1) || armyIds.has(a.id) || !road || road.restricted || !owner(a.ownerId) || !a.ownerId ||
-        !((a.from === road.from && a.to === road.to) || (a.from === road.to && a.to === road.from)) ||
-        !integer(a.troops) || a.troops < 1 || !integer(a.totalDays, 1000) || !integer(a.remainingDays, a.totalDays) ||
+    if (typeof a.id !== 'string' || !/^army-[1-9]\d*$/.test(a.id) || !integer(Number(a.id.slice(5)), s.nextId - 1) || armyIds.has(a.id) || !owner(a.ownerId) || !a.ownerId ||
+        !a.nativeMovement&&(!road||road.restricted||!((a.from === road.from && a.to === road.to) || (a.from === road.to && a.to === road.from))) ||
+        !integer(a.troops) || !a.nativeMovement&&a.troops < 1 || !integer(a.totalDays,a.nativeMovement?1000000:1000) || !integer(a.remainingDays, a.totalDays) ||
         !Array.isArray(a.generalIds) || a.generalIds.length < 1 || a.generalIds.length > 5) return fail();
+    validateNativeCampaignMovement(scene,a,fail);
     armyIds.add(a.id);
     if(a.treasury!==undefined&&!integer(a.treasury))return fail();
     for (const id of a.generalIds) {
@@ -522,7 +765,7 @@ export function validateSession(value: unknown, content: GameContent): asserts v
   }
   for (const def of scene.generals) {
     const g = s.generals[def.id];
-    if (!g || !owner(g.ownerId) || !integer(g.hp,officerMaxHp(g,def))||!integer(g.mp,officerMaxMp(g,def))||!integer(g.troops)||!['登','野','未'].includes(g.status) || (g.cityId !== null && !cityIds.has(g.cityId)) ||
+    if (!g || !owner(g.ownerId) || !integer(g.hp,officerMaxHp(g,def))||!integer(g.mp,officerMaxMp(g,def))||!integer(g.troops)||!['登','野','未',...(s.captureRules?['死']:[])].includes(g.status) || (g.cityId !== null && !cityIds.has(g.cityId)) ||
         (g.armyId !== null && (!armyIds.has(g.armyId) || !marching.has(def.id)))) return fail();
     if(g.troopSlots!==undefined) {
       const t=g.troopSlots,cap=nativeTroopCapacity(officerLevel(g,def));
@@ -545,7 +788,7 @@ export function validateSession(value: unknown, content: GameContent): asserts v
   if(s.policy!==undefined) {
     const p=s.policy,currentYear=scene.year+Math.floor(s.day/360);
     if(!p||p.version!==1||typeof p.active!=='boolean'||!integer(p.year,currentYear)||p.year<scene.year||p.year<currentYear-1||
-      (p.active&&s.battle!==null)||(p.year<currentYear&&s.battle===null)||!Array.isArray(p.acted)||p.acted.length>scene.generals.length||
+      (p.active&&s.battle!==null)||(p.year<currentYear&&s.battle===null&&!s.nativeMovementClock)||!Array.isArray(p.acted)||p.acted.length>scene.generals.length||
       new Set(p.acted).size!==p.acted.length||p.acted.some(id=>!scene.generals.some(g=>g.id===id))||
       !p.governors||Object.keys(p.governors).length!==scene.cities.length||!Array.isArray(p.results)||p.results.length>100)return fail();
     for(const def of scene.cities) {
@@ -592,9 +835,16 @@ export function validateSession(value: unknown, content: GameContent): asserts v
       ![e.attackingTroops,e.defendingTroops,e.survivors].every(n => integer(n)) || typeof e.text !== 'string' || e.text.length > 1000) return fail();
   if(s.battle!==null) {
     validateBattle(s.battle);
+    if(s.battle.roadEncounter) {
+      validateCampaignRoadBattle(s,s.battle,fail);
+      const e=s.battle.roadEncounter,first=s.armies.find(a=>a.id===e.firstArmyId)!,second=s.armies.find(a=>a.id===e.secondArmyId)!;
+      const ours=e.firstSide==='attacker'?first:second;
+      if(ours.ownerId!==s.factionId||s.battle.totalInitial[e.firstSide]!==first.troops||s.battle.totalInitial[e.firstSide==='attacker'?'defender':'attacker']!==second.troops)fail();
+      return;
+    }
     const army=s.armies.find(a=>a.id===s.battle!.armyId);
     const invader=s.battle.invasionSide??'attacker',defense=invader==='attacker'?'defender':'attacker';
-    if(!army||army.remainingDays!==0||army.to!==s.battle.cityId||s.battle.totalInitial[invader]!==army.troops||s.battle.totalInitial[defense]!==s.cities[army.to].troops||!army.generalIds.includes(s.battle.commanders[invader].id))return fail();
+    if(!army||!army.nativeMovement&&army.remainingDays!==0||army.to!==s.battle.cityId||s.battle.totalInitial[invader]!==army.troops||s.battle.totalInitial[defense]!==s.cities[army.to].troops||!army.generalIds.includes(s.battle.commanders[invader].id))return fail();
     if((invader==='attacker'?army.ownerId:s.cities[army.to].ownerId)!==s.factionId)return fail();
     if(s.battle.rosters[invader].some(m=>!army.generalIds.includes(m.commander.id))||s.battle.rosters[defense].some(m=>m.commander.id!=='garrison'&&!stationedGenerals(s,army.to).includes(m.commander.id)))return fail();
   }

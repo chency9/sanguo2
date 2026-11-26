@@ -16,6 +16,8 @@ from io import BytesIO
 from PIL import Image
 from native_general import initial_level, initial_vitals, learning_entries, equipment_speed, force_mask
 from native_animation import attack_frames, attack_timeline
+from native_arrow_animation import arrow_wait_animation
+from native_bitmap_font import export_native_fonts
 
 ROOT = Path(__file__).resolve().parents[1]
 COLORS = ['#65a9bd','#d7ac55','#8aaa75','#b67782','#9d93c9','#6bb7a5','#cf8b66',
@@ -87,6 +89,7 @@ def main():
     def ini(name):return parse(read(name).decode('cp950'))
     out=ROOT/'apps/game/public/assets'
     out.mkdir(parents=True,exist_ok=True)
+    export_native_fonts(read,out/'fonts')
     asset_records=[]
     def export_shp(name,relative):
         image,fields=shp_image(read(name))
@@ -117,7 +120,9 @@ def main():
     # FONTS05, 0x440DC3: ASCII 48..58 represent zero through ten in Chinese.
     for code in range(48,59):export_shp(f'SHAPE\\FONTS\\TNUM{code:03}.SHP',f'ui/fonts/tnum-{code}.png')
     export_shp('SHAPE\\POLICY\\PALAIS01.SHP','ui/palace.png')
-    for source_name,target in [('SHAPE\\MAP\\TEXTURE.TEX','ui/map-texture.png'),('SHAPE\\BG\\FLOOR00.TGA','battle/floor.png')]:
+    export_shp('SHAPE\\POLICY\\YIELD.SHP','ui/captives.png')
+    for suffix in ['a','b']:export_shp(f'SHAPE\\MENU\\D8_{suffix.upper()}.SHP',f'ui/captive-panel-{suffix}.png')
+    for source_name,target in [('SHAPE\\MAP\\TEXTURE.TEX','ui/map-texture.png'),('SHAPE\\POLICY\\YIELD.TEX','ui/captive-texture.png'),('SHAPE\\BG\\FLOOR00.TGA','battle/floor.png')]:
         path=out/target;path.parent.mkdir(parents=True,exist_ok=True)
         Image.open(BytesIO(read(source_name))).save(path)
     for layer in ['BG','MG','FG']:
@@ -161,10 +166,23 @@ def main():
         mask.load()
         if mask.size!=(640,480):raise ValueError(f'Unexpected terrain mask size: {mask.size}')
         map_masks.append(mask.convert('P'))
+    # Road battles sample actual strategic coordinates, not a road midpoint.
+    # Preserve exact mask values as compact per-row (value,run-length) pairs.
+    mask_rows=[]
+    for mask in map_masks:
+        encoded=[]
+        for y in range(480):
+            row=[]
+            for value in [mask.getpixel((x,y)) for x in range(640)]:
+                if row and row[-2]==value:row[-1]+=1
+                else:row.extend([value,1])
+            encoded.append(row)
+        mask_rows.append(encoded)
+    (ROOT/'packages/core/src/native-map-mask.json').write_text(json.dumps({'width':640,'height':480,'seasons':mask_rows},separators=(',',':'))+'\n',encoding='utf8')
     # Keep source animation frame order, # durations and OM_ATTACK timing for later calibration.
     objects=rows(ini('THINGS.INI'),'OBJECT')
     animations={}; frame_images={}; actions=['WAIT','WALK','ATTACK','DEATH','SPELL1'];attack_rules={};hit_audio={}
-    ids=[10,10016,18002,18003,18004]+list(range(49001,49009))+list(range(26001,26007))+list(range(13001,13012))+list(range(500,504))+list(range(180,186))+list(range(190,196))+list(range(100,113))+list(range(120,133))+list(range(140,153))+list(range(160,173))+list(range(600,660))+list(range(800,860))+list(range(700,768))+list(range(900,908))
+    ids=[10,10015,10016,18002,18003,18004]+list(range(16001,16019))+list(range(49001,49009))+list(range(26001,26007))+list(range(13001,13012))+list(range(500,504))+list(range(180,186))+list(range(190,196))+list(range(100,113))+list(range(120,133))+list(range(140,153))+list(range(160,173))+list(range(600,660))+list(range(800,860))+list(range(700,768))+list(range(900,908))
     for obj in objects:
         if number(obj.get('SEQUENCE')) not in ids:continue
         reaction_sounds={}
@@ -217,6 +235,14 @@ def main():
             for f in frames:
                 if f['key'] not in frame_images:frame_images[f['key']]=shp_image(read(f['key']))
             anim['wait']={'frames':[{'key':f['key'],'ticks':f['ticks']} for f in frames],**attack_timeline(frames),'loop':number(obj['SEQUENCE'])==49001}
+        if number(obj['SEQUENCE'])==10015 or 16001<=number(obj['SEQUENCE'])<=16018:
+            # SO owns the !6003/4 draw-node execution; the atlas preserves
+            # the exact parsed frame durations and finite/looping artwork.
+            # A ! token attaches to its preceding node, just like # and @.
+            animation=arrow_wait_animation(obj['WAIT'],obj['DIRECTORY'])
+            for f in animation['frames']:
+                if f['key'] not in frame_images:frame_images[f['key']]=shp_image(read(f['key']))
+            anim['wait']=animation
         animations[obj['SEQUENCE']]={'name':obj['NAME'],'nativeScale':48384 if 'OF_BIGSHAPE' in obj.get('FLAGS','') else 65536,
                                      'whiteLight':'OF_WHITELIGHT' in obj.get('FLAGS',''),'actions':anim}
     # Bounded pages: the client decodes only pages used by the current duel.
@@ -247,6 +273,8 @@ def main():
     if music.exists():shutil.copyfile(music,out/'music.mp3')
     battle_music=args.game/'MP3/06.mp3'
     if battle_music.exists():shutil.copyfile(battle_music,out/'battle/music.mp3')
+    captive_music=args.game/'MP3/03.mp3'
+    if captive_music.exists():shutil.copyfile(captive_music,out/'ui/captive-music.mp3')
     # Keep every original WAV available to the client. Attack/action metadata
     # refers to the source SOUND\\*.WAV name; exporting the complete catalogue
     # avoids substituting browser beeps when a later event path requests one.

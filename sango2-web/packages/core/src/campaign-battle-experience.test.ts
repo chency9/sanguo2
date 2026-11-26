@@ -29,6 +29,9 @@ const fixture=(playerCount=1,enemyCount=1):GameContent=>{
  * casualty is supplied by the test; all settlement and save code runs normally. */
 function encounter(c:GameContent,invader:'p'|'e'='p'):Session {
   let s=dispatch(createSession(c,'era',invader),{type:'policy-finish'},c);
+  // These fixtures isolate merit settlement; capture rules have their own
+  // campaign suite, including the additional pre-capture condition penalty.
+  delete s.captureRules;delete s.movementRules;
   for(const id of Object.keys(s.nativeAI!.countdowns))s.nativeAI!.countdowns[id]=900;
   for(const id of Object.keys(s.generals)) {
     Object.assign(s.generals[id],{hp:41,mp:17,morale:80,fatigue:5,loyalty:90,troops:26,troopSlots:{active:17,reserve:9}});

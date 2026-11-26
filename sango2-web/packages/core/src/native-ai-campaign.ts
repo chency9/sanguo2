@@ -105,6 +105,7 @@ export function runNativeStrategicCallback(s:Session,scene:ScenarioDefinition,ex
   const state=s.nativeAI??(s.nativeAI=createNativeCampaignAI(s,scene));state.callbacks++;
   for(const faction of scene.factions) {
     if(faction.id===s.factionId||faction.special||!Object.values(s.cities).some(c=>c.ownerId===faction.id))continue;
+    if(s.captureRules&&faction.leaderId&&s.generals[faction.leaderId]?.ownerId!==faction.id)continue;
     const previous=state.countdowns[faction.id];
     if(previous>1){state.countdowns[faction.id]--;continue;}
     replenish(s,scene,faction.id);

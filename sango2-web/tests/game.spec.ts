@@ -4,9 +4,9 @@ import {delayRivalDecisions} from './campaign-fixture';
 
 class GamePage {
   constructor(readonly page: Page) {}
-  async start() {
+  async start(legacyTravel=false) {
     await this.page.goto('/');
-    await this.page.getByRole('button', { name: '执掌何進 · 开始征程' }).click();await finishInitialPolicy(this.page);
+    await this.page.getByRole('button', { name: '执掌何進 · 开始征程' }).click();await finishInitialPolicy(this.page,legacyTravel);
     await expect(this.page.getByRole('dialog')).toHaveCount(0);
     await expect(this.page.locator('canvas')).toBeVisible();
     await expect(this.page.getByText('正在展开山河图…')).toHaveCount(0);
@@ -117,9 +117,9 @@ test('another page cannot silently overwrite a newer save', async ({ page, conte
 
 test('neutral capture, persistent save, export and invalid import', async ({ page }) => {
   await delayRivalDecisions(page);
-  const game = new GamePage(page); await game.start(); await game.selectCity('長安');
+  const game = new GamePage(page); await game.start(true); await game.selectCity('長安');
   await page.getByRole('button',{name:'调兵出征'}).click();
-  await page.getByLabel('行军目标').selectOption({label:'安定 · 无主 · 4 天'});
+  await page.getByLabel('行军目标').selectOption({label:'安定 · 无主 · 预计约 4 天'});
   await page.getByLabel(/出征兵力/).fill('30');
   await page.getByRole('button',{name:'下令出征'}).click();
   await expect(page.getByRole('heading',{name:'在途部队'})).toBeVisible();

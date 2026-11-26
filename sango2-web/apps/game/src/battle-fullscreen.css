@@ -51,6 +51,11 @@
 .source-name { position:absolute; left:39.375%; top:44.11765%; margin:0; font:2.5cqi/1 SimSun,serif; color:#fff6a7; white-space:nowrap; }
 .source-name[data-short="true"] { letter-spacing:1.5625cqi; }
 .source-combatant.defender .source-name { left:53.75%; right:auto; top:44.85294%; }
+.source-name:has(.native-bitmap-name[data-font-ready="true"]) { letter-spacing:0; }
+.source-name[data-long="true"] { left:37.8125%; }
+.source-combatant.defender .source-name[data-long="true"] { left:52.1875%; }
+.native-bitmap-name canvas { display:block;width:calc(var(--native-name-width) / 640 * 100cqi);height:2.5cqi;image-rendering:pixelated; }
+.native-bitmap-name canvas[hidden] { display:none; }
 .source-level { position:absolute;left:21.09375%;top:11.7647%;font:1.875cqi/1 monospace; }
 .source-combatant.defender .source-level { left:77.34375%; }
 /* Original sword charge and two capacity-scaled vital gauges. */
@@ -164,8 +169,10 @@
   .source-portrait,.source-portrait-frame { top:8%;width:12%;height:auto;aspect-ratio:5/6; }
   .source-combatant.defender .source-portrait,.source-combatant.defender .source-portrait-frame { left:auto;right:1%; }
   .source-name { left:15%;top:7%;font-size:15px; }
+  .source-name[data-long="true"] { left:15%; }
   .source-name[data-short="true"] { letter-spacing:0; }
   .source-combatant.defender .source-name { left:auto;right:15%;top:7%; }
+  .source-combatant.defender .source-name[data-long="true"] { left:auto;right:15%; }
   .source-level { left:2%;top:88%;font-size:10px; }
   .source-combatant.defender .source-level { left:auto;right:2%; }
   .source-sword { top:25%;left:15%;width:28%;height:15%; }

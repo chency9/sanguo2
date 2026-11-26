@@ -63,6 +63,8 @@ describe('native general initialization and learning',()=>{
   });
   it('preserves in-flight legacy battle state while recovering source learning metadata',()=>{
     let s=createSession(content,scene.id,scene.factions[0].id);
+    // This regression restores a pre-source-movement saved encounter.
+    delete s.movementRules;
     const from=scene.cities.find(c=>c.ownerId===s.factionId&&scene.roads.some(r=>r.from===c.id&&!r.restricted&&s.cities[r.to].ownerId!==s.factionId&&s.cities[r.to].ownerId))!;
     const road=scene.roads.find(r=>r.from===from.id&&!r.restricted&&s.cities[r.to].ownerId!==s.factionId&&s.cities[r.to].ownerId)!;
     const general=scene.generals.find(g=>g.cityId===from.id&&g.ownerId===s.factionId)!;

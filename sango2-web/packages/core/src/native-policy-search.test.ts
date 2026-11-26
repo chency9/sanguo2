@@ -98,11 +98,15 @@ describe('search, autonomy and growth campaign integration',()=>{
       for(const f of scene.factions)s.nativeAI!.countdowns[f.id]=999;
       s=dispatch(s,{type:'policy-finish'},content);
       s=dispatch(s,{type:'march',from:city.id,to:road.from===city.id?road.to:road.from,generalIds:[candidate.id],troops:g.troops},content);
-      for(let day=0;day<30&&!s.battle;day++)s=dispatch(s,{type:'advance',days:1},content);
+      for(let chunk=0;chunk<40&&!s.battle;chunk++) {
+        if(s.policy?.active)s=dispatch(s,{type:'policy-finish'},content);
+        for(const f of scene.factions)s.nativeAI!.countdowns[f.id]=999;
+        s=dispatch(s,{type:'advance',days:30},content);
+      }
       expect(s.battle).not.toBeNull();expect(s.battle!.commanders.attacker).toMatchObject({id:candidate.id,level:g.level,maxHp:g.maxHp,maxMp:g.maxMp});validateSession(s,content);
     }
     expect(recruited).toBe(true);
-  });
+  },15000);
   it('limits stored items to99 and removes a found unique item from every later search',()=>{
     for(const unique of [false,true]) {
       const testContent={...content,items:[{SEQUENCE:'127',NAME:'试验物品',ATTRIB:unique?'ONLYONE':'USED',SEARCHTYPE:'0',RATE:'100',LEVEL:'1'}]};

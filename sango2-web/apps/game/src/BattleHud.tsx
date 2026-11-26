@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { battleGeneral, battleSurvivors, battleFieldTroops, battleRemainingUpdates, nativeCountdown, CHARGE_LIMIT, INITIAL_CHARGE, nativeGaugeWidth, battleMovementCell, type BattleState } from '@sango2/core';
 import {battleScenePoints,nativeClampCamera,type NativeCamera} from '@sango2/core';
+import {NativeBitmapName} from './NativeBitmapName';
 
 const troopIcon=(unit:string)=>({'刀':1,'槍':2,'關':3,'大':3,'弓':4,'鏈':5,'鍊':5,'飛':6,'武':7,'蠻':8,'鐵':9,'籐':10,'賊':11,'黃':11,'弩':12,'女':13}[unit[0]]);
 
@@ -37,7 +38,7 @@ export function BattleHud({battle:b,onLocate,camera}:{battle:BattleState;onLocat
       return <div className={`source-combatant ${side}`} key={side}>
         <img className="source-portrait" src={`/assets/${c.portrait}`} alt={c.name} width="100" height="120"/>
         <img className="source-portrait-frame" src="/assets/ui/war08.png" alt="" width="100" height="120"/>
-        <h2 className="source-name" data-short={c.name.length===2}>{c.name}</h2>
+        <h2 className="source-name" data-short={c.name.length===2} data-long={c.name.length===4}><NativeBitmapName name={c.name}/></h2>
         <span className="source-level" data-testid={`battle-${side}-level`}><span className="source-value">等级 </span><SourceNumber text={c.level===undefined?'—':String(c.level).padStart(2,'0')}/></span>
         <div className="source-sword" data-full={charge===CHARGE_LIMIT}>
           <progress className="source-value" aria-label={`${c.name}集气`} value={charge} max={CHARGE_LIMIT}/>

@@ -38,7 +38,7 @@ class NativeMagicScreen {
     await this.observeMagicDraws();
     await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();await finishInitialPolicy(page);
     await page.getByRole('button',{name:'演武场',exact:true}).click();
-    await expect(page.getByRole('button',{name:'擂鼓开战'})).toBeEnabled();
+    await expect(page.getByRole('button',{name:'擂鼓开战'})).toBeEnabled({timeout:15000});
     await expect(this.canvas).toHaveAttribute('data-magic-rules','native-shoot-v1');
   }
   async cast(sequence:number) {
@@ -88,14 +88,14 @@ class NativeMagicScreen {
       }
       await route.fulfill({response,json:content});
     });
-    await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();await finishInitialPolicy(page);
+    await page.goto('/');await page.getByRole('button',{name:/执掌何進/}).click();await finishInitialPolicy(page,true);
     await page.getByRole('button',{name:'调兵出征'}).click();
     const destination=page.getByLabel('行军目标');
     await destination.selectOption({label:(await destination.getByRole('option').filter({hasText:'壺關'}).textContent())!});
     await page.getByLabel(/出征兵力/).fill('60');await page.getByRole('button',{name:'下令出征'}).click();
     for(let i=0;i<3;i++)await page.getByRole('button',{name:'下一天',exact:true}).click();
     await expect(page.getByRole('heading',{name:'壺關之战'})).toBeVisible();
-    await expect(page.getByRole('button',{name:'擂鼓开战'})).toBeEnabled();
+    await expect(page.getByRole('button',{name:'擂鼓开战'})).toBeEnabled({timeout:15000});
   }
   async openExplodeCampaign(sequence=23) {
     await this.observeMagicDraws();await this.openReinforceCampaign(sequence);

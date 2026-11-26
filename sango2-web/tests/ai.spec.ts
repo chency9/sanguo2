@@ -19,7 +19,8 @@ class DefensePage {
       });
       await route.fulfill({response,json:content});
     });
-    await this.page.goto('/');await this.page.getByRole('button',{name:/执掌何進/}).click();await finishInitialPolicy(this.page);
+    // Legacy travel compatibility; the separate unmodified campaign stays native.
+    await this.page.goto('/');await this.page.getByRole('button',{name:/执掌何進/}).click();await finishInitialPolicy(this.page,true);
   }
   async days(n:number) {for(let i=0;i<n;i++)await this.page.getByRole('button',{name:'下一天',exact:true}).click();}
 }

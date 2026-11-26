@@ -46,4 +46,4 @@
 
 这些对照运行的是固定哈希的1.05+ EXE/SO。Oracle替代了图形对象、资源播放或部分宿主输入；它们证明指定输入下的规则，不能代替原客户端整局逐帧回放。采样工具位于 `web-port-research/tools/native_*_oracle.py`，提交的fixtures保存在 `packages/core/fixtures/`。
 
-统一验证：**63个核心测试文件、18,386项测试通过；79项Chromium场景通过；6项Python测试通过；TypeScript检查与生产构建通过。** 构建仍提示核心入口bundle大于500kB，未视为功能或复刻验收完成。尚未齐备的俘虏/势力结局、原行军与在途相遇、91个通用技能、原字库/UI及SAV兼容，继续登记在[总账](FULL-PARITY-BACKLOG.md)。
+统一验证：**63个核心测试文件、18,386项测试通过；79项Chromium场景通过；6项Python测试通过；TypeScript检查与生产构建通过。** 构建仍提示核心入口bundle大于500kB，未视为功能或复刻验收完成。当天后续已补入道路相遇、战俘/System对白、君主失效及原字库，详见[后续实战记录](NATIVE-MOVEMENT-CAPTURE-2026-11-26.md)。此处数字是此前提交e90b87a的验证记录；85个通用技能、完整UI/音画及SAV兼容仍在[总账](FULL-PARITY-BACKLOG.md)。

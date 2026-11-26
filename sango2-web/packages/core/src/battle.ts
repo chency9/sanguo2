@@ -26,6 +26,7 @@ import {nativeCreateMagicHeal,type NativeMagicHeal} from './native-magic-heal';
 import {nativeCreateMagicReinforce,nativeReinforceDefinition,type NativeMagicReinforce} from './native-magic-reinforce';
 import {nativeCreateMagicExplode,nativeExplodeDefinition,type NativeMagicExplode} from './native-magic-explode';
 import {nativeCreateMagicRollTub,nativeRollTubDefinition,type NativeMagicRollTub} from './native-magic-rolltub';
+import {nativeCreateMagicArrowSupport,nativeArrowSupportDefinition,type NativeMagicArrowSupport} from './native-magic-arrow-support';
 import {advanceBattleNativeMagic,battleMagicLocked,validateBattleNativeMagic} from './battle-native-magic';
 import {advanceBattleGeneral} from './battle-general-tick';
 import {createBattleSoundEvents,validateBattleSoundEvents,type BattleSoundEvents} from './battle-audio-events';
@@ -100,6 +101,9 @@ export interface BattleState {
   timing?:'native-99';
   /** Player uses the left/attacker slot even when defending a city. */
   invasionSide?:BattleSide;
+  /** Road encounters preserve original collision-team order independently of
+   * the player's left-side control slot. They have no city or fortification. */
+  roadEncounter?:{firstArmyId:string;secondArmyId:string;firstSide:BattleSide};
   phase: 'deployment' | 'fighting' | 'intermission' | 'finished'; winner: BattleSide | null; reason: string;
   round:number; rosters:Record<BattleSide,BattleMember[]>; totalInitial:Record<BattleSide,number>; history:RoundReport[];
   commanders: Record<BattleSide,BattleCommander>; initial: Record<BattleSide,number>; reserves: Record<BattleSide,number>;
@@ -111,6 +115,7 @@ export interface BattleState {
     | {kind:'native-reinforce';side:BattleSide;casterId:number;magic:number;runtime:NativeMagicReinforce}
     | {kind:'native-explode';side:BattleSide;casterId:number;magic:number;damage:number;runtime:NativeMagicExplode}
     | {kind:'native-rolltub';side:BattleSide;casterId:number;magic:number;damage:number;runtime:NativeMagicRollTub}
+    | {kind:'native-arrow-support';side:BattleSide;casterId:number;magic:number;runtime:NativeMagicArrowSupport}
     | {kind:'native-shoot';side:BattleSide;casterId:number;targetId:number;magic:number;script:number;damage:number;runtime:NativeMagicShoot}
     | {kind:'heal'; side:BattleSide; targetId:number; initialHp:number; nextPoint:number; amount:number; wait:number; magic:NativeMagic['sequence']}
     | {kind:'magic-projectile'; side:BattleSide; casterId:number; targetId:number; magic:NativeMagic['sequence']; script:number; damage:number; phase:'windup'|'flight'|'impact'; phaseAge:number; duration:number; fromX:number; fromY:number; toX:number; toY:number; x:number; y:number; z:number; age:number; hit:boolean}
@@ -142,6 +147,8 @@ export interface BattleState {
   explodeRules?:'native-explode-v1';
   /** Original RollTub waves, point collisions and break callbacks. */
   rollTubRules?:'native-rolltub-v1';
+  /** Original ArrowSupport coroutines, draw-node scripts and point hits. */
+  arrowSupportRules?:'native-arrow-support-v1';
   cameraRules?:'native-script-v1';
   /** Existing saves retain grouped growth and their old retreat gauge. */
   generalRules?:'native-source-v1';
@@ -154,6 +161,8 @@ export interface BattleState {
   attackerAI?:BattleAIState;
   /** Old in-flight saves omit this marker and keep their former settlement. */
   experienceRules?:'native-merit-v1';
+  captureRules?:'native-capture-v1';
+  capturePrepared?:boolean;
   /** Both armies exhausted their last commanders on a native timeout. */
   drawn?:boolean;
 }
@@ -247,6 +256,12 @@ function castSkill(b:BattleState,sequence:number,side:BattleSide) {
     b.activeScript={kind:'magic-projectile',side,casterId:target.id,targetId:enemy.id,magic:magic.sequence,script:magic.script,damage:magic.attack,
       phase:'windup',phaseAge:0,duration:12,fromX,fromY,toX,toY,x:fromX,y:fromY,z:0,age:0,hit:false};
     b.log.unshift(`${caster.name}施展${magic.name}，金色箭光锁定敌方主将。`);
+  } else if(b.movementRules==='native-grid-v3'&&nativeArrowSupportDefinition(magic.script)) {
+    prepareBattleMovement(b);const m=target.movement!,enemy=battleGeneral(b,opposite(side)).movement!;
+    b.arrowSupportRules='native-arrow-support-v1';
+    b.activeScript={kind:'native-arrow-support',side,casterId:target.id,magic:sequence,
+      runtime:nativeCreateMagicArrowSupport(magic.script,{x:m.px,y:m.py,z:0},side==='attacker'?1:0,{x:enemy.px,y:enemy.py,z:0},magic.attack)};
+    b.log.unshift(`${caster.name}施展${magic.name}！`);
   } else if(b.movementRules==='native-grid-v3'&&nativeRollTubDefinition(magic.script)) {
     prepareBattleMovement(b);const m=target.movement!,enemy=battleGeneral(b,opposite(side)).movement!;
     b.rollTubRules='native-rolltub-v1';
@@ -519,6 +534,8 @@ export function commandBattle(previous:BattleState,command:BattleCommand):Battle
     const next=createBattle({id:b.id,armyId:b.armyId??undefined,cityId:b.cityId??undefined,attacker:a.commander,defender:d.commander,attackingTroops:a.troops,defendingTroops:d.troops,seed:b.rng,aiRng,rosters:b.rosters,computerAttacker:!!b.attackerAI,experienceRules:!!b.experienceRules});
     next.timing=b.timing;
     next.invasionSide=b.invasionSide;
+    next.captureRules=b.captureRules;
+    next.roadEncounter=b.roadEncounter?structuredClone(b.roadEncounter):undefined;
     next.reinforceRules=b.reinforceRules;
     next.fortifications=b.fortifications?{...b.fortifications}:undefined;
     if(command.type==='select-commander'&&b.opponentAI){
@@ -626,7 +643,7 @@ function finish(b:BattleState,winner:BattleSide,reason:string,kind:NativeRoundKi
 function advanceNativeScript(b:BattleState,nativeSteps:number) {
   for(let i=0;i<nativeSteps&&b.activeScript;i++) {
     const script=b.activeScript;
-    if(script.kind==='native-shoot'||script.kind==='native-heal'||script.kind==='native-reinforce'||script.kind==='native-explode'||script.kind==='native-rolltub')break; // Runs on the source unit clock.
+    if(script.kind==='native-shoot'||script.kind==='native-heal'||script.kind==='native-reinforce'||script.kind==='native-explode'||script.kind==='native-rolltub'||script.kind==='native-arrow-support')break; // Runs on the source unit clock.
     if(script.kind==='magic-projectile') {
       script.age++;script.phaseAge++;
       const target=b.units.find(u=>u.id===script.targetId&&u.general&&u.side===opposite(script.side));
@@ -927,6 +944,11 @@ export function validateBattle(value:unknown):asserts value is BattleState {
   if(!b||b.version!==2||typeof b.id!=='string'||!integer(b.tick,b.timing==='native-99'?3960:3600)||!integer(b.nextId)||!integer(b.rng,4294967295)||b.rng===0||!['deployment','fighting','intermission','finished'].includes(b.phase)||!['fang','yuan','zhui','yan','xuan','yu','gou','chong','jian','line','wedge','square'].includes(b.formation)||!Array.isArray(b.units)||b.units.length>600||!Array.isArray(b.effects)||b.effects.length>1000||!Array.isArray(b.log)||b.log.length>8||!b.orders) return fail();
   if(b.timing!==undefined&&b.timing!=='native-99')return fail();
   if(b.invasionSide!==undefined&&!['attacker','defender'].includes(b.invasionSide))return fail();
+  if(b.roadEncounter!==undefined) {
+    const e=b.roadEncounter;
+    if(!e||typeof e.firstArmyId!=='string'||typeof e.secondArmyId!=='string'||e.firstArmyId===e.secondArmyId||
+      !/^army-[1-9]\d*$/.test(e.firstArmyId)||!/^army-[1-9]\d*$/.test(e.secondArmyId)||!['attacker','defender'].includes(e.firstSide)||b.cityId!==null||b.fortifications!==undefined)return fail();
+  }
   if(b.opponentAI!==undefined) {
     const a=b.opponentAI;
     if(!a||!Array.isArray(a.rng)||a.rng.length!==2||!a.rng.every(n=>integer(n,4294967295))||!integer(a.countdown,60)||!integer(a.flags,7)||!integer(a.entryHp,10000)||!integer(a.chargeTick)||!integer(a.lastAction,6)||!integer(a.lastSkill,127))return fail();
@@ -938,6 +960,7 @@ export function validateBattle(value:unknown):asserts value is BattleState {
     if(a.formation!==formationToNativeIndex(b.formation))return fail();
   }
   if(b.experienceRules!==undefined&&(b.experienceRules!=='native-merit-v1'||!b.troopDeployment))fail();
+  if(b.captureRules!==undefined&&b.captureRules!=='native-capture-v1'||b.capturePrepared!==undefined&&(b.capturePrepared!==true||!b.captureRules||b.phase!=='finished'))fail();
   if(b.drawn!==undefined&&(b.drawn!==true||!b.experienceRules||b.phase!=='finished'))fail();
   if(b.scenery!==undefined)validateScenery(b.scenery);
   if(b.fortifications!==undefined&&(!b.fortifications||!integer(b.fortifications.attacker,1000000000)||!integer(b.fortifications.defender,1000000000)))return fail();
@@ -980,7 +1003,7 @@ export function validateBattle(value:unknown):asserts value is BattleState {
       const mc=m.commander;
       if(!mc||typeof mc.id!=='string'||typeof mc.name!=='string'||typeof mc.portrait!=='string'||typeof mc.unit!=='string'||![mc.hp,mc.mp,mc.strength,mc.intelligence].every(n=>integer(n,10000))||!integer(m.troops)||typeof m.withdrawn!=='boolean')return fail();
       if(mc.battleRecord!==undefined&&!isNativeBattleRecord(mc.battleRecord))fail();
-      if(m.merit!==undefined&&!integer(m.merit,4294967295)||m.battleStatus!==undefined&&!integer(m.battleStatus,6))fail();
+      if(m.merit!==undefined&&!integer(m.merit,4294967295)||m.battleStatus!==undefined&&!integer(m.battleStatus,7))fail();
       if(b.experienceRules&&(m.merit===undefined||m.battleStatus===undefined))fail();
       validateAppearance(mc,fail);if(mc.maxHp!==undefined&&(!integer(mc.maxHp,10000)||mc.hp>mc.maxHp))return fail();
       const cap=nativeTroopCapacity(mc.level??20);
@@ -998,7 +1021,7 @@ export function validateBattle(value:unknown):asserts value is BattleState {
   validateBattleHitAudio(b,fail);
   if(b.activeScript!==undefined) {
     const x=b.activeScript;
-    if(x.kind==='native-shoot'||x.kind==='native-heal'||x.kind==='native-reinforce'||x.kind==='native-explode'||x.kind==='native-rolltub') {
+    if(x.kind==='native-shoot'||x.kind==='native-heal'||x.kind==='native-reinforce'||x.kind==='native-explode'||x.kind==='native-rolltub'||x.kind==='native-arrow-support') {
       // Full native coroutine/weapon validation lives with its adapter.
     } else if(x.kind==='heal') {
       if(!['attacker','defender'].includes(x.side)||!integer(x.targetId,b.nextId-1)||!integer(x.initialHp,10000)||!integer(x.nextPoint,10000)||!integer(x.amount,10000)||!integer(x.wait,100)||!integer(x.magic,100))return fail();

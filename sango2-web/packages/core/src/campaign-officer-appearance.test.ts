@@ -63,6 +63,16 @@ describe('annual officer appearances in campaign sessions',()=>{
 
 const original=JSON.parse(readFileSync(new URL('../../../apps/game/public/assets/content.json',import.meta.url),'utf8')) as GameContent;
 describe('all five original scenarios preserve annual appearances through save/restore',()=>{
+  it('never reintroduces an executed officer from a later POS appearance schedule',()=>{
+    const scene=original.scenarios[0],faction=scene.factions.find(f=>!f.special&&scene.cities.some(c=>c.ownerId===f.id))!.id;
+    const s=createSession(original,scene.id,faction),def=scene.generals.find(g=>g.appearanceCities?.some(Boolean))!;
+    Object.assign(s.generals[def.id],{status:'死',ownerId:null,cityId:null,armyId:null});
+    s.policy!.year=194;const before=structuredClone(s.generals[def.id]),rng=[...s.nativeAI!.rng];
+    expect(runAnnualOfficerAppearances(s,scene,original.items).some(event=>event.officerId===def.id)).toBe(false);
+    expect(s.generals[def.id]).toEqual(before);
+    // Other eligible officers may still consume their own draws in this pass.
+    expect(s.nativeAI!.rng).toHaveLength(rng.length);
+  });
   it.each(original.scenarios.map(scene=>({id:scene.id,title:scene.title})))('$title',({id})=>{
     const scene=original.scenarios.find(scene=>scene.id===id)!,faction=scene.factions.find(f=>!f.special&&scene.cities.some(c=>c.ownerId===f.id))!.id;
     const s=createSession(original,id,faction),loaded=readSession(JSON.parse(JSON.stringify(s)),original);
